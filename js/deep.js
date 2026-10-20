@@ -6,8 +6,12 @@ var D=[];for(var i=0;i<100;i++){var sc=Math.min(9.6,Math.max(2.4,4+r()*4.5+(r()-
 var st={q:"",f:"all",sort:"s",dir:-1,n:25,sel:null};
 var TOT=D.reduce(function(a,d){return{av:a.av+d.av,hv:a.hv+d.hv}},{av:0,hv:0}),BEST=D.reduce(function(a,d){return d.s>a?d.s:a},0);
 function ag(d){return d.av/(d.av+d.hv)}
-function view(){var q=st.q.toLowerCase(),l=D.filter(function(d){return(!st.q||d.name.toLowerCase().indexOf(q)>=0||String(d.id)===st.q)&&(st.f==="all"||(st.f==="agent"?ag(d)>=.5:ag(d)<.5))});
- var k=st.sort;l.sort(function(a,b){var x=k==="name"?a.name.localeCompare(b.name):k==="ag"?ag(a)-ag(b):a[k]-b[k];return x*st.dir});return l}
+/* derived once: the agent share, the lower-cased name for search and the name's rank in collation order (a
+   number compare per pair instead of localeCompare) */
+D.forEach(function(d){d.ag=ag(d);d.lc=d.name.toLowerCase();d.sid=String(d.id)});
+D.slice().sort(function(a,b){return a.name.localeCompare(b.name)}).forEach(function(d,i,o){d.nr=i&&!o[i-1].name.localeCompare(d.name)?o[i-1].nr:i});
+function view(){var q=st.q.toLowerCase(),l=D.filter(function(d){return(!st.q||d.lc.indexOf(q)>=0||d.sid===st.q)&&(st.f==="all"||(st.f==="agent"?d.ag>=.5:d.ag<.5))});
+ var k=st.sort==="name"?"nr":st.sort;l.sort(function(a,b){return(a[k]-b[k])*st.dir});return l}
 
 /* The page keeps its nodes. The frame, the 100 dots and each row are built once; an update touches only what
    changed: a selection restyles two dots and two rows, a sort or filter moves rows (fewest moves), and the
@@ -31,7 +35,7 @@ function row(d){var tr=rowEls.get(d.id);if(tr)return tr;
 /* the selected proposal's readout. It repeats the row's score and range on purpose: a dot-field pick may sit in a
    row that is filtered out or not yet loaded, and the readout adds who is trading it. */
 function readout(d){return h("div",{class:"kpi k4"},[h("div",{},[h("small",{text:"Forecast score"}),h("b",{class:"num",text:d.s.toFixed(1)+" / 10"})]),h("div",{},[h("small",{text:"90% range"}),h("b",{class:"num",text:d.lo+" to "+d.hi})]),h("div",{},[h("small",{text:"Agent traders"}),h("b",{class:"num",text:String(d.at)})]),h("div",{},[h("small",{text:"Human traders"}),h("b",{class:"num",text:String(d.ht)})])])}
-function close(){var d=st.sel;st.sel=null;render();if(!d)return;var r=document.querySelector('tr[data-key="d'+d.id+'"]')||dotEls[d.id-1];if(r)r.focus({preventScroll:true})}
+function close(){var d=st.sel;st.sel=null;render();if(!d)return;var r=rowEls.get(d.id);if(!r||!r.isConnected||r.__out)r=dotEls[d.id-1];r.focus({preventScroll:true})}
 /* desktop: the readout sits beside the field. Tablet and phone: it opens in a sheet, and this panel keeps the hint. */
 function side(narrow){var inline=st.sel&&!narrow;return h("div",{class:"stack"},[h("div",{class:"kpi top"},[h("div",{},[h("small",{text:"Agent volume"}),h("b",{class:"num",text:U.money(TOT.av)})]),h("div",{},[h("small",{text:"Human volume"}),h("b",{class:"num",text:U.money(TOT.hv)})]),h("div",{},[h("small",{text:"Top forecast"}),h("b",{class:"num",text:BEST.toFixed(1)+" / 10"})])]),
   h("div",{class:"notice",text:"Evaluators still score every proposal. The market forecasts their scores; it does not choose winners."}),
@@ -50,18 +54,32 @@ function sortbar(){var ord=st.sort==="name"?(st.dir>0?"A to Z":"Z to A"):(st.dir
  return h("div",{class:"sortbar narrow-only","data-key":"sortbar"},[h("label",{for:"deep-sort",text:"Sort by"}),
   h("select",{class:"field",id:"deep-sort",onchange:function(e){var k=e.target.value;st.sort=k;st.dir=k==="name"||k==="id"?1:-1;render()}},SORTS.map(function(o){return h("option",{value:o[0],text:o[1],selected:st.sort===o[0]?"selected":null})})),
   h("button",{class:"btn soft",type:"button",onclick:function(){st.dir*=-1;render()}},[h("span",{"aria-hidden":"true",text:st.dir>0?"↑ ":"↓ "}),ord])])}
+/* rows: the visual order is set with the CSS order property (a style change: no row is detached, so none has to
+   be laid out again in the frame that starts the glide). The DOM follows a frame later, a few rows per frame
+   (tidy), so reading and tab order match what is on screen a moment after the sort. */
+function rows(ctx,want){var tb=ui.tbody,keep=new Set(want),c,nx,last=want[want.length-1];
+ want.forEach(function(n){if(n.__out)ctx.back(n)});/* still fading out from an earlier update, and listed again */
+ for(c=tb.firstElementChild;c;c=nx){nx=c.nextElementSibling;if(!c.__out&&!keep.has(c))ctx.drop(c,tb)}
+ want.forEach(function(n,k){var o=String(k);if(n.style.order!==o)n.style.order=o;if(!n.isConnected){ctx.added.push(n);tb.appendChild(n)}});
+ /* the last row drops its rule; marked here because the DOM's last child can lag the visual order for a moment */
+ if(ui.end!==last){if(ui.end)ui.end.classList.remove("is-end");if(last)last.classList.add("is-end");ui.end=last}
+ ui.want=want;tidy()}
 /* longest increasing subsequence (indices into a): the rows that can stay where they are while the rest move */
 function lis(a){var p=new Array(a.length),m=[],i,lo,hi,mid;
  for(i=0;i<a.length;i++){lo=0;hi=m.length;while(lo<hi){mid=(lo+hi)>>1;if(a[m[mid]]<a[i])lo=mid+1;else hi=mid}p[i]=lo?m[lo-1]:-1;m[lo]=i}
  var out=[],k=m.length?m[m.length-1]:-1;while(k>=0){out.push(k);k=p[k]}return out.reverse()}
-/* rows: drop the ones no longer listed, keep the longest run already in order, move or insert only the others.
-   A move uses moveBefore where it exists: the row keeps its computed style, focus and running animations. */
-function rows(ctx,want){var tb=ui.tbody,keep=new Set(want),c,nx,i=0,pos=new Map(),seq=[],at=[];
- for(c=tb.firstElementChild;c;c=nx){nx=c.nextElementSibling;if(!keep.has(c)){ctx.removed.push({n:c,p:tb,next:nx});tb.removeChild(c)}}
- for(c=tb.firstElementChild;c;c=c.nextElementSibling)pos.set(c,i++);
- want.forEach(function(n,k){if(pos.has(n)){seq.push(pos.get(n));at.push(k)}});
- var stay=new Set(lis(seq).map(function(j){return want[at[j]]}));
- for(var k=want.length-1,anchor=null;k>=0;k--){c=want[k];if(!stay.has(c)){if(!pos.has(c)){ctx.added.push(c);tb.insertBefore(c,anchor)}else if(tb.moveBefore)tb.moveBefore(c,anchor);else tb.insertBefore(c,anchor)}anchor=c}}
+/* bring the DOM order in line with the visual order: keep the longest run already in order, move up to 8 others
+   per frame (moveBefore where it exists, so a row keeps its style, focus and running animations), starting the
+   frame after the change so it never adds to the frame that starts the motion */
+var tq=0;
+function tidy(){if(!tq)tq=requestAnimationFrame(function(){tq=requestAnimationFrame(step)})}
+function step(){tq=0;var tb=ui.tbody,want=ui.want,pos=new Map(),seq=[],at=[],i=0,c,n=0,f=document.activeElement;
+ for(c=tb.firstElementChild;c;c=c.nextElementSibling)if(!c.__out)pos.set(c,i++);
+ want.forEach(function(r,k){if(pos.has(r)){seq.push(pos.get(r));at.push(k)}});
+ var run=lis(seq);if(run.length===want.length)return;
+ var stay=new Set(run.map(function(j){return want[at[j]]}));
+ for(var k=want.length-1,anchor=null;k>=0&&n<8;k--){c=want[k];if(!stay.has(c)&&c.parentNode===tb){if(tb.moveBefore)tb.moveBefore(c,anchor);else{tb.insertBefore(c,anchor);if(c===f)c.focus({preventScroll:true})}n++}anchor=c}
+ tidy()}
 /* first render: the whole page is built and handed to the morph, so it enters exactly as before */
 function frame(){var target=document.getElementById("root"),root=h("div"),l=view(),narrow=U.narrow.matches;
  var top=h("div",{class:"cols2"},[h("div",{class:"panel-c"},[h("h2",{text:"Grant round · 100 proposals"}),dots(),h("p",{class:"note",text:"Bigger, brighter dot = higher forecast score."})]),side(narrow)]);
@@ -79,7 +97,7 @@ function frame(){var target=document.getElementById("root"),root=h("div"),l=view
 function render(){var l=view(),narrow=U.narrow.matches,want=l.slice(0,st.n).map(row),more=l.length>st.n,sk=st.sel&&!narrow?st.sel.id:0;
  /* the list first: its rows are measured before anything above them can change height, so every shift glides */
  U.patch(ui.sec,function(ctx){rows(ctx,want);var m=ui.more;
-  if(more&&!m.isConnected){ui.sec.appendChild(m);ctx.added.push(m)}else if(!more&&m.isConnected){ctx.removed.push({n:m,p:ui.sec,next:null});ui.sec.removeChild(m)}},{flip:"tbody tr"});
+  if(more&&!m.isConnected){ui.sec.appendChild(m);ctx.added.push(m)}else if(!more&&m.isConnected)ctx.drop(m,ui.sec)},{flip:"tbody tr",lazy:!narrow});
  if(shown!==st.sel){if(shown){dotOn(dotEls[shown.id-1],false);if(rowEls.has(shown.id))rowOn(rowEls.get(shown.id),false)}
   if(st.sel){dotOn(dotEls[st.sel.id-1],true);if(rowEls.has(st.sel.id))rowOn(rowEls.get(st.sel.id),true)}shown=st.sel}
  if(sk!==sideK){sideK=sk;U.patch(ui.side,side(narrow))}

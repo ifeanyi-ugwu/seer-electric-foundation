@@ -53,6 +53,12 @@ No table or toolbar scrolls sideways at any width. Short landscape phones get a 
 | Selects drawn with a custom chevron 16px from the right edge, per theme | The native arrow sat against the edge and differed by browser. The control stays a native select for keyboard and screen readers. |
 | Second violet `#8F55F7`, taken from the kit's dot artwork, used for dot accents | Used only in the hero dot-matrix. |
 | Front-card logo shown as a small violet "seer" wordmark | The full logo is too small to read at card scale. |
+| Hero shows two full market cards you can swap: tap the card behind and it springs forward, then replays its dots, climbing number and bar | The kit's hero has a mostly hidden back card. Making both cards complete and interchangeable shows that Seer carries many markets, and gives each card its own moment. |
+| Hero stack is scaled as one unit from a fixed design size | Offsets and type keep their proportions at every width. |
+| The back card recedes under a 0.26 layer of the ground colour | It reads as further away in both themes. |
+| Dots pop by growing their radius in one JS loop, not one CSS animation per dot | A replay would otherwise cost about 110ms of style work at 4x CPU. |
+| A single "Next market" chip marks the back card and is retired after the first swap | One affordance, no repeated instructions. |
+| Light hero card meta text is `#44444E` | Keeps 4.5:1 under the dim layer. |
 | FADES slabs reused at low opacity as a page-head band on the app pages, drawn inline and theme-aware | An image can't follow the theme or sit cleanly behind title text. It ties the tools to the landing hero. |
 | Page-head ground is the kit's hero ink (`#0C0A16`) blended with the page, or light lavender in light mode | Calmer than the landing, but visibly the same family. |
 | Cut-corner KPI tiles and primary trade buttons | Carries the slab and base-block shape into the tools without touching the data. |

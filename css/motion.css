@@ -149,6 +149,7 @@ html{scroll-padding-top:var(--m-hdr,88px)}
 @keyframes m-wipe{from{-webkit-mask-position:50% 50%;mask-position:50% 50%}to{-webkit-mask-position:0 0;mask-position:0 0}}
 @keyframes m-pop{from{opacity:0;transform:scale(.8)}}
 @keyframes m-wash{from{background-color:var(--violet-soft);box-shadow:0 0 0 3px var(--violet-soft)}to{background-color:transparent;box-shadow:0 0 0 3px transparent}}
+@keyframes m-wash2{from{background-color:var(--violet-soft);box-shadow:0 0 0 3px var(--violet-soft)}to{background-color:transparent;box-shadow:0 0 0 3px transparent}}
 @keyframes m-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
 @keyframes m-glow{0%,100%{opacity:1}50%{opacity:.78}}
 @keyframes m-breathe{0%,100%{opacity:1}50%{opacity:.84}}
@@ -160,7 +161,9 @@ html{scroll-padding-top:var(--m-hdr,88px)}
 .m-wipe{-webkit-mask:var(--m-wipe-g) 0 0/300% 300% no-repeat;mask:var(--m-wipe-g) 0 0/300% 300% no-repeat;animation:m-wipe var(--dur-4) var(--ease-decel) both}
 
 /* =================================================================================================
-   LANDING HERO: one-time choreography (pure CSS, so no JS can leave it hidden), then ambient life
+   LANDING HERO: one-time choreography (pure CSS, so no JS can leave it hidden), then ambient life.
+   The two-card stack is choreographed by js/home.js on springs; the HERO CARD STACK block below holds
+   the CSS half of it (dot pops, the brief hide before the script starts, the scroll fan).
    ================================================================================================= */
 .hero h1 .ln{display:block;overflow:hidden;padding-bottom:.14em;margin-bottom:-.14em}
 .hero h1 .ln > span{display:inline-block}
@@ -180,36 +183,50 @@ html{scroll-padding-top:var(--m-hdr,88px)}
   :root:not(.m-hero-seen) .hero h1 .ln + .ln > span{animation-delay:230ms}
   :root:not(.m-hero-seen) .hero-sub{animation:m-rise var(--dur-4) var(--ease-decel) 420ms backwards}
   :root:not(.m-hero-seen) .hero-cta{animation:m-rise var(--dur-4) var(--ease-decel) 500ms backwards}
-  /* cards enter on the individual translate/rotate properties, so the scroll-linked fan below (transform) never competes */
-  :root:not(.m-hero-seen) .hero-cards .mcard-front{animation:m-card 760ms var(--spring-settle) 260ms backwards}
-  :root:not(.m-hero-seen) .hero-cards .mcard-back{animation:m-card-b 760ms var(--spring-settle) 400ms backwards}
-  :root:not(.m-hero-seen) .home .d-hero .on circle{animation:m-dot var(--dur-4) var(--ease-decel) backwards;animation-delay:calc(620ms + var(--i) * 22ms)}
-  :root:not(.m-hero-seen) .home .d-hero .off circle{animation:m-fade var(--dur-4) var(--ease-standard) 1180ms backwards}
-  .home .d-hero .on circle,.home .d-hero .off circle{transform-box:fill-box}
-  :root:not(.m-hero-seen) .home .mnote{animation:m-fade var(--dur-4) var(--ease-standard) 900ms backwards}
   /* return visits in the same session: a short settle instead of the full sequence */
   .m-hero-seen .home .hero-body,.m-hero-seen .home .slab-set{animation:m-fade var(--dur-3) var(--ease-standard) backwards}
-  .m-hero-seen .home .d-hero .on circle{animation:none}
 
-  /* ambient life: slow, small, phase-offset; paused offscreen (.m-off from JS) and in hidden tabs (html.m-hidden) */
+  /* ambient life: slow, small, phase-offset; paused offscreen (.m-off from JS) and in hidden tabs (html.m-hidden).
+     The idle tilt sits on the stack wrapper, so it never competes with the springs that move the cards. */
   .home .dots .on{animation:shimmer 7s ease-in-out infinite;animation-delay:calc(1.6s + var(--i) * 110ms)}
   .home .slabs{animation:m-breathe 14s ease-in-out 1.2s infinite}
   .home .hero-cards{animation:m-idle 13s ease-in-out 1.5s infinite}
-  .home .mbar i{transform-origin:0 50%;animation:m-grow-x var(--dur-5) var(--ease-decel) 700ms backwards,m-glow 5s ease-in-out 2.4s infinite}
-  .m-hero-seen .home .mbar i{animation:m-glow 5s ease-in-out 1s infinite}
+  .home .mbar i{animation:m-glow 5s ease-in-out 2.4s infinite}
+  .m-hero-seen .home .mbar i{animation-delay:1s}
   .m-hero-seen .home .dots .on{animation-delay:calc(var(--i) * 110ms)}
 }
-/* parallax depth layers (slabs deepest, cards mid, copy front, back card fans away) and the app columns
+/* parallax depth layers (slabs deepest, cards mid, copy front, the card behind fans away) and the app columns
    settling onto the protocol base. Compositor-driven where supported; JS fallback otherwise. */
 @supports (animation-timeline:view()){
   @media (prefers-reduced-motion:no-preference) and (min-width:961px){
     .home .slabs{animation:m-par-slab linear both,m-breathe 14s ease-in-out 1.2s infinite;animation-timeline:scroll(root block),auto;animation-range:0 100vh,normal}
     .home .hero-cards{animation:m-par-cards linear both,m-idle 13s ease-in-out 1.5s infinite;animation-timeline:scroll(root block),auto;animation-range:0 100vh,normal}
-    .home .hero-cards .mcard-back{animation-name:m-card-b,m-fan-b;animation-duration:760ms,auto;animation-timing-function:var(--spring-settle),linear;animation-delay:400ms,0s;animation-fill-mode:backwards,both;animation-timeline:auto,scroll(root block);animation-range:normal,0 100vh}
-    .m-hero-seen .home .hero-cards .mcard-back{animation-name:none,m-fan-b}
+    /* the fan follows whichever card is behind: --hc-b is 1 behind and 0 in front (a spring in js/home.js mid-swap) */
+    .home .hcard{animation:hc-fan linear both;animation-timeline:scroll(root block);animation-range:0 100vh;
+      transform:translate(calc(var(--hc-fan) * var(--hc-b) * 5%),calc(var(--hc-fan) * var(--hc-b) * -9%))}
     .home .apps > li{animation:m-settle linear both;animation-timeline:view();animation-range:entry 0% cover 38%}
   }
 }
+
+/* ---------- HERO CARD STACK (js/home.js runs the springs, the climb and the dot pops; this is the CSS half) ----------
+   The dots are plain static SVG; the script grows each one's radius from 0 in its own 240ms pop, 6ms after the
+   one before (column by column, bottom to top). Animating r adds no layers, and only the few dots in flight
+   change each frame, so a replay stays cheap. Here: the brief hide before the script starts, the scroll fan,
+   and the hint chip's fades. */
+@property --hc-fan{syntax:"<number>";inherits:false;initial-value:0}
+@property --hc-b{syntax:"<number>";inherits:false;initial-value:0}
+@keyframes hc-fan{to{--hc-fan:1}}
+@keyframes hc-show{to{opacity:1}}
+@media (prefers-reduced-motion:no-preference){
+  /* first visit: the stack waits for js/home.js to start its entrance; if the script never runs it appears anyway */
+  :root.hc-js:not(.m-hero-seen):not(.hc-ready) .hc-stage{opacity:0;animation:hc-show 1ms 2.5s forwards}
+  /* return visits: the cards are there at once; only the figures wait for their brief climb */
+  :root.hc-js.m-hero-seen:not(.hc-ready) .hc-stage :is(.mpct,.mbar i){opacity:0;animation:hc-show 1ms 2.5s forwards}
+}
+.hc-next{transition:opacity var(--dur-2) var(--ease-standard)}
+.hc-next.hc-off{opacity:0}
+.hc-next.hc-bye{opacity:0;transition-duration:var(--dur-1)}
+/* ---------- end HERO CARD STACK ---------- */
 .home .apps > li:nth-child(1){--k:.7}.home .apps > li:nth-child(2){--k:1.2}.home .apps > li:nth-child(3){--k:.5}
 .home .apps > li:nth-child(4){--k:1}.home .apps > li:nth-child(5){--k:.85}
 
@@ -257,6 +274,8 @@ html{scroll-padding-top:var(--m-hdr,88px)}
 .opp tr{transition:background-color var(--dur-2) var(--ease-standard),box-shadow var(--dur-2) var(--ease-standard)}
 /* value changes: a soft violet wash that settles, so the eye finds what changed (class added by JS) */
 .m-wash{animation:m-wash 900ms var(--ease-standard) both;border-radius:2px}
+/* the same wash under a second name: swapping names restarts it without forcing a layout (js/motion.js wash) */
+.m-wash.m-wash2{animation-name:m-wash2}
 tr.m-wash{animation-duration:1100ms}
 /* chips, badges and flags that appear inside a block that just arrived */
 .m-pop{animation:m-pop var(--spring-snappy-t) var(--spring-snappy) both}
@@ -337,6 +356,13 @@ main{transform-origin:50% 0}
   html.m-sheet main{transform:scale(.985)}
 }
 .m-ghost{pointer-events:none}
+/* a row fading out in place (js/motion.js exitAt): it covers what glides beneath it, like the clone it replaces;
+   exits accelerate and take 60% of an entrance */
+.m-out{animation:m-exit var(--dur-2) var(--ease-accel) forwards}
+tr.m-out{background-color:var(--card)}
+@keyframes m-exit{from{opacity:1;transform:none}to{opacity:0;transform:translateY(-4px) scale(.985)}}
+/* a row waiting for its entrance: its box holds its size, its content renders a frame or two later */
+:root .m-wait{content-visibility:hidden}
 
 /* =================================================================================================
    CHARTS: a hover readout that follows the pointer with damping (js/motion.js builds it)

@@ -14,7 +14,7 @@ window.U={
  /* Update a container from freshly built DOM. With js/motion.js this morphs in place (focus, caret and scroll survive,
     keyed items animate); without it, it falls back to a plain swap. next may also be a function that updates the
     live DOM itself and reports what it added and removed (see Motion.patch); without motion it simply runs. */
- patch:function(root,next,o){if(window.Motion)return Motion.patch(root,next,o);if(typeof next==="function")return next({added:[],removed:[]});
+ patch:function(root,next,o){if(window.Motion)return Motion.patch(root,next,o);if(typeof next==="function")return next({added:[],removed:[],drop:function(n,p){p.removeChild(n)},back:function(){}});
   while(root.firstChild)root.removeChild(root.firstChild);while(next.firstChild)root.appendChild(next.firstChild)},
  /* Tablet and phone (up to 1100px): detail opens in a sheet instead of a side column. */
  narrow:matchMedia("(max-width:1100px)")

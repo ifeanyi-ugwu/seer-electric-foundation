@@ -61,11 +61,16 @@
 .more-btn{margin-top:var(--s-3)}
 /* up to 100 rows: a row that is off screen skips style, layout and paint until it scrolls near (a sort or a resize
    then only lays out what can be seen); the size it last had stands in for it */
-.deep-tbl tbody tr{content-visibility:auto;contain-intrinsic-size:auto 43px}
+.deep-tbl tbody tr{content-visibility:auto;contain-intrinsic-size:auto 42.5px}
+/* positioned, so a row that leaves can fade out where it stood (js/motion.js) instead of as a re-rendered clone */
+.deep-tbl tbody{position:relative}
 /* desktop: each row is its own grid on the column proportions a table gives this data, so a row never waits
    on the other 99 to lay out (table layout sizes every column from every row) and off-screen rows can skip */
 @media (min-width:1101px){
-  .deep-tbl table,.deep-tbl thead,.deep-tbl tbody{display:block}
+  .deep-tbl table,.deep-tbl thead{display:block}
+  .deep-tbl tbody{display:flex;flex-direction:column}/* a flex column, so rows can take their visual order from order */
+  .deep-tbl tbody tr > *{border-bottom:1px solid var(--line)}
+  .deep-tbl tbody tr.is-end > *{border-bottom:0}
   .deep-tbl tr{display:grid;grid-template-columns:minmax(0,79fr) minmax(0,312fr) minmax(0,186fr) minmax(0,136fr) minmax(0,253fr) minmax(0,128fr) minmax(0,137fr) minmax(0,130fr)}
   .deep-tbl :is(th,td){display:block;align-content:center}
   /* the header row sticks as one band (a cell can only stick inside its own row once rows are grids) */

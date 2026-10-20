@@ -5,9 +5,11 @@
 :root{
   --ink:#0c0a16; --ink-text:#ededf2; --ink-2:#a8a8b3; --ink-line:rgba(237,237,242,.1);
   --dot:#8F55F7; --dot-off:rgba(237,237,242,.16);
+  --dot-dim-ink:#3A3350; --dot-dim-paper:#CFC6E8;   /* kit dim dots for the hero cards: dark card, light card */
+  --muted-paper:#44444e;            /* meta on the light card: stays above 4.5:1 even under the veil */
   --hero-bg:var(--ink);
   --slab-lo:rgba(255,255,255,.012); --slab-hi:rgba(160,140,255,.075);
-  --paper:color-mix(in srgb,var(--violet) 12%,#fff); --paper-text:#2b2640; --paper-dot-off:rgba(43,38,64,.18);
+  --paper:color-mix(in srgb,var(--violet) 12%,#fff); --paper-text:#2b2640;
   --wrap:1280px;
   --sec:clamp(64px,9vw,128px);      /* section spacing: 64 on phones up to 128 on desktop */
   --fs-lede-l:18px;                 /* landing type: 12 meta, 14 small, 16 body, 18 lede, 24 sub-display, then display clamps */
@@ -69,34 +71,56 @@ p{text-wrap:pretty}
 .btn-v{background:var(--violet);color:#fff;border:1px solid var(--violet)}
 @media (hover:hover){.btn-v:hover{background:color-mix(in srgb,var(--violet) 82%,#000)}}
 
-/* market cards */
-.hero-cards{grid-column:2;grid-row:1;align-self:start;justify-self:center;position:relative;width:min(100%,520px);height:340px;margin-top:8px;justify-self:start}
-.mcard{position:absolute;border-radius:16px;padding:18px 20px 20px}
-.mcard-front{left:0;top:0;width:min(330px,72%);background:var(--ink);color:var(--ink-text);z-index:2;
-  border:1px solid var(--ink-line);box-shadow:0 30px 60px -20px rgba(0,0,0,.55)}
-.mcard-back{right:0;top:96px;width:min(290px,62%);background:var(--paper);color:var(--paper-text);padding-left:92px;overflow:hidden;
-  box-shadow:0 30px 60px -30px rgba(12,10,22,.35)}
-.mcard-back .mq{white-space:nowrap;margin-left:-40px}
-.mcard-back .dots{margin-left:-40px;width:calc(100% + 40px)}
-.mcard-back .mbig{margin-left:-40px}
-.mlogo{display:block;color:var(--dot);margin-bottom:10px;height:11px;width:auto}
-.mq{font-size:15px;line-height:1.35;max-width:24ch}
-.mcard-back .mq{font-size:12px;opacity:.8}
-.dots{display:block;width:100%;height:auto;margin:22px 0 18px}
+/* market cards: a two-card stack. Both cards are complete; the one behind is a button (added by js/home.js)
+   that brings it forward. The stack is drawn at a fixed design size (--hc-w by --hc-h, in px) and scaled to
+   its column as one unit (--hc-k), so offsets, type and dots keep their proportions at every width.
+   Positions are in design px: front at (--hc-fx, --hc-fy), back at (--hc-bx, --hc-by) scaled by --hc-bs.
+   Without JS these rules place both cards at rest; with JS, springs write translate, scale and dim inline. */
+.hero-cards{--hc-w:460;--hc-h:340;--hc-cw:310;--hc-ch:264;--hc-fx:0;--hc-fy:76;--hc-bx:150;--hc-by:0;--hc-bs:.965;
+  --hc-dimc:#07050f;
+  grid-column:2;grid-row:1;align-self:start;justify-self:start;position:relative;margin-top:var(--s-2);
+  width:min(100%,calc(var(--hc-w) * 1px));aspect-ratio:var(--hc-w) / var(--hc-h);container-type:inline-size}
+:root[data-theme=light] .hero-cards{--hc-dimc:var(--hero-bg)}
+.hc-stage{position:absolute;left:0;top:0;width:calc(var(--hc-w) * 1px);height:calc(var(--hc-h) * 1px);transform-origin:0 0;
+  --hc-k:1;--hc-k:tan(atan2(100cqw,calc(var(--hc-w) * 1px)));scale:var(--hc-k)}
+.hcard{position:absolute;left:0;top:0;width:calc(var(--hc-cw) * 1px);height:calc(var(--hc-ch) * 1px);border-radius:16px;
+  translate:calc(var(--hc-fx) * 1px) calc(var(--hc-fy) * 1px);z-index:2;contain:layout style size}
+.hcard.hc-moving{will-change:translate,scale,opacity}
+.hcard.is-back{translate:calc(var(--hc-bx) * 1px) calc(var(--hc-by) * 1px);scale:var(--hc-bs);z-index:1;--hc-b:1}
+/* the card behind recedes under a thin veil of the ground colour; the veil never takes pointer events */
+.hc-veil{position:absolute;inset:-1px;border-radius:inherit;background:var(--hc-dimc);opacity:0;pointer-events:none;z-index:1}
+.is-back > .hc-veil{opacity:.26}
+.hc-body{height:100%;display:grid;grid-template-rows:auto auto 1fr auto auto auto;padding:18px 20px 16px;border-radius:inherit}
+.hc-ink .hc-body{background:var(--ink);color:var(--ink-text);box-shadow:0 0 0 1px rgba(237,237,242,.14),0 30px 60px -20px rgba(0,0,0,.6)}
+.hc-paper .hc-body{background:var(--paper);color:var(--paper-text);box-shadow:0 30px 60px -24px rgba(12,10,22,.45)}
+.dots{display:block;width:100%;height:auto}
 .dots .on circle{fill:var(--dot)}
 .dots .off circle{fill:var(--dot-off)}
-.mcard-front .dots .off circle{fill:rgba(237,237,242,.18)}
-.mcard-back .dots .off circle{fill:var(--paper-dot-off)}
-.mfoot{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.mbig{font-size:46px;letter-spacing:-.04em;line-height:1;font-weight:400}
-.mcard-back .mbig{font-size:34px}
-.chip-c{display:inline-flex;align-items:center;gap:6px;font-size:14px}
-.mcard-back .chip-c{font-size:11px}
+.mlogo{display:block;color:var(--dot);margin-bottom:10px;height:11px;width:auto}
+.hc-paper .mlogo{color:var(--violet)}
+.mq{font-size:15px;line-height:20px;max-width:24ch}
+.hc-dots{display:block;width:100%;height:auto;align-self:end;margin:0 0 12px}
+.hc-ink .hc-dots .on circle{fill:var(--dot)}
+.hc-ink .hc-dots .off circle{fill:var(--dot-dim-ink)}
+.hc-paper .hc-dots .on circle{fill:var(--violet)}
+.hc-paper .hc-dots .off circle{fill:var(--dot-dim-paper)}
+.mfoot{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.mpct{font-size:42px;letter-spacing:-.03em;line-height:1;font-weight:400;white-space:nowrap}
+.chip-c{display:inline-flex;align-items:center;gap:6px;font-size:13px;padding-bottom:4px;white-space:nowrap}
 .yes-dot{width:8px;height:8px;border-radius:50%;background:var(--violet)}
-.mbar{height:8px;border-radius:99px;background:rgba(237,237,242,.12);margin-top:16px;overflow:hidden}
-.mcard-back .mbar{background:rgba(43,38,64,.12)}
-.mbar i{display:block;height:100%;background:var(--violet);border-radius:inherit}
-.mnote{margin-top:14px;font-size:12px;color:var(--ink-2)}
+.mbar{height:8px;border-radius:99px;background:rgba(237,237,242,.12);margin-top:12px;overflow:hidden}
+.hc-paper .mbar{background:var(--dot-dim-paper)}
+.mbar i{display:block;height:100%;width:100%;background:var(--violet);border-radius:inherit;transform-origin:0 50%;transform:scaleX(var(--v))}
+.mnote{margin-top:10px;font-size:12px;line-height:16px;color:var(--ink-2)}
+.hc-paper .mnote{color:var(--muted-paper)}
+/* the card behind, once JS makes it a button: the whole card is the target */
+.hc-hit{position:absolute;inset:0;z-index:2;width:100%;height:100%;padding:0;margin:0;border:0;background:transparent;color:inherit;font:inherit;
+  border-radius:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.hc-hit:focus-visible{outline:2px solid var(--violet-text);outline-offset:3px;border-radius:inherit}
+/* the one affordance: a small chip on the visible corner of the card behind, retired after the first swap */
+.hc-next{position:absolute;top:12px;right:12px;display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 8px 0 10px;
+  border-radius:var(--r-chip);background:var(--violet);color:#fff;font-size:12px;line-height:1;white-space:nowrap;pointer-events:none}
+.hc-next svg{width:14px;height:14px}
 
 /* dot-matrix shimmer, card entrances and bar growth live in motion.css */
 
@@ -273,7 +297,7 @@ circle.g-on{fill:var(--violet)}
 }
 @media (max-width:960px){
   .hero-body{grid-template-columns:1fr;align-items:start}
-  .hero-cards{grid-column:1;grid-row:1;justify-self:start;height:360px}
+  .hero-cards{grid-column:1;grid-row:1;justify-self:start}
   .hero-copy{grid-row:2}
   .feat{grid-template-columns:1fr;gap:var(--s-6);padding-block:var(--s-8)}
   .feat.flip .feat-copy{order:0}
@@ -297,13 +321,8 @@ circle.g-on{fill:var(--violet)}
   .nav-links{order:3;width:100%;gap:var(--s-5)}
   .hero{min-height:0}
   .hero-body{padding-block:var(--s-2) var(--s-7)}
-  .hero-cards{height:300px;width:100%}
-  .mcard-front{width:76%;padding:14px 16px}
-  .mcard-back{width:64%;top:84px;padding-left:64px}
-  .mq{font-size:13px}
-  .mbig{font-size:34px}.mcard-back .mbig{font-size:26px}
-  .chip-c{font-size:12px}
-  .dots{margin:14px 0 12px}
+  /* phones: a narrower stack, the card behind peeks out above the front one (a band at least 44px tall at 280px) */
+  .hero-cards{--hc-w:328;--hc-h:328;--hc-cw:290;--hc-fy:64;--hc-bx:38;width:min(100%,376px)}
   .hero h1{font-size:clamp(36px,12vw,44px)}
   .hero-sub,.feat-copy p:not(.kicker),.lede{font-size:16px}
   .stack{margin-top:var(--s-7)}

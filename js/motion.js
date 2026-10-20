@@ -72,9 +72,9 @@ function live(el){return!!(el.closest&&el.closest("[aria-live],[role=status]"))}
 function setTxt(el,s){var f=el.firstChild;if(f&&f.nodeType===3&&!f.nextSibling){if(f.nodeValue!==s)f.nodeValue=s}else el.textContent=s}
 /* a soft violet wash on whatever just changed value (class-based so it survives a morph) */
 function wash(el){if(reduced()||!el||!el.classList)return;
-  if(el.classList.contains("m-wash")){el.classList.remove("m-wash");void el.offsetWidth}/* restart only when one is already running: the reflow is not free */
-  el.classList.add("m-wash");
-  if(!el.__wl){el.__wl=1;el.addEventListener("animationend",function(e){if(e.animationName==="m-wash")el.classList.remove("m-wash")})}}
+  /* one already running restarts by switching to its twin keyframes: no reflow, so a list can wash many rows at once */
+  if(el.classList.contains("m-wash"))el.classList.toggle("m-wash2");else el.classList.add("m-wash");
+  if(!el.__wl){el.__wl=1;el.addEventListener("animationend",function(e){if(e.target===el&&/^m-wash2?$/.test(e.animationName))el.classList.remove("m-wash","m-wash2")})}}
 M.wash=wash;
 function setNum(el,text,o){o=o||{};var k=idOf(el)+":n";
   if(el.__nt===text&&tw.has(k))return;
@@ -222,7 +222,7 @@ function clipOf(el,cache){var sc=el.closest&&el.closest(".tbl,.tbl-wrap,.panel")
 function visIn(r,c){return r.width>0&&r.bottom>c.top&&r.top<c.bottom&&r.right>c.left&&r.left<c.right}
 function ghost(el,f){var g=el.cloneNode(true),host=doc.createElement("div");
   g.removeAttribute("id");g.removeAttribute("tabindex");each(g.querySelectorAll("[id],[tabindex]"),function(x){x.removeAttribute("id");x.removeAttribute("tabindex")});
-  g.classList.remove("m-phys","m-live","m-wash");g.style.removeProperty("--m-fx");g.style.removeProperty("--m-fy");
+  g.classList.remove("m-phys","m-live","m-wash","m-wash2");g.style.removeProperty("--m-fx");g.style.removeProperty("--m-fy");
   if(el.tagName==="TR"){var t=doc.createElement("table"),tb=doc.createElement("tbody");t.style.cssText="width:100%;min-width:0;border-collapse:collapse"+(f.w?";table-layout:fixed":"");
     if(f.w)Array.prototype.forEach.call(g.children,function(td,i){td.style.width=f.w[i]+"px"});tb.appendChild(g);t.appendChild(tb);host.className=f.wc;host.appendChild(t)}
   else{g.style.width="100%";g.style.height="100%";g.style.margin="0";host.appendChild(g)}
@@ -242,7 +242,23 @@ function flipTo(el,dx,dy){el.__fl=1;var far=Math.abs(dy)>600||Math.abs(dx)>600;
   drive(el,{fx:0,fy:0},far?"gentle":"settle",{from:{fx:dx,fy:dy},eps:.3})}
 function flipStop(el){el.__fl=0;if(SP)SP.stop(el,true);applyVars({fx:0,fy:0},el);physDone(el)}
 /* a node a page detaches to reuse later goes back to rest, so it never returns mid-glide */
-function rest(el){if(!el||el.nodeType!==1)return;if(el.__flip){el.__flip.cancel();el.__flip=null}if(el.__fl)flipStop(el)}
+function rest(el){if(!el||el.nodeType!==1)return;if(el.__flip){el.__flip.cancel();el.__flip=null}if(el.__fl)flipStop(el);el.classList.remove("m-wait")}
+/* A row leaving a positioned list that is not in table layout exits where it stands: it stays in the DOM, out of
+   flow at its last visual position, hidden from assistive tech, and fades like a ghost (css .m-out). A clone
+   would need its whole content laid out again; this costs one small layout. Its handlers are held back so a
+   click on the fading row does nothing. It leaves the DOM when the fade ends, or comes straight back (back)
+   if the list wants it again first. */
+function exitAt(n,f){rest(n);n.__out=1;n.setAttribute("data-m-keep","");n.setAttribute("aria-hidden","true");
+  var off=[],all=[n].concat([].slice.call(n.getElementsByTagName("*")));
+  all.forEach(function(e){var o=null,i;for(i=0;i<EVT.length;i++)if(e[EVT[i]]){if(!o)o={e:e,h:{}};o.h[EVT[i]]=e[EVT[i]];e[EVT[i]]=null}if(o)off.push(o)});n.__off=off;
+  var s=n.style,p=f.pr;s.position="absolute";s.margin="0";s.left=(f.r.left-p.left)+"px";s.top=(f.r.top-p.top)+"px";s.width=f.r.width+"px";s.height=f.r.height+"px";
+  /* done on animationend, or by a timer when no animation runs (a hidden tab, motion switched off mid-fade) */
+  n.__oe=function(e){if(e&&(e.target!==n||e.animationName!=="m-exit"))return;var q=n.parentNode;back(n);if(q)q.removeChild(n)};
+  n.addEventListener("animationend",n.__oe);n.__ot=setTimeout(n.__oe,D.s+400);n.classList.add("m-out")}
+function back(n){if(!n||!n.__out)return;n.__out=0;clearTimeout(n.__ot);if(n.__oe){n.removeEventListener("animationend",n.__oe);n.__oe=null}
+  n.removeAttribute("data-m-keep");n.removeAttribute("aria-hidden");n.classList.remove("m-out");
+  (n.__off||[]).forEach(function(o){for(var k in o.h)o.e[k]=o.h[k]});n.__off=null;
+  ["position","margin","left","top","width","height"].forEach(function(k){n.style.removeProperty(k)});if(!n.getAttribute("style"))n.removeAttribute("style")}
 
 M.patch=function(target,next,o){o=o||{};
   var ctx={added:[],removed:[],swapped:new Set(),animate:o.animate!==false&&!reduced()},sel=o.flip;
@@ -250,9 +266,10 @@ M.patch=function(target,next,o){o=o||{};
   /* rapid interactions coalesce into one pending job per container: the earliest "first" positions win */
   var job=target.__mjob;
   if(ctx.animate&&sel){if(!job){job=target.__mjob={first:new Map(),sel:sel,added:[],removed:[]}}
-    var tcache=new Map(),cc=new Map();/* per table: wrapper class + column widths, read once from the header row; per scroll box: its clip */
+    var tcache=new Map(),cc=new Map(),pcache=new Map();/* per table: wrapper class + column widths, read once from the header row; per scroll box: its clip; per list: its box and whether rows can exit in place */
     each(target.querySelectorAll(sel),function(el){if(job.first.has(el))return;var r=el.getBoundingClientRect(),c=clipOf(el,cc);if(!visIn(r,c))return;
-      var f={r:r,c:c,par:el.parentNode};
+      var par=el.parentNode,pi=pcache.get(par);if(!pi){var ps=getComputedStyle(par);pi={r:par.getBoundingClientRect(),ip:ps.position!=="static"&&ps.display!=="table-row-group"};pcache.set(par,pi)}
+      var f={r:r,c:c,par:par,pr:pi.r,ip:pi.ip};
       if(el.tagName==="TR"){var tb=el.closest("table"),tc=tcache.get(tb);
         if(!tc){var w=el.closest(".tbl,.tbl-wrap"),hr=tb.querySelector("thead tr");tc={wc:w?w.className:"",w:null};
           if(hr&&getComputedStyle(el).display==="table-row")tc.w=Array.prototype.map.call(hr.children,function(th){return th.getBoundingClientRect().width});tcache.set(tb,tc)}
@@ -261,7 +278,17 @@ M.patch=function(target,next,o){o=o||{};
   /* next is either freshly built DOM to morph into target, or a function that updates target's live DOM itself
      (a page that keeps its nodes) and reports what it added and removed in ctx, so moves, entrances and exits
      animate exactly as they do for a morph */
-  if(typeof next==="function"){next(ctx);ctx.removed.forEach(function(r){rest(r.n)})}else morphKids(target,next,ctx);
+  if(typeof next==="function"){
+    /* drop(node, parent): take a node out of the list (on screen and in a positioned list, it exits in place);
+       back(node): a node still exiting is wanted again, so it returns to the flow where it is */
+    ctx.drop=function(n,p){var f=ctx.animate&&job&&job.first&&job.first.get(n);if(f&&f.ip&&n.nodeType===1){exitAt(n,f);return}
+      ctx.removed.push({n:n,p:p,next:n.nextSibling});p.removeChild(n)};
+    ctx.back=back;
+    next(ctx);ctx.removed.forEach(function(r){rest(r.n)});
+    /* o.lazy: a new row starts as an empty box of its usual size (css .m-wait); settle fills the ones that fade in
+       a few per frame, just ahead of their staggered entrance, so no single frame lays out a screenful of rows */
+    if(o.lazy&&ctx.animate&&sel)ctx.added.forEach(function(n){if(n.nodeType===1&&n.matches(sel))n.classList.add("m-wait")})}
+  else morphKids(target,next,ctx);
   if(ae&&ae!==doc.body&&ae!==doc.activeElement&&ae.isConnected){try{ae.focus({preventScroll:true});if(ss!=null)ae.setSelectionRange(ss,se)}catch(e){}}
   if(ctx.animate){
     if(!job){job=target.__mjob={first:null,sel:null,added:[],removed:[]}}
@@ -273,6 +300,7 @@ M.patch=function(target,next,o){o=o||{};
 function settle(target,job){var first=job.first,sel=job.sel,moves=[],enters=[];
   if(first)first.forEach(function(f,el){if(!el.isConnected&&f.par&&f.par.isConnected)ghost(el,f)});
   if(first){var all=target.querySelectorAll(sel);
+    all=[].filter.call(all,function(el){return!el.__out});
     each(all,function(el){if(el.__flip){el.__flip.cancel();el.__flip=null}if(el.__fl){el.style.setProperty("--m-fx","0px");el.style.setProperty("--m-fy","0px");if(el.__mv){el.__mv.fx=el.__mv.fy=null}}});
     var cc=new Map();each(all,function(el){var r=el.getBoundingClientRect(),f=first.get(el),c=clipOf(el,cc);
       if(f){var dx=f.r.left-r.left,dy=f.r.top-r.top;if(Math.abs(dx)>=1||Math.abs(dy)>=1)moves.push([el,dx,dy,r.height,visIn(r,c)?0:1]);
@@ -282,7 +310,10 @@ function settle(target,job){var first=job.first,sel=job.sel,moves=[],enters=[];
     moves.sort(function(a,b){return a[4]-b[4]});
     moves.slice(0,60).forEach(function(m){flipTo(m[0],m[1],m[2]);if(Math.abs(m[2])>m[3]*2.5)wash(m[0])});
     moves.slice(60).forEach(function(m){if(m[0].__fl)flipStop(m[0])});
-    enters.slice(0,24).forEach(function(el,i){enterKf(el,i)})}
+    enters.slice(0,24).forEach(function(el,i){enterKf(el,i)});
+    var queue=[];job.added.forEach(function(n){if(n.classList&&n.classList.contains("m-wait")&&enters.indexOf(n)<0)n.classList.remove("m-wait")});
+    enters.forEach(function(el,i){if(!el.classList.contains("m-wait"))return;if(i>=24)el.classList.remove("m-wait");else queue.push([el,performance.now()+Math.min(i,MAXSTAG)*STAG])});
+    if(queue.length)fill(queue)}
   var k=0;
   job.added.forEach(function(n){if(n.nodeType!==1||!n.isConnected)return;
     if(n instanceof SVGElement){if(n.hasAttribute("data-key")){if(n.tagName==="rect")M.grow(n,{y:1,delay:(k++)*30});else anim(n,[{opacity:0},{opacity:1}],{duration:D.m,delay:D.s,fill:"backwards"})}return}
@@ -292,6 +323,11 @@ function settle(target,job){var first=job.first,sel=job.sel,moves=[],enters=[];
   job.removed.forEach(function(r){var n=r.n;if(n instanceof SVGElement&&n.hasAttribute&&n.hasAttribute("data-key")&&r.p.isConnected&&!n.isConnected){
     n.setAttribute("data-m-keep","");n.setAttribute("aria-hidden","true");r.p.appendChild(n);
     var a=anim(n,[{opacity:1},{opacity:0}],{duration:D.s,easing:E.accel,fill:"forwards"});if(a)a.onfinish=function(){n.remove()};else n.remove()}})}
+
+/* release waiting rows: every row whose entrance starts within the next 50ms, at least two and at most six per frame */
+function fill(q){requestAnimationFrame(function(){var now=performance.now()+50,n=0;
+  while(q.length&&n<6&&(n<2||q[0][1]<=now)){q.shift()[0].classList.remove("m-wait");n++}
+  if(q.length)fill(q)})}
 
 /* ---------- sliding indicators (segmented controls, tab rows): two edge springs, the leading one stiffer ---------- */
 /* set up once per host; after that its own observers (aria-pressed, children, size) move it, so a re-render
