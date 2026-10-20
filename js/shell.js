@@ -37,7 +37,8 @@
       '<nav class="shell-products" aria-label="Seer products">'+links+'</nav>'+
       '<div class="shell-end">'+(o.cta?'<button class="btn btn-pill" id="shell-cta" type="button">'+o.cta+'</button>':'')+
       '<button class="shell-icon" id="shell-theme" type="button" aria-label="Toggle light and dark theme">'+SUN+'</button></div></div></header>';
-    document.getElementById("shell-theme").onclick=function(){var l=document.documentElement.dataset.theme==="light";applyTheme(l?"dark":"light");store("seer-theme",l?"dark":"light")};
+    document.getElementById("shell-theme").onclick=function(){var l=document.documentElement.dataset.theme==="light",go=function(){applyTheme(l?"dark":"light");store("seer-theme",l?"dark":"light")};
+      if(window.Motion)Motion.theme(go,this);else go()};
     var cur=el.querySelector(".shell-products [aria-current]"),nv=el.querySelector(".shell-products");
     if(cur&&nv.scrollWidth>nv.clientWidth)nv.scrollLeft=Math.max(0,cur.offsetLeft-nv.offsetLeft-(nv.clientWidth-cur.offsetWidth)/2);
     var ph=document.querySelector(".phead");

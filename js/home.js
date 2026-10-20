@@ -21,7 +21,9 @@
 
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-theme-toggle]');
-    if (b) set(current() === 'light' ? 'dark' : 'light');
+    if (!b) return;
+    var next = current() === 'light' ? 'dark' : 'light', go = function () { set(next); };
+    if (window.Motion) Motion.theme(go, b); else go();
   });
 
   sync();

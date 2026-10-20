@@ -1,0 +1,233 @@
+/* Electric Foundation: motion system. Linked last on every page.
+   One motion language: decelerate in, quick out, short distances (8-16px), purposeful stagger.
+   Everything here is enhancement. Content is visible without it; JS-driven states are added by js/motion.js.
+   Only transform / opacity / clip-path are animated, except colour cross-fades on state changes. */
+
+/* ---------- tokens ---------- */
+:root{
+  --dur-1:120ms;   /* press, focus, micro feedback */
+  --dur-2:200ms;   /* hover, colour, exits */
+  --dur-3:320ms;   /* indicators, list moves, condensing */
+  --dur-4:520ms;   /* entrances, reveals, value changes */
+  --dur-5:900ms;   /* one-off choreography: hero, chart draw */
+  --ease-standard:cubic-bezier(.2,0,0,1);      /* moves on screen */
+  --ease-decel:cubic-bezier(.05,.7,.1,1);      /* emphasized: things arriving */
+  --ease-accel:cubic-bezier(.3,0,.8,.15);      /* things leaving */
+  --ease-spring:cubic-bezier(.3,1.3,.5,1);     /* settle with a whisper of overshoot */
+  /* legacy aliases read by shell.css */
+  --ease:var(--ease-standard); --t:var(--dur-2);
+}
+
+@property --g{syntax:"<number>";inherits:true;initial-value:0}
+
+/* ---------- scroll ---------- */
+html{scroll-padding-top:var(--m-hdr,88px)}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+.tbl,.tbl-wrap,.panel,.shell-products{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--text) 22%,transparent) transparent}
+.tbl:hover,.tbl-wrap:hover,.panel:hover{scrollbar-color:color-mix(in srgb,var(--violet) 70%,transparent) transparent}
+.shell-products{scrollbar-width:none}
+.tbl,.tbl-wrap{overscroll-behavior-x:contain}
+.panel{overscroll-behavior:contain}
+.m-sentinel{position:absolute;top:24px;left:0;width:1px;height:1px;pointer-events:none;visibility:hidden}
+
+/* ---------- shell header: condenses after 24px without changing its layout height (CLS 0) ---------- */
+.shell-bar{background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;border-bottom:0;pointer-events:none}
+.shell-bar::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  box-shadow:inset 0 -1px 0 var(--line);
+  transition:transform var(--dur-3) var(--ease-standard),background-color var(--dur-3) var(--ease-standard),box-shadow var(--dur-3) var(--ease-standard)}
+.shell-in{position:relative;transition:transform var(--dur-3) var(--ease-standard)}
+.shell-in > *{pointer-events:auto}
+.shell-bar.is-condensed::before{transform:translateY(-12px);background:color-mix(in srgb,var(--bg) 86%,transparent);
+  -webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);
+  box-shadow:inset 0 -1px 0 color-mix(in srgb,var(--text) 14%,transparent),0 10px 24px -18px rgba(0,0,0,.55)}
+.shell-bar.is-condensed .shell-in{transform:translateY(-6px)}
+@media (max-width:760px){.shell-bar.is-condensed::before{transform:none}.shell-bar.is-condensed .shell-in{transform:none}}
+
+/* product nav: active indicator (glides from the previous product on page change, see js/motion.js) + hover pill */
+.shell-products.m-ind-host{position:relative}
+.shell-products a{position:relative;z-index:1}
+.m-nav-ind{position:absolute;left:0;top:0;width:0;height:0;z-index:0;pointer-events:none;background:var(--violet-soft);
+  border-radius:var(--r-chip) var(--r-chip) 0 0;box-shadow:inset 0 -2px 0 var(--violet)}
+.m-nav-hov{position:absolute;left:0;top:0;z-index:0;pointer-events:none;background:var(--surface);opacity:0;clip-path:inset(0 100% 100% 0);
+  transition:clip-path var(--dur-3) var(--ease-decel),opacity var(--dur-2) var(--ease-standard)}
+.m-ind-on.shell-products a[aria-current=page]{background:transparent;box-shadow:none}
+.m-hov-on.shell-products a:hover{background:transparent}
+
+/* ---------- landing nav: fixed + condensing (JS adds .m-nav-fixed after measuring; layout is identical) ---------- */
+.m-nav-fixed .hero{z-index:3;padding-top:var(--m-nav-h,84px)}
+.m-nav-fixed .topnav{position:fixed;top:0;left:0;right:0;z-index:30;pointer-events:none}
+.m-nav-fixed .topnav > *{pointer-events:auto;transition:transform var(--dur-3) var(--ease-standard),opacity var(--dur-2) var(--ease-standard),visibility var(--dur-2)}
+.m-nav-fixed .topnav::before{content:"";position:absolute;top:0;bottom:0;left:calc(50% - 50vw);width:100vw;z-index:-1;pointer-events:none;opacity:0;
+  background:color-mix(in srgb,var(--bg) 86%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);
+  box-shadow:inset 0 -1px 0 var(--line),0 10px 24px -18px rgba(0,0,0,.5);
+  transition:opacity var(--dur-3) var(--ease-standard),transform var(--dur-3) var(--ease-standard)}
+.m-nav-fixed .topnav.is-condensed::before{opacity:1;transform:translateY(calc(var(--m-cut,20px) * -1))}
+.m-nav-fixed .topnav.is-condensed > *{transform:translateY(calc(var(--m-shift,10px) * -1))}
+.m-nav-fixed .topnav.is-wrapped.is-condensed .nav-links{opacity:0;visibility:hidden}
+.home .skip{z-index:40}
+
+/* landing scroll progress */
+.m-progress{position:fixed;left:0;right:0;top:0;height:2px;z-index:31;pointer-events:none}
+.m-progress i{display:block;height:100%;background:var(--violet);transform-origin:0 50%;transform:scaleX(0)}
+@supports (animation-timeline:scroll()){
+  @media (prefers-reduced-motion:no-preference){
+    .m-progress i{animation:m-progress linear both;animation-timeline:scroll(root block)}
+  }
+}
+@keyframes m-progress{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+
+/* ---------- keyframes ---------- */
+@keyframes m-fade{from{opacity:0}}
+@keyframes m-rise{from{opacity:0;transform:translateY(12px)}}
+@keyframes m-line{from{transform:translateY(105%)}}
+@keyframes m-slab{from{transform:translateY(-102%)}}
+@keyframes m-slab-soft{from{opacity:0;transform:translateY(-24%)}}
+@keyframes m-grow-x{from{transform:scaleX(0)}}
+@keyframes m-card{from{opacity:0;transform:translateY(32px) rotate(-1deg)}}
+@keyframes m-card-b{from{opacity:0;transform:translate(16px,36px) rotate(1deg)}}
+@keyframes m-dot{from{opacity:0;transform:translateY(6px)}}
+@keyframes m-focus{from{outline-offset:6px;outline-color:transparent}}
+@keyframes m-panel-in{from{transform:translateX(40px)}}
+@keyframes m-par-slab{to{transform:translateY(18%)}}
+@keyframes m-settle{from{transform:translateY(calc(var(--k,1) * 56px))}}
+
+/* ---------- landing hero: one-time choreography (pure CSS, so no JS can leave it hidden) ---------- */
+.hero h1 .ln{display:block;overflow:hidden;padding-bottom:.14em;margin-bottom:-.14em}
+.hero h1 .ln > span{display:inline-block}
+@media (prefers-reduced-motion:no-preference){
+  :root:not(.m-hero-seen) .home .slab-set path{transform-box:fill-box;animation:m-slab var(--dur-5) var(--ease-decel) backwards}
+  :root:not(.m-hero-seen) .home .slab-set path:nth-child(1){animation-delay:0ms}
+  :root:not(.m-hero-seen) .home .slab-set path:nth-child(2){animation-delay:40ms}
+  :root:not(.m-hero-seen) .home .slab-set path:nth-child(3){animation-delay:120ms}
+  :root:not(.m-hero-seen) .home .slab-set path:nth-child(4){animation-delay:60ms}
+  :root:not(.m-hero-seen) .home .slab-set path:nth-child(5){animation-delay:160ms}
+  :root:not(.m-hero-seen) .home .slab-set path:nth-child(6){animation-delay:240ms}
+  :root:not(.m-hero-seen) .home .slab-set path:nth-child(7){animation-delay:360ms}
+  :root:not(.m-hero-seen) .home .slab-set path:nth-child(8){animation-delay:300ms}
+  :root:not(.m-hero-seen) .home .topnav > *{animation:m-fade var(--dur-4) var(--ease-standard) 80ms backwards}
+  :root:not(.m-hero-seen) .hero h1 .ln > span{animation:m-line var(--dur-5) var(--ease-decel) 140ms backwards}
+  :root:not(.m-hero-seen) .hero h1 .ln + .ln > span{animation-delay:230ms}
+  :root:not(.m-hero-seen) .hero-sub{animation:m-rise var(--dur-4) var(--ease-decel) 420ms backwards}
+  :root:not(.m-hero-seen) .hero-cta{animation:m-rise var(--dur-4) var(--ease-decel) 500ms backwards}
+  :root:not(.m-hero-seen) .hero-cards .mcard-front{animation:m-card 760ms var(--ease-spring) 260ms backwards}
+  :root:not(.m-hero-seen) .hero-cards .mcard-back{animation:m-card-b 760ms var(--ease-spring) 400ms backwards}
+  :root:not(.m-hero-seen) .home .d-hero .on circle{animation:m-dot var(--dur-4) var(--ease-decel) backwards;animation-delay:calc(620ms + var(--i) * 22ms)}
+  :root:not(.m-hero-seen) .home .d-hero .off circle{animation:m-fade var(--dur-4) var(--ease-standard) 1180ms backwards}
+  .home .d-hero .on circle,.home .d-hero .off circle{transform-box:fill-box}
+  .home .dots .on{animation:shimmer 3.2s ease-in-out infinite;animation-delay:calc(1.6s + var(--i) * 90ms)}
+  .home .dots.m-off .on{animation-play-state:paused}
+  .home .mbar i{transform-origin:0 50%;animation:m-grow-x var(--dur-5) var(--ease-decel) 700ms backwards}
+  :root:not(.m-hero-seen) .home .mnote{animation:m-fade var(--dur-4) var(--ease-standard) 900ms backwards}
+  /* return visits in the same session: a short settle instead of the full sequence */
+  .m-hero-seen .home .hero-body,.m-hero-seen .home .slab-set{animation:m-fade var(--dur-3) var(--ease-standard) backwards}
+  .m-hero-seen .home .d-hero .on circle,.m-hero-seen .home .mbar i{animation:none}
+  .m-hero-seen .home .dots .on{animation-delay:calc(var(--i) * 90ms)}
+}
+/* parallax + the app columns settling onto the protocol base. Compositor-driven where supported; JS fallback otherwise. */
+@supports (animation-timeline:view()){
+  @media (prefers-reduced-motion:no-preference) and (min-width:961px){
+    .home .slabs{animation:m-par-slab linear both;animation-timeline:scroll(root block);animation-range:0 100vh}
+    .home .apps > li{animation:m-settle linear both;animation-timeline:view();animation-range:entry 0% cover 38%}
+  }
+}
+.home .apps > li:nth-child(1){--k:.7}.home .apps > li:nth-child(2){--k:1.2}.home .apps > li:nth-child(3){--k:.5}
+.home .apps > li:nth-child(4){--k:1}.home .apps > li:nth-child(5){--k:.85}
+
+/* ---------- product page heads ---------- */
+@media (prefers-reduced-motion:no-preference){
+  .phead-in > div:first-child > *{animation:m-rise var(--dur-4) var(--ease-decel) backwards}
+  .phead-in > div:first-child > :nth-child(2){animation-delay:60ms}
+  .phead-in > div:first-child > :nth-child(3){animation-delay:120ms}
+  .phead-aside{animation:m-fade var(--dur-4) var(--ease-standard) 180ms backwards}
+  .phead-in::after{transform-origin:0 50%;animation:m-grow-x var(--dur-4) var(--ease-decel) 200ms backwards}
+  .ph-slabs path{transform-box:fill-box;animation:m-slab-soft var(--dur-5) var(--ease-decel) backwards}
+  .ph-slabs path:nth-child(2n){animation-delay:60ms}.ph-slabs path:nth-child(3n){animation-delay:120ms}
+  .ph-slabs path:nth-child(n+6){animation-delay:180ms}
+}
+
+/* ---------- reveal (state added by JS only) ---------- */
+.m-rv{opacity:0}
+@media print{.m-rv{opacity:1!important}}
+
+/* ---------- interaction: one transition list on tokens ---------- */
+.btn,.tab,.chip,.seg button,.pick,.mcard,.orow,.sel,.shell-products a,.shell-icon,.field,th button,tr[tabindex] td,.yn,.btn-pill{
+  transition:background-color var(--dur-2) var(--ease-standard),color var(--dur-2) var(--ease-standard),border-color var(--dur-2) var(--ease-standard),
+    box-shadow var(--dur-2) var(--ease-standard),transform var(--dur-2) var(--ease-decel)}
+.btn.lg::before{transition:background-color var(--dur-2) var(--ease-standard)}
+.btn-o,.btn-v,.btn-w,.btn-ow,.pill,.theme-toggle,.go,.nav-links a,.nav-start,.foot ul a{
+  transition:background-color var(--dur-2) var(--ease-standard),color var(--dur-2) var(--ease-standard),border-color var(--dur-2) var(--ease-standard),transform var(--dur-2) var(--ease-decel)}
+.app::before{transition:background-color var(--dur-2) var(--ease-standard)}
+.app::after{transition:opacity var(--dur-2) var(--ease-standard)}
+.app-go,.go svg{transition:transform var(--dur-2) var(--ease-decel)}
+.theme-toggle svg,.shell-icon svg{transition:transform var(--dur-3) var(--ease-standard)}
+.dotfield circle{transform-box:fill-box;transform-origin:center;transition:stroke var(--dur-2) var(--ease-standard),transform var(--dur-2) var(--ease-decel)}
+.chart rect{transform-box:fill-box;transform-origin:50% 100%}
+.chart .m-end,.m-ripple{transform-box:fill-box;transform-origin:center}
+.vote-bar i,.sigbar .trk i,.mini,.bar i,.leg-bar i,.sig i,.rb i{transform-origin:0 50%}
+.opp tr{transition:background-color var(--dur-2) var(--ease-standard),box-shadow var(--dur-2) var(--ease-standard)}
+
+/* press: a small, quick give */
+@media (prefers-reduced-motion:no-preference){
+  .btn:active,.tab:active,.chip:active,.seg button:active,.pick:active,.sel:active,.shell-icon:active,.mgrid .mcard:active,
+  .pill:active,.btn-o:active,.btn-v:active,.btn-w:active,.btn-ow:active,.theme-toggle:active{transform:scale(.98);transition-duration:var(--dur-1)}
+  :where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{animation:m-focus var(--dur-2) var(--ease-decel)}
+  /* row selection sweeps left to right across the cells; deselect is immediate */
+  tr.is-sel > td:nth-child(2){transition-delay:25ms}tr.is-sel > td:nth-child(3){transition-delay:50ms}
+  tr.is-sel > td:nth-child(4){transition-delay:75ms}tr.is-sel > td:nth-child(5){transition-delay:100ms}
+  tr.is-sel > td:nth-child(6){transition-delay:125ms}tr.is-sel > td:nth-child(n+7){transition-delay:150ms}
+  .heat td.h{transition:background-color var(--dur-4) var(--ease-standard),--g var(--dur-4) var(--ease-decel)}
+}
+/* hover lift + tilt, pointer devices only */
+@media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
+  .mgrid .mcard:hover{transform:perspective(900px) translateY(-3px) rotateX(var(--m-ty,0deg)) rotateY(var(--m-tx,0deg))}
+  .pick:hover{transform:translateY(-1px)}
+  .dotfield circle:hover{transform:scale(1.15)}
+}
+
+/* heat bars scale from the right edge (transform, not width) so value changes stay on the compositor */
+.heat td.h::after{width:calc(100% - 32px);transform:scaleX(var(--g));transform-origin:100% 50%}
+
+/* ---------- sliding indicator for segmented controls and tab rows ---------- */
+.m-ind-host{position:relative;isolation:isolate}
+.m-ind-host > button{position:relative;z-index:1}
+.m-ind{position:absolute;left:0;top:0;width:0;height:0;z-index:0;pointer-events:none;background:var(--violet);
+  transition:transform var(--dur-3) var(--ease-decel),width var(--dur-3) var(--ease-decel),opacity var(--dur-2) var(--ease-standard)}
+.m-ind-on > button[aria-pressed=true],.m-ind-on > button[aria-pressed=true]:hover{background:transparent}
+
+/* ---------- detail panel ---------- */
+@media (prefers-reduced-motion:no-preference){
+  .scrim{animation:m-fade var(--dur-3) var(--ease-standard) both}
+  .panel{animation:m-panel-in var(--dur-4) var(--ease-decel) both,m-fade var(--dur-2) var(--ease-standard) both}
+}
+
+/* ---------- ghosts of removed list items (fade out in place) ---------- */
+.m-ghost{pointer-events:none}
+
+/* ---------- theme change fallback (no View Transitions): a short colour cross-fade ---------- */
+html.m-theming,html.m-theming *,html.m-theming *::before,html.m-theming *::after{
+  transition:background-color var(--dur-3) var(--ease-standard),color var(--dur-3) var(--ease-standard),border-color var(--dur-3) var(--ease-standard),
+    fill var(--dur-3) var(--ease-standard),stroke var(--dur-3) var(--ease-standard),stop-color var(--dur-3) var(--ease-standard)!important}
+
+/* ---------- page transitions (cross-document View Transitions; ignored where unsupported) ---------- */
+@view-transition{navigation:auto}
+@media (prefers-reduced-motion:reduce){@view-transition{navigation:none}}
+/* Only <main> moves. Header, page chrome and backgrounds ride the root cross-fade, and since they are the same
+   pixels on both pages they read as staying put. (Naming the header instead would make it a backdrop root and
+   switch off its blur.) */
+main{view-transition-name:m-main}
+::view-transition-group(*){animation-duration:var(--dur-3);animation-timing-function:var(--ease-standard)}
+::view-transition-old(root),::view-transition-new(root){animation-duration:var(--dur-2)}
+::view-transition-old(m-main){animation:m-vt-out var(--dur-2) var(--ease-accel) both}
+::view-transition-new(m-main){animation:m-vt-in var(--dur-4) var(--ease-decel) 40ms both}
+::view-transition-group(m-main){animation:none}
+@keyframes m-vt-out{to{opacity:0;transform:translateY(-8px)}}
+@keyframes m-vt-in{from{opacity:0;transform:translateY(12px)}}
+/* theme swap uses a same-document transition: one circular reveal of the whole page */
+html.m-vt-theme::view-transition-old(root),html.m-vt-theme::view-transition-new(root){animation:none;mix-blend-mode:normal}
+html.m-vt-theme main{view-transition-name:none}
+
+/* ---------- reduced motion: every state change is instant (JS skips its animations too) ---------- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+}

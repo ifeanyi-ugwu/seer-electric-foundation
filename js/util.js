@@ -4,5 +4,8 @@ window.U={
  svg:function(tag,attrs){var n=document.createElementNS("http://www.w3.org/2000/svg",tag);for(var k in attrs||{})n.setAttribute(k,attrs[k]);return n},
  rng:function(seed){return function(){seed=(seed*9301+49297)%233280;return seed/233280}},
  money:function(v){if(v>=1e6)return"$"+(v/1e6).toFixed(1).replace(/\.0$/,"")+"M";if(v>=1e3)return"$"+Math.round(v/1e3)+"K";return"$"+Math.round(v)},
- clear:function(n){while(n.firstChild)n.removeChild(n.firstChild)}
+ clear:function(n){while(n.firstChild)n.removeChild(n.firstChild)},
+ /* Update a container from freshly built DOM. With js/motion.js this morphs in place (focus, caret and scroll survive,
+    keyed items animate); without it, it falls back to a plain swap. */
+ patch:function(root,next,o){if(window.Motion)return Motion.patch(root,next,o);while(root.firstChild)root.removeChild(root.firstChild);while(next.firstChild)root.appendChild(next.firstChild)}
 };

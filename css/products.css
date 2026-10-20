@@ -93,8 +93,8 @@ td.r,th.r{text-align:right}td.w{white-space:normal}
   .head input.field{flex:1 1 100%}
   .head > div:has(> input.field){width:100%}
   /* long segmented controls scroll sideways instead of orphaning a button */
-  .seg:has(> :nth-child(4)){flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
-  .seg:has(> :nth-child(4)) button{flex:0 0 auto}
+  .seg:has(> button:nth-child(4)){flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .seg:has(> button:nth-child(4)) button{flex:0 0 auto}
   .seg::-webkit-scrollbar{display:none}
   /* keep the protocol name in view while the heatmap scrolls */
   .heat th:first-child,.heat td:first-child{position:sticky;left:0;z-index:1;background:var(--card);box-shadow:inset -1px 0 0 var(--line)}

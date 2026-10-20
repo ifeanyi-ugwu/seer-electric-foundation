@@ -16,25 +16,25 @@ function chart(p,cw){
  var s=U.svg("svg",{class:"chart",viewBox:"0 0 "+W+" "+H,width:W,height:H,role:"img","aria-label":"Forecast of "+p.metric+" if the proposal passes ("+fmt(p,p.pass)+") versus if it fails ("+fmt(p,p.fail)+")"});
  for(var g=0;g<5;g++){var gy=T+g*(H-T-B)/4,gv=mx-g*(mx-mn)/4;s.appendChild(U.svg("line",{x1:L,x2:W-R,y1:gy,y2:gy,stroke:"var(--line)"}));var t=U.svg("text",{x:L-8,y:gy+4,"text-anchor":"end","font-size":"11",fill:"var(--muted)",class:"num"});t.textContent=gv.toFixed(p.dec);s.appendChild(t)}
  var lab=[["Start",0],["Now",range-1]];lab.forEach(function(l,k){var tx=U.svg("text",{x:X(l[1]),y:H-6,"text-anchor":k?"end":"start","font-size":"11",fill:"var(--muted)"});tx.textContent=l[0];s.appendChild(tx)});
- function path(arr,col,dash){var d=arr.map(function(v,i){return(i?"L":"M")+X(i).toFixed(1)+" "+Y(v).toFixed(1)}).join(" ");s.appendChild(U.svg("path",{d:d,fill:"none",stroke:col,"stroke-width":"2.5","stroke-dasharray":dash||"","stroke-linejoin":"round"}))}
+ function path(arr,col,dash){var d=arr.map(function(v,i){return(i?"L":"M")+X(i).toFixed(1)+" "+Y(v).toFixed(1)}).join(" ");s.appendChild(U.svg("path",{class:"m-line","data-tween":"d",d:d,fill:"none",stroke:col,"stroke-width":"2.5","stroke-dasharray":dash||"","stroke-linejoin":"round"}))}
  path(a,"var(--pos)");path(b,"var(--neg)","7 5");
- s.appendChild(U.svg("circle",{cx:X(range-1),cy:Y(a[range-1]),r:5,fill:"var(--pos)"}));
- s.appendChild(U.svg("rect",{x:X(range-1)-5,y:Y(b[range-1])-5,width:10,height:10,fill:"var(--neg)"}));
+ s.appendChild(U.svg("circle",{class:"m-end","data-tween":"cx cy",cx:X(range-1),cy:Y(a[range-1]),r:5,fill:"var(--pos)"}));
+ s.appendChild(U.svg("rect",{class:"m-end","data-tween":"x y",x:X(range-1)-5,y:Y(b[range-1])-5,width:10,height:10,fill:"var(--neg)"}));
  return s}
 function delta(p){var d=(p.pass-p.fail)/p.fail*100,good=(p.better==="higher")===(d>0);
  return{pct:d,good:good,text:(d>0?"+":"")+d.toFixed(1)+"% under pass",msg:"The market expects "+p.metric.toLowerCase()+" to be "+(d>0?"higher":"lower")+" if the proposal passes — "+(good?"better":"worse")+" for the DAO's stated goal."}}
-function list(){var el=document.getElementById("list");U.clear(el);
+function list(){var root=document.getElementById("list"),el=h("div");
  el.appendChild(h("div",{class:"muted list-label",text:"Active proposals · "+P.length}));
- P.forEach(function(p){var d=delta(p);el.appendChild(h("button",{class:"pick",type:"button","aria-pressed":String(p===sel),onclick:function(){sel=p;list();detail()}},[
+ P.forEach(function(p){var d=delta(p);el.appendChild(h("button",{class:"pick",type:"button","data-key":"p"+p.id,"aria-pressed":String(p===sel),onclick:function(){sel=p;list();detail()}},[
   h("b",{text:"#"+p.id+" "+p.t}),h("span",{class:"muted",text:p.metric}),
-  h("div",{class:"line",style:"margin-top:8px"},[h("span",{class:"num "+(d.good?"pos":"neg"),text:(d.pct>0?"▲ ":"▼ ")+d.text+(d.good?" · better":" · worse")}),h("span",{class:"muted num",text:"vote ends "+p.vote.end})])]))})}
-function detail(){var p=sel,d=delta(p),el=document.getElementById("detail");U.clear(el);
+  h("div",{class:"line",style:"margin-top:8px"},[h("span",{class:"num "+(d.good?"pos":"neg"),text:(d.pct>0?"▲ ":"▼ ")+d.text+(d.good?" · better":" · worse")}),h("span",{class:"muted num",text:"vote ends "+p.vote.end})])]))});U.patch(root,el)}
+function detail(animate){var p=sel,d=delta(p),root=document.getElementById("detail"),el=h("div");
  var head=h("div",{class:"panel-c"},[h("span",{class:"badge",text:"Conditional market · Proposal #"+p.id}),h("h2",{style:"font-size:20px;margin:10px 0 4px",text:p.t}),
   h("p",{class:"note",text:"Success metric: "+p.metric+". Two markets trade the metric: one pays out only if the proposal passes, the other only if it fails. The branch that does not happen is refunded."})]);
  var rg=h("div",{class:"seg",role:"group","aria-label":"Time range"},[["7 days",20],["30 days",40],["All",60]].map(function(r){return h("button",{type:"button","aria-pressed":String(range===r[1]),text:r[0],onclick:function(){range=r[1];detail()}})}));
  var ch=h("div",{class:"panel-c"},[h("div",{class:"line"},[h("h2",{text:"Market forecast of the success metric"}),rg]),
   h("div",{class:"legend"},[h("span",{},[h("i",{class:"sw",style:"border-color:var(--pos)"}),"If it passes · "+fmt(p,p.pass)]),h("span",{},[h("i",{class:"sw",style:"border-color:var(--neg);border-top-style:dashed"}),"If it fails · "+fmt(p,p.fail)])])]);
- var cw=(el.clientWidth||600)-32;ch.appendChild(chart(p,cw));
+ var cw=(root.clientWidth||600)-32;ch.appendChild(chart(p,cw));
  ch.appendChild(h("div",{class:"notice",style:"margin-top:12px"},[h("b",{class:d.good?"pos":"neg",text:(d.pct>0?"\u25B2 ":"\u25BC ")+d.text+". "}),d.msg]));
  /* The fork: one metric, two conditional branches (same circle / square markers as the chart). */
  var fork=U.svg("svg",{class:"fork-lines",viewBox:"0 0 200 40",preserveAspectRatio:"none","aria-hidden":"true"});
@@ -47,18 +47,19 @@ function detail(){var p=sel,d=delta(p),el=document.getElementById("detail");U.cl
    h("div",{class:"fork-meta"},[h("div",{},[h("span",{text:"Gap"}),h("span",{class:"num",text:fmt(p,Math.abs(p.pass-p.fail))})]),h("div",{},[h("span",{text:"Market volume"}),h("span",{class:"num",text:U.money(p.vol)})])]),
    h("p",{class:"note",style:"margin-top:12px",text:"A signal for voters. It does not execute anything."})]);
  var dao=h("div",{class:"panel-c"},[h("h2",{text:"The DAO's decision"}),h("div",{class:"line"},[h("span",{text:"Voting open"}),h("span",{class:"muted num",text:"ends in "+p.vote.end})]),
-   h("div",{style:"margin-top:12px;display:grid;gap:12px"},[["For",p.vote.f],["Against",p.vote.a]].map(function(v){return h("div",{},[h("div",{class:"line"},[h("span",{text:v[0]}),h("span",{class:"num",text:v[1]+"%"})]),h("div",{class:"vote-bar"},[h("i",{style:"width:"+v[1]+"%"})])])})),
+   h("div",{style:"margin-top:12px;display:grid;gap:12px"},[["For",p.vote.f],["Against",p.vote.a]].map(function(v){return h("div",{},[h("div",{class:"line"},[h("span",{text:v[0]}),h("span",{class:"num",text:v[1]+"%"})]),h("div",{class:"vote-bar"},[h("i",{"data-tween":"bar",style:"width:"+v[1]+"%"})])])})),
    h("p",{class:"note",style:"margin-top:12px",text:"Token holders decide. The outcome is binding; the market forecast is not."})]);
  var two=h("div",{class:"two"},[sig,dao]);
  var pr=branch==="pass"?p.pass:p.fail,t=h("div",{class:"panel-c ticket"});
  t.appendChild(h("h2",{text:"Trade a branch"}));
  t.appendChild(h("div",{class:"seg",role:"group","aria-label":"Branch"},[["pass","If it passes"],["fail","If it fails"]].map(function(b){return h("button",{type:"button","aria-pressed":String(branch===b[0]),text:b[1],onclick:function(){branch=b[0];detail()}})})));
  t.appendChild(h("div",{class:"line"},[h("span",{text:"Current forecast"}),h("b",{class:"num",text:fmt(p,pr)})]));
- var inp=h("input",{class:"field",type:"number",min:"1",value:String(amt),id:"amt",oninput:function(){amt=Math.max(0,+inp.value||0)}});
+ var inp=h("input",{class:"field",type:"number",min:"1",value:String(amt),id:"amt",oninput:function(e){amt=Math.max(0,+e.target.value||0)}});
  t.appendChild(h("label",{for:"amt",text:"Amount (USDC)"}));t.appendChild(inp);
  t.appendChild(h("button",{class:"btn lg",type:"button",text:"Connect wallet to trade"}));t.appendChild(h("p",{class:"note",text:"Demo only. If the other branch happens, this trade is refunded."}));
- [head,ch,two,t].forEach(function(n){el.appendChild(n)})}
+ [head,ch,two,t].forEach(function(n){el.appendChild(n)});U.patch(root,el,{animate:animate!==false})}
 list();detail();
+if(window.Motion){Motion.ready();Motion.reveal("#list > *",{rise:8});Motion.reveal("#detail > .panel-c, #detail .two > .panel-c",{onIn:Motion.dataIn})}
 var lw=document.getElementById("detail").clientWidth,rt;
-window.addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(function(){var w=document.getElementById("detail").clientWidth;if(w!==lw){lw=w;detail()}},150)});
+window.addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(function(){var w=document.getElementById("detail").clientWidth;if(w!==lw){lw=w;detail(false)}},150)});
 })();

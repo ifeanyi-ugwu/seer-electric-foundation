@@ -20,7 +20,10 @@ body{overflow-x:hidden}
 .skip:focus{top:12px}
 
 /* ---------- header bar ---------- */
-.shell-bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+/* The wrapper is the sticky element (a sticky child of a same-height wrapper never sticks), and its height is
+   reserved so the JS-rendered header causes no layout shift. */
+#shell{position:sticky;top:0;z-index:20;min-height:68px}
+.shell-bar{position:relative;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .shell-in{max-width:1440px;margin:0 auto;display:flex;align-items:center;gap:24px;padding:12px 40px}
 .shell-brand{display:flex;align-items:center;flex:none;min-height:44px}
 :root[data-theme=light] .shell-brand img{filter:invert(1) hue-rotate(180deg) brightness(.35) saturate(3)}
@@ -103,21 +106,14 @@ tr[tabindex]:hover td{background:color-mix(in srgb,var(--surface) 70%,transparen
 tr.is-sel td{background:var(--violet-soft)}
 tr.is-sel td:first-child{box-shadow:inset 3px 0 0 var(--violet)}
 
-/* ---------- page-load: fade + rise on the top-level blocks only ---------- */
-@keyframes ef-rise{from{opacity:0;transform:translateY(8px)}}
-@media (prefers-reduced-motion:no-preference){
-  .phead-in,.page > *,main > .wrap > *{animation:ef-rise .42s var(--ease) backwards}
-  .page > :nth-child(2),main > .wrap > :nth-child(2){animation-delay:50ms}
-  .page > :nth-child(3),main > .wrap > :nth-child(3){animation-delay:100ms}
-  .page > :nth-child(4),main > .wrap > :nth-child(4){animation-delay:150ms}
-  .page > :nth-child(n+5),main > .wrap > :nth-child(n+5){animation-delay:200ms}
-}
+/* ---------- motion: tokens, entrances, reveals and transitions live in motion.css ---------- */
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
 }
 
 /* ---------- responsive ---------- */
 @media(max-width:760px){
+  #shell{min-height:116px}
   .shell-in{padding:8px 16px;flex-wrap:wrap;gap:8px 12px}
   .shell-products{order:3;width:calc(100% + 32px);margin:0 -16px;padding:0 16px 4px;
     -webkit-mask:linear-gradient(90deg,#000 85%,transparent);mask:linear-gradient(90deg,#000 85%,transparent)}

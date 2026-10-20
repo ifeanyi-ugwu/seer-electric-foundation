@@ -9,9 +9,11 @@ function view(){var l=D.filter(function(d){return(!st.q||d.name.toLowerCase().in
  var k=st.sort;l.sort(function(a,b){var x=k==="name"?a.name.localeCompare(b.name):k==="ag"?ag(a)-ag(b):a[k]-b[k];return x*st.dir});return l}
 function dots(l){var s=U.svg("svg",{class:"dotfield",viewBox:"0 0 300 300",width:"100%",role:"group","aria-label":"Field of 100 proposals coloured by forecast score"});
  D.forEach(function(d,i){var c=U.svg("circle",{cx:15+(i%10)*30,cy:15+Math.floor(i/10)*30,r:4+d.s*.8,fill:"var(--violet)","fill-opacity":(.18+d.s/10*.82).toFixed(2),stroke:st.sel===d?"var(--text)":"none","stroke-width":st.sel===d?3:2,tabindex:"0",role:"button","aria-pressed":String(st.sel===d),"aria-label":"#"+d.id+" "+d.name+", forecast "+d.s});
-  c.onclick=function(){st.sel=d;draw()};c.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();st.sel=d;draw();var n=document.querySelector('.dotfield [aria-pressed="true"]');if(n)n.focus()}};s.appendChild(c)});return s}
+  c.onclick=function(){choose(d)};c.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();choose(d)}};s.appendChild(c)});return s}
+/* selecting re-renders in place; the dot for the choice ripples so the eye finds it in the field */
+function choose(d){st.sel=d;draw();if(window.Motion)Motion.ripple(document.querySelectorAll(".dotfield circle:not([data-m-keep])")[d.id-1])}
 function split(d){var p=Math.round(ag(d)*100);return h("span",{"aria-label":p+"% agent volume"},[h("i",{class:"mini",style:"width:"+p*.6+"px;background:var(--violet)"}),h("i",{class:"mini",style:"width:"+(100-p)*.6+"px;background:var(--text-2);opacity:.5"}),h("span",{class:"num muted",style:"margin-left:8px",text:p+"% agents"})])}
-function draw(){var root=document.getElementById("root"),sc=document.querySelector(".tbl.tall"),y=sc?sc.scrollTop:0;U.clear(root);var l=view();
+function draw(){var target=document.getElementById("root"),root=h("div"),l=view();
  var tot=D.reduce(function(a,d){return{av:a.av+d.av,hv:a.hv+d.hv}},{av:0,hv:0});
  var top=h("div",{class:"cols2"},[
   h("div",{class:"panel-c"},[h("h2",{text:"Grant round · 100 proposals"}),dots(),h("p",{class:"note",text:"Bigger, brighter dot = higher forecast score. Select one."})]),
@@ -20,16 +22,21 @@ function draw(){var root=document.getElementById("root"),sc=document.querySelect
    st.sel?h("div",{class:"panel-c"},[h("div",{class:"line"},[h("h2",{text:"#"+st.sel.id+" "+st.sel.name}),h("button",{class:"btn soft",type:"button",text:"Clear",onclick:function(){st.sel=null;draw()}})]),
     h("div",{class:"kpi"},[h("div",{},[h("small",{text:"Forecast score"}),h("b",{class:"num",text:st.sel.s.toFixed(1)+" / 10"})]),h("div",{},[h("small",{text:"90% range"}),h("b",{class:"num",text:st.sel.lo+" – "+st.sel.hi})]),h("div",{},[h("small",{text:"Agent traders"}),h("b",{class:"num",text:String(st.sel.at)})]),h("div",{},[h("small",{text:"Human traders"}),h("b",{class:"num",text:String(st.sel.ht)})])])]):h("div",{class:"panel-c"},[h("h2",{text:"Select a proposal"}),h("p",{class:"note",text:"Pick a dot in the field or a row in the table to see its forecast score, 90% range and who is trading it."})])])]);
  var tb=h("div",{class:"head",style:"margin:0 0 12px"},[
-  h("div",{style:"display:flex;gap:10px;flex-wrap:wrap"},[h("input",{class:"field",type:"search",placeholder:"Search proposals",value:st.q,"aria-label":"Search proposals",oninput:function(e){st.q=e.target.value;st.n=25;draw();var i=document.querySelector('input[type=search]');i.focus();i.setSelectionRange(99,99)}}),
+  h("div",{style:"display:flex;gap:10px;flex-wrap:wrap"},[h("input",{class:"field",type:"search",placeholder:"Search proposals",value:st.q,"aria-label":"Search proposals",oninput:function(e){st.q=e.target.value;st.n=25;draw()}}),
    h("div",{class:"seg",role:"group","aria-label":"Participation"},[["all","All"],["agent","Agent-led"],["human","Human-led"]].map(function(f){return h("button",{type:"button","aria-pressed":String(st.f===f[0]),text:f[1],onclick:function(){st.f=f[0];st.n=25;draw()}})}))]),
   h("span",{class:"muted",role:"status",text:"Showing "+Math.min(st.n,l.length)+" of "+l.length})]);
  var cols=[["id","#"],["name","Proposal"],["s","Forecast score","r"],["lo","90% range","r"],["ag","Agent vs human volume"],["av","Agent vol.","r"],["hv","Human vol.","r"],["ch","7d change","r"]];
  var tr=h("tr");cols.forEach(function(c){var th=h("th",{scope:"col",class:c[2]||"","aria-sort":st.sort===c[0]?(st.dir>0?"ascending":"descending"):"none"},[h("button",{type:"button",text:c[1]+(st.sort===c[0]?(st.dir>0?" ↑":" ↓"):""),onclick:function(){if(st.sort===c[0])st.dir*=-1;else{st.sort=c[0];st.dir=c[0]==="name"||c[0]==="id"?1:-1}draw()}})]);tr.appendChild(th)});
- var body=h("tbody");l.slice(0,st.n).forEach(function(d){body.appendChild(h("tr",{tabindex:"0",class:st.sel===d?"is-sel":null,"aria-current":st.sel===d?"true":null,onclick:function(){st.sel=d;draw()},onkeydown:function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();st.sel=d;draw();var r=document.querySelector("tr.is-sel");if(r)r.focus({preventScroll:true})}}},[
+ var body=h("tbody");l.slice(0,st.n).forEach(function(d){body.appendChild(h("tr",{tabindex:"0","data-key":"d"+d.id,class:st.sel===d?"is-sel":null,"aria-current":st.sel===d?"true":null,onclick:function(){choose(d)},onkeydown:function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();choose(d)}}},[
   h("td",{class:"num muted",text:String(d.id)}),h("td",{text:d.name}),h("td",{class:"r num",text:d.s.toFixed(1)}),h("td",{class:"r num muted",text:d.lo+"–"+d.hi}),h("td",{},[split(d)]),h("td",{class:"r num",text:U.money(d.av)}),h("td",{class:"r num",text:U.money(d.hv)}),
   h("td",{class:"r num "+(d.ch>=0?"pos":"neg"),text:(d.ch>=0?"▲ +":"▼ ")+d.ch.toFixed(1)})]))});
  var tbl=h("div",{class:"tbl tall",tabindex:"0","aria-label":"Proposals table, scrollable"},[h("table",{},[h("thead",{},[tr]),body])]);
- root.appendChild(top);root.appendChild(tb);root.appendChild(h("p",{class:"tbl-hint",text:"Scroll the table sideways for more columns"}));root.appendChild(tbl);tbl.scrollTop=y;
- if(l.length>st.n)root.appendChild(h("button",{class:"btn lg",type:"button",style:"margin-top:12px",text:"Show 25 more",onclick:function(){st.n+=25;draw()}}));}
+ root.appendChild(top);root.appendChild(tb);root.appendChild(h("p",{class:"tbl-hint",text:"Scroll the table sideways for more columns"}));root.appendChild(tbl);
+ if(l.length>st.n)root.appendChild(h("button",{class:"btn lg",type:"button",style:"margin-top:12px",text:"Show 25 more",onclick:function(){st.n+=25;draw()}}));
+ U.patch(target,root,{flip:"tbody tr"})}
 draw();
+if(window.Motion){Motion.ready();
+ Motion.reveal(".cols2 > .panel-c, .kpi.top > div, .cols2 .stack > .notice, .cols2 .stack > .panel-c, #root > .head",{onIn:Motion.dataIn});
+ /* table rows: only the ones visible in the scroll box stagger in; the rest are simply there */
+ var tb=document.querySelector(".tbl.tall");Motion.reveal([].slice.call(tb.querySelectorAll("tbody tr"),0,14),{rise:8,onIn:Motion.dataIn})}
 })();

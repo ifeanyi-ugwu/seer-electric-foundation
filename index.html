@@ -4,12 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Seer — the base layer for decision markets</title>
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <meta name="description" content="Seer is the prediction-market protocol underneath an ecosystem of decision apps: the Seer explorer, Futarchy, Deep, Opportunity Markets and Risk Pricing.">
 <meta name="color-scheme" content="dark light">
-<script>try{var t=localStorage.getItem('seer-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+<script>try{var t=localStorage.getItem('seer-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}try{if(sessionStorage.getItem('seer-hero'))document.documentElement.classList.add('m-hero-seen')}catch(e){}</script>
 <link rel="stylesheet" href="css/tokens.css">
 <link rel="stylesheet" href="css/components.css">
 <link rel="stylesheet" href="css/home.css">
+<link rel="stylesheet" href="css/motion.css">
+<script src="js/motion.js" defer></script>
 <script src="js/home.js" defer></script>
 </head>
 <body class="home">
@@ -63,7 +66,7 @@
 
   <div class="hero-body wrap">
     <div class="hero-copy">
-      <h1>The base layer<br> for <span class="v">decision markets.</span></h1>
+      <h1><span class="ln"><span>The base layer</span></span> <span class="ln"><span>for <span class="v">decision markets.</span></span></span></h1>
       <p class="hero-sub">Seer is the prediction-market protocol underneath a family of apps that help people, DAOs and AI agents decide with prices instead of guesses.</p>
       <div class="hero-cta">
         <a class="btn-o" href="#ecosystem">Learn More</a>
