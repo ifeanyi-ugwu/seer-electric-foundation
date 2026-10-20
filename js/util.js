@@ -12,8 +12,10 @@ window.U={
   [].forEach.call(t.querySelectorAll("td"),function(n){n.setAttribute("role","cell")});return t},
  clear:function(n){while(n.firstChild)n.removeChild(n.firstChild)},
  /* Update a container from freshly built DOM. With js/motion.js this morphs in place (focus, caret and scroll survive,
-    keyed items animate); without it, it falls back to a plain swap. */
- patch:function(root,next,o){if(window.Motion)return Motion.patch(root,next,o);while(root.firstChild)root.removeChild(root.firstChild);while(next.firstChild)root.appendChild(next.firstChild)},
+    keyed items animate); without it, it falls back to a plain swap. next may also be a function that updates the
+    live DOM itself and reports what it added and removed (see Motion.patch); without motion it simply runs. */
+ patch:function(root,next,o){if(window.Motion)return Motion.patch(root,next,o);if(typeof next==="function")return next({added:[],removed:[]});
+  while(root.firstChild)root.removeChild(root.firstChild);while(next.firstChild)root.appendChild(next.firstChild)},
  /* Tablet and phone (up to 1100px): detail opens in a sheet instead of a side column. */
  narrow:matchMedia("(max-width:1100px)")
 };

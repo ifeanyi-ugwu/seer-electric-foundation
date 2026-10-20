@@ -59,6 +59,20 @@
 .cols2{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:var(--gap-block);align-items:start}
 .cols2 > .panel-c .note{margin-top:var(--s-3)}
 .more-btn{margin-top:var(--s-3)}
+/* up to 100 rows: a row that is off screen skips style, layout and paint until it scrolls near (a sort or a resize
+   then only lays out what can be seen); the size it last had stands in for it */
+.deep-tbl tbody tr{content-visibility:auto;contain-intrinsic-size:auto 43px}
+/* desktop: each row is its own grid on the column proportions a table gives this data, so a row never waits
+   on the other 99 to lay out (table layout sizes every column from every row) and off-screen rows can skip */
+@media (min-width:1101px){
+  .deep-tbl table,.deep-tbl thead,.deep-tbl tbody{display:block}
+  .deep-tbl tr{display:grid;grid-template-columns:minmax(0,79fr) minmax(0,312fr) minmax(0,186fr) minmax(0,136fr) minmax(0,253fr) minmax(0,128fr) minmax(0,137fr) minmax(0,130fr)}
+  .deep-tbl :is(th,td){display:block;align-content:center}
+  /* the header row sticks as one band (a cell can only stick inside its own row once rows are grids) */
+  .tbl.tall.deep-tbl thead{position:sticky;top:56px;z-index:2}
+  .tbl.tall.deep-tbl thead th{position:static}
+}
+@media (min-width:1101px) and (max-height:500px) and (orientation:landscape){.tbl.tall.deep-tbl thead{top:0}}
 
 /* ---------- Opportunity: signal beside decision ---------- */
 .sigbar{display:inline-flex;align-items:center;gap:var(--s-3)}
@@ -97,6 +111,7 @@
   /* ---------- reflowed tables: per-page card layouts (shared card rules in shell.css) ---------- */
   /* Deep: rank + name, score large on the right with its 7d change, range, agent/human split, both volumes */
   .deep-tbl tr{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"id n s" "r r ch" "ag ag ag" "av av hv"}
+  .deep-tbl tbody tr{contain-intrinsic-size:auto 99px}/* content box: a 131px card less its padding */
   .deep-tbl .c-id{grid-area:id;line-height:20px}.deep-tbl .c-id::before{content:"#"}
   .deep-tbl .c-n{grid-area:n;font-size:var(--fs-ui);line-height:20px}
   .deep-tbl .c-s{grid-area:s;text-align:right;font-size:var(--fs-kpi);line-height:1;font-weight:500;letter-spacing:-.01em}

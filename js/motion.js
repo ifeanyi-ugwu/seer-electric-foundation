@@ -193,6 +193,11 @@ function setText(node,v,ctx){var p=node.parentNode;
   node.nodeValue=v;
   if(ctx.animate&&p&&p.nodeType===1){var s=p.closest(SWAP);if(s&&!ctx.swapped.has(s)){ctx.swapped.add(s);anim(s,[{opacity:.15,transform:"translateY(3px)"},{opacity:1,transform:"none"}],{duration:D.m,easing:E.decel})}}}
 function morphEl(a,b,ctx){syncAttrs(a,b,ctx);morphKids(a,b,ctx)}
+/* an unchanged subtree (most rows and tiles on most updates) costs one native comparison; only the handlers,
+   which are fresh closures on every render, are carried over. Live motion state (m- classes, --m- variables,
+   kept nodes, a number mid-count) makes the trees differ, so those still take the full morph. */
+function handlers(a,b){var i,n;for(i=0;i<EVT.length;i++){n=EVT[i];if(a[n]!==b[n])a[n]=b[n]}
+  for(var x=a.firstElementChild,y=b.firstElementChild;x&&y;x=x.nextElementSibling,y=y.nextElementSibling)handlers(x,y)}
 function morphKids(a,b,ctx){var olds=[],news=[],c;
   for(c=a.firstChild;c;c=c.nextSibling)if(!isKeep(c))olds.push(c);
   for(c=b.firstChild;c;c=c.nextSibling)news.push(c);
@@ -201,7 +206,7 @@ function morphKids(a,b,ctx){var olds=[],news=[],c;
   news.forEach(function(n){var k=keyOf(n),m=null,j,o;
     if(k!=null){m=byKey.get(k)||null;if(m&&(m.nodeName!==n.nodeName||used.has(m)))m=null}
     else for(j=oi;j<olds.length;j++){o=olds[j];if(!used.has(o)&&keyOf(o)==null&&o.nodeName===n.nodeName){m=o;oi=j+1;break}}
-    if(m){used.add(m);if(m.nodeType===1)morphEl(m,n,ctx);else if(m.nodeValue!==n.nodeValue)setText(m,n.nodeValue,ctx);res.push(m)}
+    if(m){used.add(m);if(m.nodeType===1){if(m.isEqualNode(n))handlers(m,n);else morphEl(m,n,ctx)}else if(m.nodeValue!==n.nodeValue)setText(m,n.nodeValue,ctx);res.push(m)}
     else{res.push(n);ctx.added.push(n)}});
   olds.forEach(function(o){if(!used.has(o)){ctx.removed.push({n:o,p:a,next:o.nextSibling});a.removeChild(o)}});
   var tail=null;for(c=a.lastChild;c&&isKeep(c);c=c.previousSibling)tail=c;
@@ -210,8 +215,10 @@ function morphKids(a,b,ctx){var olds=[],news=[],c;
     if(n===cur)cur=cur.nextSibling;else a.insertBefore(n,cur||tail)})}
 
 /* ---------- FLIP on springs, enters, ghosts ---------- */
-function clipOf(el){var r={top:0,left:0,bottom:innerHeight,right:innerWidth},sc=el.closest&&el.closest(".tbl,.tbl-wrap,.panel");
-  if(sc){var s=sc.getBoundingClientRect();r={top:Math.max(0,s.top),left:Math.max(0,s.left),bottom:Math.min(innerHeight,s.bottom),right:Math.min(innerWidth,s.right)}}return r}
+function clipOf(el,cache){var sc=el.closest&&el.closest(".tbl,.tbl-wrap,.panel"),r=cache&&cache.get(sc||doc);if(r)return r;
+  r={top:0,left:0,bottom:innerHeight,right:innerWidth};
+  if(sc){var s=sc.getBoundingClientRect();r={top:Math.max(0,s.top),left:Math.max(0,s.left),bottom:Math.min(innerHeight,s.bottom),right:Math.min(innerWidth,s.right)}}
+  if(cache)cache.set(sc||doc,r);return r}
 function visIn(r,c){return r.width>0&&r.bottom>c.top&&r.top<c.bottom&&r.right>c.left&&r.left<c.right}
 function ghost(el,f){var g=el.cloneNode(true),host=doc.createElement("div");
   g.removeAttribute("id");g.removeAttribute("tabindex");each(g.querySelectorAll("[id],[tabindex]"),function(x){x.removeAttribute("id");x.removeAttribute("tabindex")});
@@ -234,6 +241,8 @@ function enterKf(el,i,dist){if(el.__flip){el.__flip.cancel();el.__flip=null}unre
 function flipTo(el,dx,dy){el.__fl=1;var far=Math.abs(dy)>600||Math.abs(dx)>600;
   drive(el,{fx:0,fy:0},far?"gentle":"settle",{from:{fx:dx,fy:dy},eps:.3})}
 function flipStop(el){el.__fl=0;if(SP)SP.stop(el,true);applyVars({fx:0,fy:0},el);physDone(el)}
+/* a node a page detaches to reuse later goes back to rest, so it never returns mid-glide */
+function rest(el){if(!el||el.nodeType!==1)return;if(el.__flip){el.__flip.cancel();el.__flip=null}if(el.__fl)flipStop(el)}
 
 M.patch=function(target,next,o){o=o||{};
   var ctx={added:[],removed:[],swapped:new Set(),animate:o.animate!==false&&!reduced()},sel=o.flip;
@@ -241,15 +250,18 @@ M.patch=function(target,next,o){o=o||{};
   /* rapid interactions coalesce into one pending job per container: the earliest "first" positions win */
   var job=target.__mjob;
   if(ctx.animate&&sel){if(!job){job=target.__mjob={first:new Map(),sel:sel,added:[],removed:[]}}
-    var tcache=new Map();/* per table: wrapper class + column widths, read once from the header row */
-    each(target.querySelectorAll(sel),function(el){if(job.first.has(el))return;var r=el.getBoundingClientRect(),c=clipOf(el);if(!visIn(r,c))return;
+    var tcache=new Map(),cc=new Map();/* per table: wrapper class + column widths, read once from the header row; per scroll box: its clip */
+    each(target.querySelectorAll(sel),function(el){if(job.first.has(el))return;var r=el.getBoundingClientRect(),c=clipOf(el,cc);if(!visIn(r,c))return;
       var f={r:r,c:c,par:el.parentNode};
       if(el.tagName==="TR"){var tb=el.closest("table"),tc=tcache.get(tb);
         if(!tc){var w=el.closest(".tbl,.tbl-wrap"),hr=tb.querySelector("thead tr");tc={wc:w?w.className:"",w:null};
           if(hr&&getComputedStyle(el).display==="table-row")tc.w=Array.prototype.map.call(hr.children,function(th){return th.getBoundingClientRect().width});tcache.set(tb,tc)}
         f.wc=tc.wc;f.w=tc.w}
       job.first.set(el,f)})}
-  morphKids(target,next,ctx);
+  /* next is either freshly built DOM to morph into target, or a function that updates target's live DOM itself
+     (a page that keeps its nodes) and reports what it added and removed in ctx, so moves, entrances and exits
+     animate exactly as they do for a morph */
+  if(typeof next==="function"){next(ctx);ctx.removed.forEach(function(r){rest(r.n)})}else morphKids(target,next,ctx);
   if(ae&&ae!==doc.body&&ae!==doc.activeElement&&ae.isConnected){try{ae.focus({preventScroll:true});if(ss!=null)ae.setSelectionRange(ss,se)}catch(e){}}
   if(ctx.animate){
     if(!job){job=target.__mjob={first:null,sel:null,added:[],removed:[]}}
@@ -262,7 +274,7 @@ function settle(target,job){var first=job.first,sel=job.sel,moves=[],enters=[];
   if(first)first.forEach(function(f,el){if(!el.isConnected&&f.par&&f.par.isConnected)ghost(el,f)});
   if(first){var all=target.querySelectorAll(sel);
     each(all,function(el){if(el.__flip){el.__flip.cancel();el.__flip=null}if(el.__fl){el.style.setProperty("--m-fx","0px");el.style.setProperty("--m-fy","0px");if(el.__mv){el.__mv.fx=el.__mv.fy=null}}});
-    each(all,function(el){var r=el.getBoundingClientRect(),f=first.get(el),c=clipOf(el);
+    var cc=new Map();each(all,function(el){var r=el.getBoundingClientRect(),f=first.get(el),c=clipOf(el,cc);
       if(f){var dx=f.r.left-r.left,dy=f.r.top-r.top;if(Math.abs(dx)>=1||Math.abs(dy)>=1)moves.push([el,dx,dy,r.height,visIn(r,c)?0:1]);
         else if(el.__fl)flipStop(el)}
       else if(visIn(r,c))enters.push(el)});
@@ -282,7 +294,9 @@ function settle(target,job){var first=job.first,sel=job.sel,moves=[],enters=[];
     var a=anim(n,[{opacity:1},{opacity:0}],{duration:D.s,easing:E.accel,fill:"forwards"});if(a)a.onfinish=function(){n.remove()};else n.remove()}})}
 
 /* ---------- sliding indicators (segmented controls, tab rows): two edge springs, the leading one stiffer ---------- */
-function indicator(host){if(host.__ind){host.__ind();return}
+/* set up once per host; after that its own observers (aria-pressed, children, size) move it, so a re-render
+   that changes nothing here costs no layout read */
+function indicator(host){if(host.__ind)return;
   if(!host.querySelector(":scope > button[aria-pressed]"))return;
   var ind=doc.createElement("span"),firstPlace=true,q=0;ind.className="m-ind";ind.setAttribute("aria-hidden","true");ind.setAttribute("data-m-keep","");
   host.appendChild(ind);host.classList.add("m-ind-host");
@@ -363,22 +377,24 @@ var HOVER=".mgrid .mcard,.pick,.rtbl tr[tabindex],.btn.lg,.btn.act,.pill,.btn-v,
 var LIFT=[[".mgrid .mcard",-3],[".pick",-2],[".rtbl tr[tabindex]",-1],[".btn.lg,.btn.act,.pill,.btn-v,.btn-w,.btn-pill,.app",-1]];
 function liftOf(t){for(var i=0;i<LIFT.length;i++)if(t.matches(LIFT[i][0]))return LIFT[i][1];return 0}
 function pressScale(t){return t.matches("input[type=checkbox]")?.86:t.matches(".mcard,.pick,.app,.rtbl tr")?.985:t.matches("th button")?.94:.965}
+/* a table row (table layout, or a desktop row grid) stays flat; a row reflowed into a card (its body is a grid) lifts and presses */
+function flatRow(t){return t.tagName==="TR"&&getComputedStyle(t.parentNode).display!=="grid"}
 function phys(){if(phys.on||!SP)return;phys.on=1;var pressed=null,hov=null,card=null,rect=null,ev=null,q=0;
   doc.addEventListener("pointerdown",function(e){if(reduced()||e.button>0)return;var t=e.target.closest&&e.target.closest(PRESS);
     if(!t||t.matches(".mcard.static")||t.getAttribute("aria-disabled")==="true")return;
-    if(t.tagName==="TR"&&getComputedStyle(t).display==="table-row")return;
+    if(flatRow(t))return;
     pressed=t;drive(t,{s:pressScale(t)},"press",{eps:.0008})},{passive:true});
   function release(){if(!pressed)return;drive(pressed,{s:1},"press",{eps:.0008});pressed=null}
   doc.addEventListener("pointerup",release,{passive:true});doc.addEventListener("pointercancel",release,{passive:true});addEventListener("blur",release);
   /* keyboard activation gets the same give */
   doc.addEventListener("keydown",function(e){if(reduced()||(e.key!==" "&&e.key!=="Enter")||e.repeat)return;var t=e.target.closest&&e.target.closest(PRESS);if(!t||t.tagName==="INPUT"&&t.type!=="checkbox")return;
-    if(t.tagName==="TR"&&getComputedStyle(t).display==="table-row")return;pressed=t;drive(t,{s:pressScale(t)},"press",{eps:.0008})});
+    if(flatRow(t))return;pressed=t;drive(t,{s:pressScale(t)},"press",{eps:.0008})});
   doc.addEventListener("keyup",release);
   function leave(t){drive(t,{y:0,rx:0,ry:0,px:0,py:0},"settle",{eps:.05});t.style.setProperty("--m-gl","0");if(t===card){card=null;rect=null}}
   doc.addEventListener("pointerover",function(e){if(reduced()||!mqFine.matches||e.pointerType==="touch")return;var t=e.target.closest&&e.target.closest(HOVER);
     if(t&&t.matches(".mcard.static"))t=null;
     if(t===hov)return;if(hov)leave(hov);hov=t;if(!t)return;
-    if(t.tagName==="TR"){var r=t.getBoundingClientRect();t.classList.toggle("m-from-b",e.clientY>r.top+r.height/2);if(getComputedStyle(t).display==="table-row")return}
+    if(t.tagName==="TR"){var r=t.getBoundingClientRect();t.classList.toggle("m-from-b",e.clientY>r.top+r.height/2);if(flatRow(t))return}
     var l=liftOf(t);if(l)drive(t,{y:l},"settle",{eps:.05});
     if(t.matches(".mgrid .mcard")){card=t;rect=t.getBoundingClientRect();t.style.setProperty("--m-gl","1")}},{passive:true});
   doc.addEventListener("pointerout",function(e){if(!hov)return;var rt=e.relatedTarget;if(rt&&hov.contains(rt))return;if(e.target!==hov&&!hov.contains(e.target))return;leave(hov);hov=null},{passive:true});
