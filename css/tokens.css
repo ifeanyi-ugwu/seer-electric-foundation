@@ -1,0 +1,20 @@
+/* Electric Foundation tokens — values read from the Figma kit (Color pallete frame).
+   Departures are marked DEPARTURE and listed in RATIONALE.md. */
+:root{
+  --bg:#101013; --card:#1a1a1e; --surface:#1f1f24; --row:#232329;
+  --text:#ededf2; --text-2:#a8a8b3;
+  --muted:#8b8b95;            /* DEPARTURE: kit #67676F fails 4.5:1 on card */
+  --violet:#7d33ff; --violet-soft:#241e33; --violet-text:#9c6ff2;
+  --line:rgba(237,237,242,.08);
+  /* DEPARTURE: kit has no semantic pair. Colour-blind-safe teal/amber, always paired with icon or label */
+  --pos:#2fd4b5; --neg:#ffb020;
+  --r-card:8px; --r-chip:4px; --pad:12px;
+  --font:"PP Neue Montreal","Inter Tight","Inter",system-ui,sans-serif;
+  --num:"Inter Tight","Inter",system-ui,sans-serif; /* DEPARTURE: tabular numerals for data */
+}
+:root[data-theme=light]{
+  --bg:#f7f7f9; --card:#fff; --surface:#f1f1f4; --row:#f1f1f4;
+  --text:#17171c; --text-2:#5c5c66; --muted:#5f5f6b; /* DEPARTURE: kit #8E8E99 fails contrast on white */
+  --violet-soft:#efe9fc; --violet-text:#6c2bd9; --line:rgba(23,23,28,.1);
+  --pos:#00705f; --neg:#a15c00;
+}

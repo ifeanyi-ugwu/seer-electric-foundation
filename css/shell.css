@@ -1,0 +1,133 @@
+/* Shared shell + cross-page polish for app / futarchy / deep / opportunity / risk.
+   Carries the landing's language (FADES slabs, hard violet blocks, diagonal cuts) into the tools, at low volume. */
+
+:root{
+  --ph-bg:color-mix(in srgb,#0c0a16 70%,var(--bg));      /* kit hero ground, blended toward the page */
+  --ph-lo:rgba(255,255,255,0); --ph-hi:rgba(160,140,255,.085);
+  --cut:12px;                                             /* diagonal-cut size for tiles */
+  --ease:cubic-bezier(.2,.7,.2,1);
+  --t:.15s;
+}
+:root[data-theme=light]{
+  --ph-bg:color-mix(in srgb,var(--violet) 7%,#f3f3f8);
+  --ph-lo:rgba(255,255,255,0); --ph-hi:rgba(255,255,255,.95);
+}
+html{-webkit-text-size-adjust:100%}
+body{overflow-x:hidden}
+
+/* ---------- skip link ---------- */
+.skip{position:absolute;left:16px;top:-60px;z-index:60;background:var(--violet);color:#fff;padding:12px 16px;border-radius:var(--r-chip);text-decoration:none}
+.skip:focus{top:12px}
+
+/* ---------- header bar ---------- */
+.shell-bar{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.shell-in{max-width:1440px;margin:0 auto;display:flex;align-items:center;gap:24px;padding:12px 40px}
+.shell-brand{display:flex;align-items:center;flex:none;min-height:44px}
+:root[data-theme=light] .shell-brand img{filter:invert(1) hue-rotate(180deg) brightness(.35) saturate(3)}
+.shell-products{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.shell-products::-webkit-scrollbar{display:none}
+.shell-products a{display:flex;align-items:center;min-height:40px;padding:8px 12px;border-radius:var(--r-chip);color:var(--text-2);text-decoration:none;white-space:nowrap;font-size:13px}
+.shell-products a:hover{color:var(--text);background:var(--surface)}
+/* active: hard-edged violet base under a soft fill, like the landing's violet base layer */
+.shell-products a[aria-current=page]{background:var(--violet-soft);color:var(--text);border-radius:var(--r-chip) var(--r-chip) 0 0;box-shadow:inset 0 -2px 0 var(--violet)}
+.shell-end{margin-left:auto;display:flex;align-items:center;gap:12px}
+.shell-icon{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;display:grid;place-items:center}
+.shell-icon:hover{border-color:var(--violet-text)}
+.shell-icon svg{transition:transform .3s var(--ease)}
+:root[data-theme=light] .shell-icon svg{transform:rotate(90deg)}
+.btn-pill{border-radius:999px;padding:0 20px;min-height:44px;font-size:13px}
+
+/* ---------- shared focus ring ---------- */
+:where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{outline:2px solid var(--violet-text);outline-offset:2px}
+
+/* ---------- page head: slab band ---------- */
+.phead{position:relative;isolation:isolate;overflow:hidden;background:var(--ph-bg);border-bottom:1px solid var(--line)}
+.ph-slabs{position:absolute;top:0;right:0;height:100%;width:min(1180px,100%);z-index:-1;pointer-events:none;
+  -webkit-mask:linear-gradient(90deg,transparent 0,#000 55%);mask:linear-gradient(90deg,transparent 0,#000 55%)}
+.ph-slabs stop.lo{stop-color:var(--ph-lo)}.ph-slabs stop.hi{stop-color:var(--ph-hi)}
+.phead-in{position:relative;max-width:1440px;margin:0 auto;padding:40px 40px 24px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px 24px;flex-wrap:wrap}
+/* short hard violet segment on the band's bottom edge, aligned to the content gutter */
+.phead-in::after{content:"";position:absolute;left:40px;bottom:-1px;width:40px;height:3px;background:var(--violet)}
+.phead h1{font-size:32px;line-height:1.1;font-weight:500;letter-spacing:-.02em}
+.phead .lede{color:var(--text-2);margin-top:8px;max-width:68ch;font-size:14px;line-height:1.5}
+.kicker{display:flex;align-items:center;gap:12px;color:var(--text-2);font-size:13px;margin:0 0 12px}
+.tag{display:inline-grid;place-items:center;min-width:30px;height:22px;padding:0 6px;background:var(--violet);color:#fff;font-size:12px;border-radius:2px}
+.phead-aside{display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.ph-glyph{display:block;width:120px;height:40px;color:var(--text-2)}
+.ph-glyph .g-v{fill:var(--violet)}
+.ph-glyph .g-s{fill:color-mix(in srgb,var(--text) 14%,transparent)}
+.ph-glyph .g-ln{fill:none;stroke:var(--text-2);stroke-width:1.5}
+.ph-glyph .g-pos{fill:none;stroke:var(--pos);stroke-width:2}
+.ph-glyph .g-neg{fill:none;stroke:var(--neg);stroke-width:2;stroke-dasharray:4 3}
+.ph-glyph .f-pos{fill:var(--pos)}.ph-glyph .f-neg{fill:var(--neg)}
+
+/* ---------- badges (one style everywhere) ---------- */
+.badge{display:inline-block;font-size:11px;line-height:16px;padding:2px 8px;border-radius:var(--r-chip);background:var(--violet-soft);color:var(--violet-text);white-space:nowrap}
+.badge.ghost{background:transparent;border:1px solid var(--line);color:var(--muted);padding:1px 7px}
+
+/* ---------- numbers ---------- */
+.num{font-family:var(--num);font-variant-numeric:tabular-nums;letter-spacing:0}
+
+/* ---------- interaction: transitions + hover/active ---------- */
+.btn,.tab,.chip,.seg button,.pick,.mcard,.orow,.sel,.shell-products a,.shell-icon,.field,th button,tr[tabindex] td,.yn{
+  transition:background-color var(--t) ease,color var(--t) ease,border-color var(--t) ease,box-shadow var(--t) ease,transform var(--t) var(--ease)}
+.btn{min-height:28px}
+.btn:hover{background:color-mix(in srgb,var(--violet) 82%,#000)}
+.btn.soft:hover{background:var(--violet-soft);box-shadow:inset 0 0 0 1px var(--violet)}
+.btn:active,.tab:active,.chip:active,.seg button:active{transform:translateY(1px)}
+.btn.lg{position:relative;isolation:isolate;background:transparent;min-height:44px}
+/* primary action: hard violet block with the landing's chamfered corner */
+.btn.lg::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--violet);border-radius:inherit;
+  clip-path:polygon(0 0,100% 0,100% 100%,14px 100%,0 calc(100% - 14px));transition:background-color var(--t) ease}
+.btn.lg:hover{background:transparent}
+.btn.lg:hover::before{background:color-mix(in srgb,var(--violet) 82%,#000)}
+.field{transition:border-color var(--t) ease}
+.field:hover{border-color:color-mix(in srgb,var(--text) 26%,transparent)}
+th button{border-radius:2px}
+th button:hover{color:var(--text)}
+th[aria-sort=ascending],th[aria-sort=descending]{color:var(--text)}
+
+/* tables: scroll inside their container with violet edge shadows as the affordance */
+.tbl,.tbl-wrap{
+  background:
+    linear-gradient(90deg,var(--card) 30%,transparent) left center/40px 100% no-repeat local,
+    linear-gradient(270deg,var(--card) 30%,transparent) right center/40px 100% no-repeat local,
+    radial-gradient(farthest-side at 0 50%,color-mix(in srgb,var(--violet) 55%,transparent),transparent) left center/14px 100% no-repeat scroll,
+    radial-gradient(farthest-side at 100% 50%,color-mix(in srgb,var(--violet) 55%,transparent),transparent) right center/14px 100% no-repeat scroll,
+    var(--card);
+  -webkit-overflow-scrolling:touch}
+.tbl-hint{display:none;align-items:center;gap:8px;color:var(--muted);font-size:12px;margin:0 0 8px}
+.tbl-hint::before{content:"";width:16px;height:2px;background:var(--violet)}
+tr[tabindex]{cursor:pointer}
+tr[tabindex]:hover td{background:color-mix(in srgb,var(--surface) 70%,transparent)}
+tr.is-sel td{background:var(--violet-soft)}
+tr.is-sel td:first-child{box-shadow:inset 3px 0 0 var(--violet)}
+
+/* ---------- page-load: fade + rise on the top-level blocks only ---------- */
+@keyframes ef-rise{from{opacity:0;transform:translateY(8px)}}
+@media (prefers-reduced-motion:no-preference){
+  .phead-in,.page > *,main > .wrap > *{animation:ef-rise .42s var(--ease) backwards}
+  .page > :nth-child(2),main > .wrap > :nth-child(2){animation-delay:50ms}
+  .page > :nth-child(3),main > .wrap > :nth-child(3){animation-delay:100ms}
+  .page > :nth-child(4),main > .wrap > :nth-child(4){animation-delay:150ms}
+  .page > :nth-child(n+5),main > .wrap > :nth-child(n+5){animation-delay:200ms}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+}
+
+/* ---------- responsive ---------- */
+@media(max-width:760px){
+  .shell-in{padding:8px 16px;flex-wrap:wrap;gap:8px 12px}
+  .shell-products{order:3;width:calc(100% + 32px);margin:0 -16px;padding:0 16px 4px;
+    -webkit-mask:linear-gradient(90deg,#000 85%,transparent);mask:linear-gradient(90deg,#000 85%,transparent)}
+  .shell-products a{min-height:44px}
+  .phead-in{padding:24px 16px 16px;align-items:flex-start}
+  .phead-in::after{left:16px}
+  .phead h1{font-size:28px}
+  .phead-aside{flex-direction:row-reverse;align-items:center;justify-content:space-between;width:100%}
+  .ph-glyph{width:96px;height:32px}
+  .ph-slabs{width:100%;-webkit-mask:linear-gradient(90deg,transparent 0,#000 80%);mask:linear-gradient(90deg,transparent 0,#000 80%)}
+  .tbl-hint{display:flex}
+  .btn:not(.lg),.tab,.chip,.seg button{min-height:44px}
+}

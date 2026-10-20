@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Seer — the base layer for decision markets</title>
+<meta name="description" content="Seer is the prediction-market protocol underneath an ecosystem of decision apps: the Seer explorer, Futarchy, Deep, Opportunity Markets and Risk Pricing.">
+<meta name="color-scheme" content="dark light">
+<script>try{var t=localStorage.getItem('seer-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="stylesheet" href="css/tokens.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/home.css">
+<script src="js/home.js" defer></script>
+</head>
+<body class="home">
+<a class="skip" href="#main">Skip to content</a>
+
+<svg width="0" height="0" class="defs" aria-hidden="true" focusable="false">
+  <symbol id="logo" viewBox="0 0 86 24"><path fill="currentColor" d="M12.2695 6C12.1061 6 11.9486 6.06424 11.833 6.17969L7.05859 10.9492C6.67062 11.3368 6.94608 11.9999 7.49414 12H11.5176V12.002C11.7008 12.002 11.7919 12.2229 11.6631 12.3516L6.00879 18H11.7578C11.9212 17.9999 12.0778 17.9357 12.1934 17.8203L16.9688 13.0508C17.3565 12.6632 17.0803 12 16.5322 12H12.5088C12.3256 12 12.2346 11.779 12.3633 11.6504L18.0205 6H12.2695ZM34.8359 3.99902C38.1497 3.99902 41.8154 5.33918 41.8154 9.20508H38.416C38.416 7.26718 36.4704 6.72559 34.8672 6.72559C33.6552 6.72561 31.4365 6.86952 31.4365 8.63574C31.4367 10.5108 34.7061 10.5802 36.0088 10.7979C38.6323 11.2349 41.9159 12.0332 41.916 15.2969C41.916 18.9054 38.1236 20.0009 35.1104 20.001C31.7967 20.001 28.131 18.6616 28.1309 14.7959H31.5303C31.5304 16.7336 33.4776 17.2744 35.0791 17.2744C36.2911 17.2744 38.5098 16.992 38.5098 15.3643C38.5093 13.4894 35.2401 13.4182 33.9375 13.2021C31.3156 12.7651 28.0303 11.9668 28.0303 8.70312C28.0303 5.09466 31.8228 3.99907 34.8359 3.99902ZM86 7.86719H79.7148V20.001H76.2559V9.27832C76.2559 8.78704 76.3285 8.31397 76.4639 7.86719C76.5249 7.66605 76.5988 7.46793 76.6846 7.27832C77.1716 6.19804 78.0442 5.32901 79.124 4.84082C79.3138 4.75512 79.5099 4.68013 79.7129 4.61914C80.1602 4.48394 80.6357 4.41214 81.126 4.41211H86V7.86719ZM50.7314 4.00098C55.2719 4.00103 58.0176 7.6395 58.0176 11.9639V13.0703H46.666C46.666 15.3792 48.7153 17.1093 50.9111 17.1094C52.6645 17.1094 53.9841 16.1498 54.6182 14.5254H58.0176C57.225 17.8799 54.1523 19.999 50.8057 19.999C46.2338 19.999 43.2354 16.3606 43.2354 11.9834C43.2355 7.60633 46.193 3.99902 50.7334 3.99902L50.7314 4.00098ZM66.999 4.00098C71.5395 4.00098 74.2852 7.63947 74.2852 11.9639V13.0703H62.9346C62.9346 15.3791 64.9829 17.1091 67.1787 17.1094C68.9321 17.1094 70.2517 16.1498 70.8857 14.5254H74.2852C73.4925 17.8799 70.4199 19.999 67.0732 19.999C62.5015 19.9989 59.5029 16.3605 59.5029 11.9834C59.503 7.60633 62.4606 3.99902 67.001 3.99902L66.999 4.00098ZM50.7334 6.86914C48.7802 6.86914 46.6895 8.41979 46.6895 10.5605H54.5771C54.5771 8.45127 52.6865 6.86936 50.7334 6.86914ZM66.999 6.86914C65.0458 6.86924 62.9561 8.41985 62.9561 10.5605H70.8428C70.8428 8.45112 68.9523 6.86914 66.999 6.86914ZM22.7949 5.99805C23.4751 5.99805 24.0262 6.54913 24.0264 7.22852V11.4893C24.0263 11.8156 23.8961 12.1286 23.665 12.3594L12.373 23.6387C12.142 23.8695 11.8288 23.9999 11.502 24H7.2373C6.55706 24 6.00488 23.449 6.00488 22.7695V18.002H1.23145C0.551319 18.0018 0 17.4509 0 16.7715V12.5117C0 12.1852 0.130268 11.8715 0.361328 11.6406L11.6533 0.361328C11.8845 0.13043 12.1985 0 12.5254 0H16.79C17.4702 6.24588e-05 18.0215 0.551006 18.0215 1.23047V6H22.7949V5.99805Z"/></symbol>
+  <symbol id="mark" viewBox="0 0 24.03 24"><path fill="currentColor" d="M12.2695 6C12.1061 6 11.9486 6.06424 11.833 6.17969L7.05859 10.9492C6.67062 11.3368 6.94608 11.9999 7.49414 12H11.5176V12.002C11.7008 12.002 11.7919 12.2229 11.6631 12.3516L6.00879 18H11.7578C11.9212 17.9999 12.0778 17.9357 12.1934 17.8203L16.9688 13.0508C17.3565 12.6632 17.0803 12 16.5322 12H12.5088C12.3256 12 12.2346 11.779 12.3633 11.6504L18.0205 6H12.2695ZM34.8359 3.99902C38.1497 3.99902 41.8154 5.33918 41.8154 9.20508H38.416C38.416 7.26718 36.4704 6.72559 34.8672 6.72559C33.6552 6.72561 31.4365 6.86952 31.4365 8.63574C31.4367 10.5108 34.7061 10.5802 36.0088 10.7979C38.6323 11.2349 41.9159 12.0332 41.916 15.2969C41.916 18.9054 38.1236 20.0009 35.1104 20.001C31.7967 20.001 28.131 18.6616 28.1309 14.7959H31.5303C31.5304 16.7336 33.4776 17.2744 35.0791 17.2744C36.2911 17.2744 38.5098 16.992 38.5098 15.3643C38.5093 13.4894 35.2401 13.4182 33.9375 13.2021C31.3156 12.7651 28.0303 11.9668 28.0303 8.70312C28.0303 5.09466 31.8228 3.99907 34.8359 3.99902ZM86 7.86719H79.7148V20.001H76.2559V9.27832C76.2559 8.78704 76.3285 8.31397 76.4639 7.86719C76.5249 7.66605 76.5988 7.46793 76.6846 7.27832C77.1716 6.19804 78.0442 5.32901 79.124 4.84082C79.3138 4.75512 79.5099 4.68013 79.7129 4.61914C80.1602 4.48394 80.6357 4.41214 81.126 4.41211H86V7.86719ZM50.7314 4.00098C55.2719 4.00103 58.0176 7.6395 58.0176 11.9639V13.0703H46.666C46.666 15.3792 48.7153 17.1093 50.9111 17.1094C52.6645 17.1094 53.9841 16.1498 54.6182 14.5254H58.0176C57.225 17.8799 54.1523 19.999 50.8057 19.999C46.2338 19.999 43.2354 16.3606 43.2354 11.9834C43.2355 7.60633 46.193 3.99902 50.7334 3.99902L50.7314 4.00098ZM66.999 4.00098C71.5395 4.00098 74.2852 7.63947 74.2852 11.9639V13.0703H62.9346C62.9346 15.3791 64.9829 17.1091 67.1787 17.1094C68.9321 17.1094 70.2517 16.1498 70.8857 14.5254H74.2852C73.4925 17.8799 70.4199 19.999 67.0732 19.999C62.5015 19.9989 59.5029 16.3605 59.5029 11.9834C59.503 7.60633 62.4606 3.99902 67.001 3.99902L66.999 4.00098ZM50.7334 6.86914C48.7802 6.86914 46.6895 8.41979 46.6895 10.5605H54.5771C54.5771 8.45127 52.6865 6.86936 50.7334 6.86914ZM66.999 6.86914C65.0458 6.86924 62.9561 8.41985 62.9561 10.5605H70.8428C70.8428 8.45112 68.9523 6.86914 66.999 6.86914ZM22.7949 5.99805C23.4751 5.99805 24.0262 6.54913 24.0264 7.22852V11.4893C24.0263 11.8156 23.8961 12.1286 23.665 12.3594L12.373 23.6387C12.142 23.8695 11.8288 23.9999 11.502 24H7.2373C6.55706 24 6.00488 23.449 6.00488 22.7695V18.002H1.23145C0.551319 18.0018 0 17.4509 0 16.7715V12.5117C0 12.1852 0.130268 11.8715 0.361328 11.6406L11.6533 0.361328C11.8845 0.13043 12.1985 0 12.5254 0H16.79C17.4702 6.24588e-05 18.0215 0.551006 18.0215 1.23047V6H22.7949V5.99805Z"/></symbol>
+  <symbol id="flag-ar" viewBox="0 0 16 16"><clipPath id="fc"><circle cx="8" cy="8" r="8"/></clipPath><g clip-path="url(#fc)"><rect width="16" height="16" fill="#74acdf"/><rect y="5.33" width="16" height="5.34" fill="#fff"/><circle cx="8" cy="8" r="1.6" fill="#f6b40e"/></g></symbol>
+  <symbol id="arrow" viewBox="0 0 16 16"><path d="M3 8h9.5M8.5 3.5 13 8l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.5"/></symbol>
+</svg>
+
+<header class="hero">
+  <svg class="slabs" viewBox="0 0 1440 600" preserveAspectRatio="xMidYMin slice" aria-hidden="true" focusable="false">
+    <defs>
+      <linearGradient id="s0" x1="0" y1="0" x2="0" y2="1"><stop offset=".5" class="s-lo"/><stop offset="1" class="s-hi"/></linearGradient>
+      <linearGradient id="s1" x1="0" y1="0" x2="0" y2="1"><stop offset=".25" class="s-lo"/><stop offset="1" class="s-hi"/></linearGradient>
+      <linearGradient id="s2" x1="1062" y1="-1.6" x2="566" y2="507.5" gradientUnits="userSpaceOnUse"><stop offset=".25" class="s-lo"/><stop offset="1" class="s-hi"/></linearGradient>
+      <linearGradient id="s3" x1="1285" y1="115" x2="1130" y2="318" gradientUnits="userSpaceOnUse"><stop class="s-lo"/><stop offset="1" class="s-hi"/></linearGradient>
+      <linearGradient id="s4" x1="1017.5" y1="0" x2="822" y2="385" gradientUnits="userSpaceOnUse"><stop offset=".25" class="s-lo"/><stop offset="1" class="s-hi"/></linearGradient>
+    </defs>
+    <g class="slab-set">
+      <path d="M301.5 493L0 384V0H301.5V493Z" fill="url(#s0)"/>
+      <path d="M152 249.5L0 194.5V0H152V249.5Z" fill="url(#s1)"/>
+      <path d="M226 271V0H618V417L226 271Z" fill="url(#s0)"/>
+      <path d="M299.5 0V107L0 0H299.5Z" fill="url(#s1)"/>
+      <path d="M367 135.5V0H759.5V277L367 135.5Z" fill="url(#s1)"/>
+      <path d="M686 456.5V0H1078.5V600L686 456.5Z" fill="url(#s2)"/>
+      <path d="M1129.5 246.5V0H1440V359L1129.5 246.5Z" fill="url(#s3)"/>
+      <path d="M821.5 299V0H1213.5V442L821.5 299Z" fill="url(#s4)"/>
+    </g>
+  </svg>
+
+  <nav class="topnav wrap" aria-label="Primary">
+    <a class="brand" href="./index.html" aria-label="Seer home">
+      <svg width="86" height="24" aria-hidden="true" focusable="false"><use href="#logo"/></svg>
+    </a>
+    <ul class="nav-links">
+      <li><a href="https://seer-3.gitbook.io/seer-documentation" target="_blank" rel="noopener">Documents</a></li>
+      <li><a href="https://seer-pm.medium.com/" target="_blank" rel="noopener">Blog</a></li>
+    </ul>
+    <div class="nav-end">
+      <a class="nav-start" href="./app.html">Start today!</a>
+      <button class="theme-toggle" type="button" aria-pressed="false" data-theme-toggle>
+        <span class="sr">Light theme</span>
+        <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 1.75v12.5A6.25 6.25 0 0 1 8 1.75Z" fill="currentColor"/></svg>
+      </button>
+      <a class="pill" href="./app.html">Launch App</a>
+    </div>
+  </nav>
+
+  <div class="hero-body wrap">
+    <div class="hero-copy">
+      <h1>The base layer<br> for <span class="v">decision markets.</span></h1>
+      <p class="hero-sub">Seer is the prediction-market protocol underneath a family of apps that help people, DAOs and AI agents decide with prices instead of guesses.</p>
+      <div class="hero-cta">
+        <a class="btn-o" href="#ecosystem">Learn More</a>
+        <a class="btn-v" href="./app.html">Start Now</a>
+      </div>
+    </div>
+
+    <div class="hero-cards">
+      <article class="mcard mcard-back" aria-hidden="true">
+        <p class="mq">Which team will win the 2026 World Cup?</p>
+        <svg class="dots d-hero" viewBox="0 0 243 63" aria-hidden="true" focusable="false"><g class="on" style="--i:0"><circle cx="4.5" cy="58.5" r="2.3"/><circle cx="4.5" cy="49.5" r="2.3"/><circle cx="4.5" cy="40.5" r="2.3"/><circle cx="4.5" cy="31.5" r="2.3"/></g><g class="on" style="--i:1"><circle cx="13.5" cy="58.5" r="2.3"/><circle cx="13.5" cy="49.5" r="2.3"/><circle cx="13.5" cy="40.5" r="2.3"/><circle cx="13.5" cy="31.5" r="2.3"/><circle cx="13.5" cy="22.5" r="2.3"/><circle cx="13.5" cy="13.5" r="2.3"/></g><g class="on" style="--i:2"><circle cx="22.5" cy="58.5" r="2.3"/><circle cx="22.5" cy="49.5" r="2.3"/><circle cx="22.5" cy="40.5" r="2.3"/><circle cx="22.5" cy="31.5" r="2.3"/><circle cx="22.5" cy="22.5" r="2.3"/><circle cx="22.5" cy="13.5" r="2.3"/><circle cx="22.5" cy="4.5" r="2.3"/></g><g class="on" style="--i:3"><circle cx="31.5" cy="58.5" r="2.3"/><circle cx="31.5" cy="49.5" r="2.3"/><circle cx="31.5" cy="40.5" r="2.3"/><circle cx="31.5" cy="31.5" r="2.3"/><circle cx="31.5" cy="22.5" r="2.3"/><circle cx="31.5" cy="13.5" r="2.3"/><circle cx="31.5" cy="4.5" r="2.3"/></g><g class="on" style="--i:4"><circle cx="40.5" cy="58.5" r="2.3"/><circle cx="40.5" cy="49.5" r="2.3"/><circle cx="40.5" cy="40.5" r="2.3"/><circle cx="40.5" cy="31.5" r="2.3"/><circle cx="40.5" cy="22.5" r="2.3"/><circle cx="40.5" cy="13.5" r="2.3"/></g><g class="on" style="--i:5"><circle cx="49.5" cy="58.5" r="2.3"/><circle cx="49.5" cy="49.5" r="2.3"/><circle cx="49.5" cy="40.5" r="2.3"/><circle cx="49.5" cy="31.5" r="2.3"/><circle cx="49.5" cy="22.5" r="2.3"/></g><g class="on" style="--i:6"><circle cx="58.5" cy="58.5" r="2.3"/><circle cx="58.5" cy="49.5" r="2.3"/><circle cx="58.5" cy="40.5" r="2.3"/><circle cx="58.5" cy="31.5" r="2.3"/><circle cx="58.5" cy="22.5" r="2.3"/></g><g class="on" style="--i:7"><circle cx="67.5" cy="58.5" r="2.3"/><circle cx="67.5" cy="49.5" r="2.3"/><circle cx="67.5" cy="40.5" r="2.3"/><circle cx="67.5" cy="31.5" r="2.3"/><circle cx="67.5" cy="22.5" r="2.3"/></g><g class="on" style="--i:8"><circle cx="76.5" cy="58.5" r="2.3"/><circle cx="76.5" cy="49.5" r="2.3"/><circle cx="76.5" cy="40.5" r="2.3"/><circle cx="76.5" cy="31.5" r="2.3"/><circle cx="76.5" cy="22.5" r="2.3"/><circle cx="76.5" cy="13.5" r="2.3"/></g><g class="on" style="--i:9"><circle cx="85.5" cy="58.5" r="2.3"/><circle cx="85.5" cy="49.5" r="2.3"/><circle cx="85.5" cy="40.5" r="2.3"/><circle cx="85.5" cy="31.5" r="2.3"/><circle cx="85.5" cy="22.5" r="2.3"/><circle cx="85.5" cy="13.5" r="2.3"/></g><g class="on" style="--i:10"><circle cx="94.5" cy="58.5" r="2.3"/><circle cx="94.5" cy="49.5" r="2.3"/><circle cx="94.5" cy="40.5" r="2.3"/><circle cx="94.5" cy="31.5" r="2.3"/><circle cx="94.5" cy="22.5" r="2.3"/><circle cx="94.5" cy="13.5" r="2.3"/></g><g class="on" style="--i:11"><circle cx="103.5" cy="58.5" r="2.3"/><circle cx="103.5" cy="49.5" r="2.3"/><circle cx="103.5" cy="40.5" r="2.3"/><circle cx="103.5" cy="31.5" r="2.3"/><circle cx="103.5" cy="22.5" r="2.3"/></g><g class="on" style="--i:12"><circle cx="112.5" cy="58.5" r="2.3"/><circle cx="112.5" cy="49.5" r="2.3"/><circle cx="112.5" cy="40.5" r="2.3"/><circle cx="112.5" cy="31.5" r="2.3"/><circle cx="112.5" cy="22.5" r="2.3"/></g><g class="on" style="--i:13"><circle cx="121.5" cy="58.5" r="2.3"/><circle cx="121.5" cy="49.5" r="2.3"/><circle cx="121.5" cy="40.5" r="2.3"/><circle cx="121.5" cy="31.5" r="2.3"/></g><g class="on" style="--i:14"><circle cx="130.5" cy="58.5" r="2.3"/><circle cx="130.5" cy="49.5" r="2.3"/><circle cx="130.5" cy="40.5" r="2.3"/><circle cx="130.5" cy="31.5" r="2.3"/></g><g class="on" style="--i:15"><circle cx="139.5" cy="58.5" r="2.3"/><circle cx="139.5" cy="49.5" r="2.3"/><circle cx="139.5" cy="40.5" r="2.3"/><circle cx="139.5" cy="31.5" r="2.3"/></g><g class="on" style="--i:16"><circle cx="148.5" cy="58.5" r="2.3"/><circle cx="148.5" cy="49.5" r="2.3"/><circle cx="148.5" cy="40.5" r="2.3"/></g><g class="on" style="--i:17"><circle cx="157.5" cy="58.5" r="2.3"/><circle cx="157.5" cy="49.5" r="2.3"/><circle cx="157.5" cy="40.5" r="2.3"/></g><g class="on" style="--i:18"><circle cx="166.5" cy="58.5" r="2.3"/><circle cx="166.5" cy="49.5" r="2.3"/><circle cx="166.5" cy="40.5" r="2.3"/></g><g class="on" style="--i:19"><circle cx="175.5" cy="58.5" r="2.3"/><circle cx="175.5" cy="49.5" r="2.3"/></g><g class="on" style="--i:20"><circle cx="184.5" cy="58.5" r="2.3"/><circle cx="184.5" cy="49.5" r="2.3"/></g><g class="on" style="--i:21"><circle cx="193.5" cy="58.5" r="2.3"/><circle cx="193.5" cy="49.5" r="2.3"/></g><g class="on" style="--i:22"><circle cx="202.5" cy="58.5" r="2.3"/><circle cx="202.5" cy="49.5" r="2.3"/></g><g class="off" style="--i:23"><circle cx="211.5" cy="58.5" r="2.3"/></g><g class="off" style="--i:24"><circle cx="220.5" cy="58.5" r="2.3"/></g><g class="off" style="--i:25"><circle cx="229.5" cy="58.5" r="2.3"/></g><g class="off" style="--i:26"><circle cx="238.5" cy="58.5" r="2.3"/></g></svg>
+        <div class="mfoot"><span class="mbig num">84.1%</span><span class="chip-c"><svg width="14" height="14"><use href="#flag-ar"/></svg>Argentina</span></div>
+        <div class="mbar"><i style="width:84.1%"></i></div>
+      </article>
+      <article class="mcard mcard-front" aria-label="Illustrative categorical market">
+        <svg class="mlogo" width="40" height="11" aria-hidden="true" focusable="false"><use href="#logo"/></svg>
+        <p class="mq">Which team will win the 2026 World Cup?</p>
+        <svg class="dots d-hero" viewBox="0 0 243 63" role="img" aria-label="Distribution of outcome prices; the leading outcome sits at 84.1%" focusable="false"><g class="on" style="--i:0"><circle cx="4.5" cy="58.5" r="2.3"/><circle cx="4.5" cy="49.5" r="2.3"/><circle cx="4.5" cy="40.5" r="2.3"/><circle cx="4.5" cy="31.5" r="2.3"/></g><g class="on" style="--i:1"><circle cx="13.5" cy="58.5" r="2.3"/><circle cx="13.5" cy="49.5" r="2.3"/><circle cx="13.5" cy="40.5" r="2.3"/><circle cx="13.5" cy="31.5" r="2.3"/><circle cx="13.5" cy="22.5" r="2.3"/><circle cx="13.5" cy="13.5" r="2.3"/></g><g class="on" style="--i:2"><circle cx="22.5" cy="58.5" r="2.3"/><circle cx="22.5" cy="49.5" r="2.3"/><circle cx="22.5" cy="40.5" r="2.3"/><circle cx="22.5" cy="31.5" r="2.3"/><circle cx="22.5" cy="22.5" r="2.3"/><circle cx="22.5" cy="13.5" r="2.3"/><circle cx="22.5" cy="4.5" r="2.3"/></g><g class="on" style="--i:3"><circle cx="31.5" cy="58.5" r="2.3"/><circle cx="31.5" cy="49.5" r="2.3"/><circle cx="31.5" cy="40.5" r="2.3"/><circle cx="31.5" cy="31.5" r="2.3"/><circle cx="31.5" cy="22.5" r="2.3"/><circle cx="31.5" cy="13.5" r="2.3"/><circle cx="31.5" cy="4.5" r="2.3"/></g><g class="on" style="--i:4"><circle cx="40.5" cy="58.5" r="2.3"/><circle cx="40.5" cy="49.5" r="2.3"/><circle cx="40.5" cy="40.5" r="2.3"/><circle cx="40.5" cy="31.5" r="2.3"/><circle cx="40.5" cy="22.5" r="2.3"/><circle cx="40.5" cy="13.5" r="2.3"/></g><g class="on" style="--i:5"><circle cx="49.5" cy="58.5" r="2.3"/><circle cx="49.5" cy="49.5" r="2.3"/><circle cx="49.5" cy="40.5" r="2.3"/><circle cx="49.5" cy="31.5" r="2.3"/><circle cx="49.5" cy="22.5" r="2.3"/></g><g class="on" style="--i:6"><circle cx="58.5" cy="58.5" r="2.3"/><circle cx="58.5" cy="49.5" r="2.3"/><circle cx="58.5" cy="40.5" r="2.3"/><circle cx="58.5" cy="31.5" r="2.3"/><circle cx="58.5" cy="22.5" r="2.3"/></g><g class="on" style="--i:7"><circle cx="67.5" cy="58.5" r="2.3"/><circle cx="67.5" cy="49.5" r="2.3"/><circle cx="67.5" cy="40.5" r="2.3"/><circle cx="67.5" cy="31.5" r="2.3"/><circle cx="67.5" cy="22.5" r="2.3"/></g><g class="on" style="--i:8"><circle cx="76.5" cy="58.5" r="2.3"/><circle cx="76.5" cy="49.5" r="2.3"/><circle cx="76.5" cy="40.5" r="2.3"/><circle cx="76.5" cy="31.5" r="2.3"/><circle cx="76.5" cy="22.5" r="2.3"/><circle cx="76.5" cy="13.5" r="2.3"/></g><g class="on" style="--i:9"><circle cx="85.5" cy="58.5" r="2.3"/><circle cx="85.5" cy="49.5" r="2.3"/><circle cx="85.5" cy="40.5" r="2.3"/><circle cx="85.5" cy="31.5" r="2.3"/><circle cx="85.5" cy="22.5" r="2.3"/><circle cx="85.5" cy="13.5" r="2.3"/></g><g class="on" style="--i:10"><circle cx="94.5" cy="58.5" r="2.3"/><circle cx="94.5" cy="49.5" r="2.3"/><circle cx="94.5" cy="40.5" r="2.3"/><circle cx="94.5" cy="31.5" r="2.3"/><circle cx="94.5" cy="22.5" r="2.3"/><circle cx="94.5" cy="13.5" r="2.3"/></g><g class="on" style="--i:11"><circle cx="103.5" cy="58.5" r="2.3"/><circle cx="103.5" cy="49.5" r="2.3"/><circle cx="103.5" cy="40.5" r="2.3"/><circle cx="103.5" cy="31.5" r="2.3"/><circle cx="103.5" cy="22.5" r="2.3"/></g><g class="on" style="--i:12"><circle cx="112.5" cy="58.5" r="2.3"/><circle cx="112.5" cy="49.5" r="2.3"/><circle cx="112.5" cy="40.5" r="2.3"/><circle cx="112.5" cy="31.5" r="2.3"/><circle cx="112.5" cy="22.5" r="2.3"/></g><g class="on" style="--i:13"><circle cx="121.5" cy="58.5" r="2.3"/><circle cx="121.5" cy="49.5" r="2.3"/><circle cx="121.5" cy="40.5" r="2.3"/><circle cx="121.5" cy="31.5" r="2.3"/></g><g class="on" style="--i:14"><circle cx="130.5" cy="58.5" r="2.3"/><circle cx="130.5" cy="49.5" r="2.3"/><circle cx="130.5" cy="40.5" r="2.3"/><circle cx="130.5" cy="31.5" r="2.3"/></g><g class="on" style="--i:15"><circle cx="139.5" cy="58.5" r="2.3"/><circle cx="139.5" cy="49.5" r="2.3"/><circle cx="139.5" cy="40.5" r="2.3"/><circle cx="139.5" cy="31.5" r="2.3"/></g><g class="on" style="--i:16"><circle cx="148.5" cy="58.5" r="2.3"/><circle cx="148.5" cy="49.5" r="2.3"/><circle cx="148.5" cy="40.5" r="2.3"/></g><g class="on" style="--i:17"><circle cx="157.5" cy="58.5" r="2.3"/><circle cx="157.5" cy="49.5" r="2.3"/><circle cx="157.5" cy="40.5" r="2.3"/></g><g class="on" style="--i:18"><circle cx="166.5" cy="58.5" r="2.3"/><circle cx="166.5" cy="49.5" r="2.3"/><circle cx="166.5" cy="40.5" r="2.3"/></g><g class="on" style="--i:19"><circle cx="175.5" cy="58.5" r="2.3"/><circle cx="175.5" cy="49.5" r="2.3"/></g><g class="on" style="--i:20"><circle cx="184.5" cy="58.5" r="2.3"/><circle cx="184.5" cy="49.5" r="2.3"/></g><g class="on" style="--i:21"><circle cx="193.5" cy="58.5" r="2.3"/><circle cx="193.5" cy="49.5" r="2.3"/></g><g class="on" style="--i:22"><circle cx="202.5" cy="58.5" r="2.3"/><circle cx="202.5" cy="49.5" r="2.3"/></g><g class="off" style="--i:23"><circle cx="211.5" cy="58.5" r="2.3"/></g><g class="off" style="--i:24"><circle cx="220.5" cy="58.5" r="2.3"/></g><g class="off" style="--i:25"><circle cx="229.5" cy="58.5" r="2.3"/></g><g class="off" style="--i:26"><circle cx="238.5" cy="58.5" r="2.3"/></g></svg>
+        <div class="mfoot"><span class="mbig num">84.1%</span><span class="chip-c"><svg width="14" height="14" aria-hidden="true"><use href="#flag-ar"/></svg>Argentina</span></div>
+        <div class="mbar" aria-hidden="true"><i style="width:84.1%"></i></div>
+        <p class="mnote">Categorical market · illustrative</p>
+      </article>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ECOSYSTEM -->
+  <section id="ecosystem" class="sec wrap" aria-labelledby="eco-h">
+    <div class="sec-head">
+      <p class="kicker"><i></i>The ecosystem</p>
+      <h2 id="eco-h">One protocol underneath.<br><span class="dim">Five apps built on top.</span></h2>
+      <p class="lede">Every app below reads and writes the same Seer markets. Different questions, different interfaces &mdash; one shared layer for asking, trading and resolving.</p>
+    </div>
+
+    <div class="stack">
+      <ol class="apps" id="apps">
+        <li><a class="app" href="./app.html" style="--h:300px">
+          <span class="app-n num">01</span>
+          <span class="app-name">Seer app</span>
+          <span class="app-role">The explorer for every market type. Seer&rsquo;s Etherscan.</span>
+          <svg class="app-go" width="16" height="16" aria-hidden="true"><use href="#arrow"/></svg></a></li>
+        <li><a class="app" href="./futarchy.html" style="--h:250px">
+          <span class="app-n num">02</span>
+          <span class="app-name">Futarchy</span>
+          <span class="app-role">Pass vs fail markets that inform a DAO&rsquo;s vote.</span>
+          <svg class="app-go" width="16" height="16" aria-hidden="true"><use href="#arrow"/></svg></a></li>
+        <li><a class="app" href="./deep.html" style="--h:330px">
+          <span class="app-n num">03</span>
+          <span class="app-name">Deep</span>
+          <span class="app-role">Many-outcome questions, traded by people and AI agents.</span>
+          <svg class="app-go" width="16" height="16" aria-hidden="true"><use href="#arrow"/></svg></a></li>
+        <li><a class="app" href="./opportunity.html" style="--h:270px">
+          <span class="app-n num">04</span>
+          <span class="app-name">Opportunity Markets</span>
+          <span class="app-role">Forecast which submissions get selected.</span>
+          <svg class="app-go" width="16" height="16" aria-hidden="true"><use href="#arrow"/></svg></a></li>
+        <li><a class="app" href="./risk.html" style="--h:290px">
+          <span class="app-n num">05</span>
+          <span class="app-name">Risk Pricing</span>
+          <span class="app-role">Market-estimated risk, compared across DeFi protocols.</span>
+          <svg class="app-go" width="16" height="16" aria-hidden="true"><use href="#arrow"/></svg></a></li>
+      </ol>
+      <div class="base">
+        <div class="base-id">
+          <svg width="28" height="28" aria-hidden="true"><use href="#mark"/></svg>
+          <div>
+            <p class="base-name">Seer protocol</p>
+            <p class="base-desc">Markets, outcome tokens and oracle resolution. The base layer every app shares.</p>
+          </div>
+        </div>
+        <ul class="base-types" aria-label="Market types supported by the protocol">
+          <li>Categorical</li><li>Scalar</li><li>Multi-categorical</li><li>Multi-scalar</li><li>Conditional</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW A MARKET WORKS -->
+  <section id="how" class="sec how" aria-labelledby="how-h">
+    <div class="wrap">
+      <div class="sec-head row-head">
+        <p class="kicker"><i></i>How a market works</p>
+        <h2 id="how-h">Ask. Trade. Resolve. Redeem.</h2>
+      </div>
+      <ol class="steps">
+        <li><span class="step-n num">01</span><h3>Ask</h3><p>Anyone opens a market: a question, a market type and an end date.</p></li>
+        <li><span class="step-n num">02</span><h3>Trade</h3><p>Each outcome is a token. Its price reads as the crowd&rsquo;s probability.</p></li>
+        <li><span class="step-n num">03</span><h3>Resolve</h3><p>After the end date an oracle reports the answer, and it can be disputed.</p></li>
+        <li><span class="step-n num">04</span><h3>Redeem</h3><p>Holders of the winning outcome redeem their tokens for the collateral.</p></li>
+      </ol>
+      <ul class="types">
+        <li><svg viewBox="0 0 40 24" aria-hidden="true"><rect x="2" y="6" width="10" height="12" class="g-dim"/><rect x="15" y="2" width="10" height="20" class="g-on"/><rect x="28" y="10" width="10" height="8" class="g-dim"/></svg><div><h3>Categorical</h3><p>Choose one of several outcomes.</p></div></li>
+        <li><svg viewBox="0 0 40 24" aria-hidden="true"><path d="M2 12h36" class="g-line"/><rect x="24" y="5" width="3" height="14" class="g-on"/></svg><div><h3>Scalar</h3><p>Forecast a number within a range.</p></div></li>
+        <li><svg viewBox="0 0 40 24" aria-hidden="true"><rect x="2" y="2" width="10" height="20" class="g-on"/><rect x="15" y="6" width="10" height="16" class="g-on"/><rect x="28" y="14" width="10" height="8" class="g-dim"/></svg><div><h3>Multi-categorical</h3><p>Several outcomes can be true at once.</p></div></li>
+        <li><svg viewBox="0 0 40 24" aria-hidden="true"><path d="M2 6h36M2 18h36" class="g-line"/><rect x="12" y="2" width="3" height="8" class="g-on"/><rect x="29" y="14" width="3" height="8" class="g-on"/></svg><div><h3>Multi-scalar</h3><p>Several numbers forecast side by side.</p></div></li>
+        <li><svg viewBox="0 0 40 24" aria-hidden="true"><path d="M2 12h12l10-8h14M14 12l10 8h14" class="g-line"/><circle cx="14" cy="12" r="3" class="g-on"/></svg><div><h3>Conditional</h3><p>Counts only if another outcome happens.</p></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- APPS -->
+  <section class="apps-detail" aria-label="The apps">
+
+    <!-- 01 SEER APP -->
+    <article class="feat wrap" id="seer-app" aria-labelledby="f1-h">
+      <div class="feat-copy">
+        <p class="kicker"><span class="tag num">01</span>Seer app</p>
+        <h2 id="f1-h">The explorer for every market on Seer.</h2>
+        <p>Think of it as Seer&rsquo;s Etherscan. Whatever app a market was made in, it shows up here &mdash; categorical, scalar, multi-categorical, multi-scalar and conditional &mdash; with its prices, liquidity and resolution status in one place.</p>
+        <a class="go" href="./app.html">Open the Seer app<svg width="16" height="16" aria-hidden="true"><use href="#arrow"/></svg></a>
+      </div>
+      <figure class="viz card">
+        <figcaption class="viz-cap"><span>All markets</span><span class="illus">Illustrative</span></figcaption>
+        <div class="filters" aria-hidden="true"><span class="on">All</span><span>Categorical</span><span>Scalar</span><span>Multi-cat.</span><span>Multi-scalar</span><span>Conditional</span></div>
+        <ul class="xlist">
+          <li class="row"><span class="xq">Which team will win the 2026 World Cup?</span><span class="xt">Categorical</span><span class="xv num">Argentina 84.1%</span></li>
+          <li class="row"><span class="xq">ETH/USD on 31 Dec 2026</span><span class="xt">Scalar</span><span class="xv num">3,950</span></li>
+          <li class="row"><span class="xq">Which features ship in v3?</span><span class="xt">Multi-categorical</span><span class="xv num">3 of 7 likely</span></li>
+          <li class="row"><span class="xq">Monthly rainfall in four cities</span><span class="xt">Multi-scalar</span><span class="xv num">4 ranges</span></li>
+          <li class="row"><span class="xq">Token price if Proposal 14 passes</span><span class="xt">Conditional</span><span class="xv num">$1.24</span></li>
+        </ul>
+      </figure>
+    </article>
+
+    <!-- 02 FUTARCHY -->
+    <article class="feat wrap flip" id="futarchy" aria-labelledby="f2-h">
+      <div class="feat-copy">
+        <p class="kicker"><span class="tag num">02</span>Futarchy</p>
+        <h2 id="f2-h">See the outcome of a vote before you cast it.</h2>
+        <p>For each proposal, two conditional markets price the DAO&rsquo;s chosen success metric: one if the proposal passes, one if it fails. The gap between them is a signal. It informs the decision &mdash; the DAO still makes it.</p>
+        <a class="go" href="./futarchy.html">Open Futarchy<svg width="16" height="16" aria-hidden="true"><use href="#arrow"/></svg></a>
+      </div>
+      <figure class="viz card fork">
+        <figcaption class="viz-cap"><span>Proposal 14 &middot; Fund a liquidity programme</span><span class="illus">Illustrative</span></figcaption>
+        <p class="fork-metric">Success metric: token price in 90 days</p>
+        <svg class="fork-lines" viewBox="0 0 400 60" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M200 0V16L100 60M200 16L300 60" vector-effect="non-scaling-stroke"/>
+        </svg>
+        <div class="fork-legs">
+          <div class="leg leg-pass">
+            <p class="leg-k">If it passes</p>
+            <p class="leg-v num">$1.24</p>
+            <div class="leg-bar"><i style="width:82%"></i></div>
+          </div>
+          <div class="leg leg-fail">
+            <p class="leg-k">If it fails</p>
+            <p class="leg-v num">$1.09</p>
+            <div class="leg-bar"><i style="width:72%"></i></div>
+          </div>
+        </div>
+        <p class="fork-read"><span class="num">+13.8%</span> expected under &ldquo;pass&rdquo;. <span class="dim">Signal only &mdash; the vote decides.</span></p>
+      </figure>
+    </article>
+
+    <!-- 03 DEEP -->
+    <article class="feat wrap" id="deep" aria-labelledby="f3-h">
+      <div class="feat-copy">
+        <p class="kicker"><span class="tag num">03</span>Deep</p>
+        <h2 id="f3-h">Questions with many possible answers.</h2>
+        <p>Deep handles fields of outcomes too wide for a yes/no market &mdash; including markets built for AI agents to trade. For example, agents forecast how human evaluators will score each proposal in a grant round, so reviewers know where to look first.</p>
+        <a class="go" href="./deep.html">Open Deep<svg width="16" height="16" aria-hidden="true"><use href="#arrow"/></svg></a>
+      </div>
+      <figure class="viz card">
+        <figcaption class="viz-cap"><span>Grant round &middot; <span class="num">48</span> proposals</span><span class="illus">Illustrative</span></figcaption>
+        <p class="viz-sub">Forecast evaluator score per proposal, traded by agents</p>
+        <svg class="dots d-deep" viewBox="0 0 432 81" role="img" aria-label="48 proposals sorted by forecast score; 9 are forecast at 7 or above" focusable="false"><g class="on" style="--i:0"><circle cx="4.5" cy="76.5" r="2.3"/><circle cx="4.5" cy="67.5" r="2.3"/><circle cx="4.5" cy="58.5" r="2.3"/><circle cx="4.5" cy="49.5" r="2.3"/><circle cx="4.5" cy="40.5" r="2.3"/><circle cx="4.5" cy="31.5" r="2.3"/><circle cx="4.5" cy="22.5" r="2.3"/><circle cx="4.5" cy="13.5" r="2.3"/><circle cx="4.5" cy="4.5" r="2.3"/></g><g class="on" style="--i:1"><circle cx="13.5" cy="76.5" r="2.3"/><circle cx="13.5" cy="67.5" r="2.3"/><circle cx="13.5" cy="58.5" r="2.3"/><circle cx="13.5" cy="49.5" r="2.3"/><circle cx="13.5" cy="40.5" r="2.3"/><circle cx="13.5" cy="31.5" r="2.3"/><circle cx="13.5" cy="22.5" r="2.3"/><circle cx="13.5" cy="13.5" r="2.3"/></g><g class="on" style="--i:2"><circle cx="22.5" cy="76.5" r="2.3"/><circle cx="22.5" cy="67.5" r="2.3"/><circle cx="22.5" cy="58.5" r="2.3"/><circle cx="22.5" cy="49.5" r="2.3"/><circle cx="22.5" cy="40.5" r="2.3"/><circle cx="22.5" cy="31.5" r="2.3"/><circle cx="22.5" cy="22.5" r="2.3"/><circle cx="22.5" cy="13.5" r="2.3"/></g><g class="on" style="--i:3"><circle cx="31.5" cy="76.5" r="2.3"/><circle cx="31.5" cy="67.5" r="2.3"/><circle cx="31.5" cy="58.5" r="2.3"/><circle cx="31.5" cy="49.5" r="2.3"/><circle cx="31.5" cy="40.5" r="2.3"/><circle cx="31.5" cy="31.5" r="2.3"/><circle cx="31.5" cy="22.5" r="2.3"/><circle cx="31.5" cy="13.5" r="2.3"/></g><g class="on" style="--i:4"><circle cx="40.5" cy="76.5" r="2.3"/><circle cx="40.5" cy="67.5" r="2.3"/><circle cx="40.5" cy="58.5" r="2.3"/><circle cx="40.5" cy="49.5" r="2.3"/><circle cx="40.5" cy="40.5" r="2.3"/><circle cx="40.5" cy="31.5" r="2.3"/><circle cx="40.5" cy="22.5" r="2.3"/><circle cx="40.5" cy="13.5" r="2.3"/></g><g class="on" style="--i:5"><circle cx="49.5" cy="76.5" r="2.3"/><circle cx="49.5" cy="67.5" r="2.3"/><circle cx="49.5" cy="58.5" r="2.3"/><circle cx="49.5" cy="49.5" r="2.3"/><circle cx="49.5" cy="40.5" r="2.3"/><circle cx="49.5" cy="31.5" r="2.3"/><circle cx="49.5" cy="22.5" r="2.3"/></g><g class="on" style="--i:6"><circle cx="58.5" cy="76.5" r="2.3"/><circle cx="58.5" cy="67.5" r="2.3"/><circle cx="58.5" cy="58.5" r="2.3"/><circle cx="58.5" cy="49.5" r="2.3"/><circle cx="58.5" cy="40.5" r="2.3"/><circle cx="58.5" cy="31.5" r="2.3"/><circle cx="58.5" cy="22.5" r="2.3"/></g><g class="on" style="--i:7"><circle cx="67.5" cy="76.5" r="2.3"/><circle cx="67.5" cy="67.5" r="2.3"/><circle cx="67.5" cy="58.5" r="2.3"/><circle cx="67.5" cy="49.5" r="2.3"/><circle cx="67.5" cy="40.5" r="2.3"/><circle cx="67.5" cy="31.5" r="2.3"/><circle cx="67.5" cy="22.5" r="2.3"/></g><g class="on" style="--i:8"><circle cx="76.5" cy="76.5" r="2.3"/><circle cx="76.5" cy="67.5" r="2.3"/><circle cx="76.5" cy="58.5" r="2.3"/><circle cx="76.5" cy="49.5" r="2.3"/><circle cx="76.5" cy="40.5" r="2.3"/><circle cx="76.5" cy="31.5" r="2.3"/><circle cx="76.5" cy="22.5" r="2.3"/></g><g class="off" style="--i:9"><circle cx="85.5" cy="76.5" r="2.3"/><circle cx="85.5" cy="67.5" r="2.3"/><circle cx="85.5" cy="58.5" r="2.3"/><circle cx="85.5" cy="49.5" r="2.3"/><circle cx="85.5" cy="40.5" r="2.3"/><circle cx="85.5" cy="31.5" r="2.3"/><circle cx="85.5" cy="22.5" r="2.3"/></g><g class="off" style="--i:10"><circle cx="94.5" cy="76.5" r="2.3"/><circle cx="94.5" cy="67.5" r="2.3"/><circle cx="94.5" cy="58.5" r="2.3"/><circle cx="94.5" cy="49.5" r="2.3"/><circle cx="94.5" cy="40.5" r="2.3"/><circle cx="94.5" cy="31.5" r="2.3"/></g><g class="off" style="--i:11"><circle cx="103.5" cy="76.5" r="2.3"/><circle cx="103.5" cy="67.5" r="2.3"/><circle cx="103.5" cy="58.5" r="2.3"/><circle cx="103.5" cy="49.5" r="2.3"/><circle cx="103.5" cy="40.5" r="2.3"/><circle cx="103.5" cy="31.5" r="2.3"/></g><g class="off" style="--i:12"><circle cx="112.5" cy="76.5" r="2.3"/><circle cx="112.5" cy="67.5" r="2.3"/><circle cx="112.5" cy="58.5" r="2.3"/><circle cx="112.5" cy="49.5" r="2.3"/><circle cx="112.5" cy="40.5" r="2.3"/><circle cx="112.5" cy="31.5" r="2.3"/></g><g class="off" style="--i:13"><circle cx="121.5" cy="76.5" r="2.3"/><circle cx="121.5" cy="67.5" r="2.3"/><circle cx="121.5" cy="58.5" r="2.3"/><circle cx="121.5" cy="49.5" r="2.3"/><circle cx="121.5" cy="40.5" r="2.3"/><circle cx="121.5" cy="31.5" r="2.3"/></g><g class="off" style="--i:14"><circle cx="130.5" cy="76.5" r="2.3"/><circle cx="130.5" cy="67.5" r="2.3"/><circle cx="130.5" cy="58.5" r="2.3"/><circle cx="130.5" cy="49.5" r="2.3"/><circle cx="130.5" cy="40.5" r="2.3"/><circle cx="130.5" cy="31.5" r="2.3"/></g><g class="off" style="--i:15"><circle cx="139.5" cy="76.5" r="2.3"/><circle cx="139.5" cy="67.5" r="2.3"/><circle cx="139.5" cy="58.5" r="2.3"/><circle cx="139.5" cy="49.5" r="2.3"/><circle cx="139.5" cy="40.5" r="2.3"/><circle cx="139.5" cy="31.5" r="2.3"/></g><g class="off" style="--i:16"><circle cx="148.5" cy="76.5" r="2.3"/><circle cx="148.5" cy="67.5" r="2.3"/><circle cx="148.5" cy="58.5" r="2.3"/><circle cx="148.5" cy="49.5" r="2.3"/><circle cx="148.5" cy="40.5" r="2.3"/></g><g class="off" style="--i:17"><circle cx="157.5" cy="76.5" r="2.3"/><circle cx="157.5" cy="67.5" r="2.3"/><circle cx="157.5" cy="58.5" r="2.3"/><circle cx="157.5" cy="49.5" r="2.3"/><circle cx="157.5" cy="40.5" r="2.3"/></g><g class="off" style="--i:18"><circle cx="166.5" cy="76.5" r="2.3"/><circle cx="166.5" cy="67.5" r="2.3"/><circle cx="166.5" cy="58.5" r="2.3"/><circle cx="166.5" cy="49.5" r="2.3"/><circle cx="166.5" cy="40.5" r="2.3"/></g><g class="off" style="--i:19"><circle cx="175.5" cy="76.5" r="2.3"/><circle cx="175.5" cy="67.5" r="2.3"/><circle cx="175.5" cy="58.5" r="2.3"/><circle cx="175.5" cy="49.5" r="2.3"/><circle cx="175.5" cy="40.5" r="2.3"/></g><g class="off" style="--i:20"><circle cx="184.5" cy="76.5" r="2.3"/><circle cx="184.5" cy="67.5" r="2.3"/><circle cx="184.5" cy="58.5" r="2.3"/><circle cx="184.5" cy="49.5" r="2.3"/><circle cx="184.5" cy="40.5" r="2.3"/></g><g class="off" style="--i:21"><circle cx="193.5" cy="76.5" r="2.3"/><circle cx="193.5" cy="67.5" r="2.3"/><circle cx="193.5" cy="58.5" r="2.3"/><circle cx="193.5" cy="49.5" r="2.3"/><circle cx="193.5" cy="40.5" r="2.3"/></g><g class="off" style="--i:22"><circle cx="202.5" cy="76.5" r="2.3"/><circle cx="202.5" cy="67.5" r="2.3"/><circle cx="202.5" cy="58.5" r="2.3"/><circle cx="202.5" cy="49.5" r="2.3"/><circle cx="202.5" cy="40.5" r="2.3"/></g><g class="off" style="--i:23"><circle cx="211.5" cy="76.5" r="2.3"/><circle cx="211.5" cy="67.5" r="2.3"/><circle cx="211.5" cy="58.5" r="2.3"/><circle cx="211.5" cy="49.5" r="2.3"/></g><g class="off" style="--i:24"><circle cx="220.5" cy="76.5" r="2.3"/><circle cx="220.5" cy="67.5" r="2.3"/><circle cx="220.5" cy="58.5" r="2.3"/><circle cx="220.5" cy="49.5" r="2.3"/></g><g class="off" style="--i:25"><circle cx="229.5" cy="76.5" r="2.3"/><circle cx="229.5" cy="67.5" r="2.3"/><circle cx="229.5" cy="58.5" r="2.3"/><circle cx="229.5" cy="49.5" r="2.3"/></g><g class="off" style="--i:26"><circle cx="238.5" cy="76.5" r="2.3"/><circle cx="238.5" cy="67.5" r="2.3"/><circle cx="238.5" cy="58.5" r="2.3"/><circle cx="238.5" cy="49.5" r="2.3"/></g><g class="off" style="--i:27"><circle cx="247.5" cy="76.5" r="2.3"/><circle cx="247.5" cy="67.5" r="2.3"/><circle cx="247.5" cy="58.5" r="2.3"/><circle cx="247.5" cy="49.5" r="2.3"/></g><g class="off" style="--i:28"><circle cx="256.5" cy="76.5" r="2.3"/><circle cx="256.5" cy="67.5" r="2.3"/><circle cx="256.5" cy="58.5" r="2.3"/><circle cx="256.5" cy="49.5" r="2.3"/></g><g class="off" style="--i:29"><circle cx="265.5" cy="76.5" r="2.3"/><circle cx="265.5" cy="67.5" r="2.3"/><circle cx="265.5" cy="58.5" r="2.3"/></g><g class="off" style="--i:30"><circle cx="274.5" cy="76.5" r="2.3"/><circle cx="274.5" cy="67.5" r="2.3"/><circle cx="274.5" cy="58.5" r="2.3"/></g><g class="off" style="--i:31"><circle cx="283.5" cy="76.5" r="2.3"/><circle cx="283.5" cy="67.5" r="2.3"/><circle cx="283.5" cy="58.5" r="2.3"/></g><g class="off" style="--i:32"><circle cx="292.5" cy="76.5" r="2.3"/><circle cx="292.5" cy="67.5" r="2.3"/><circle cx="292.5" cy="58.5" r="2.3"/></g><g class="off" style="--i:33"><circle cx="301.5" cy="76.5" r="2.3"/><circle cx="301.5" cy="67.5" r="2.3"/><circle cx="301.5" cy="58.5" r="2.3"/></g><g class="off" style="--i:34"><circle cx="310.5" cy="76.5" r="2.3"/><circle cx="310.5" cy="67.5" r="2.3"/><circle cx="310.5" cy="58.5" r="2.3"/></g><g class="off" style="--i:35"><circle cx="319.5" cy="76.5" r="2.3"/><circle cx="319.5" cy="67.5" r="2.3"/><circle cx="319.5" cy="58.5" r="2.3"/></g><g class="off" style="--i:36"><circle cx="328.5" cy="76.5" r="2.3"/><circle cx="328.5" cy="67.5" r="2.3"/></g><g class="off" style="--i:37"><circle cx="337.5" cy="76.5" r="2.3"/><circle cx="337.5" cy="67.5" r="2.3"/></g><g class="off" style="--i:38"><circle cx="346.5" cy="76.5" r="2.3"/><circle cx="346.5" cy="67.5" r="2.3"/></g><g class="off" style="--i:39"><circle cx="355.5" cy="76.5" r="2.3"/><circle cx="355.5" cy="67.5" r="2.3"/></g><g class="off" style="--i:40"><circle cx="364.5" cy="76.5" r="2.3"/><circle cx="364.5" cy="67.5" r="2.3"/></g><g class="off" style="--i:41"><circle cx="373.5" cy="76.5" r="2.3"/><circle cx="373.5" cy="67.5" r="2.3"/></g><g class="off" style="--i:42"><circle cx="382.5" cy="76.5" r="2.3"/><circle cx="382.5" cy="67.5" r="2.3"/></g><g class="off" style="--i:43"><circle cx="391.5" cy="76.5" r="2.3"/><circle cx="391.5" cy="67.5" r="2.3"/></g><g class="off" style="--i:44"><circle cx="400.5" cy="76.5" r="2.3"/></g><g class="off" style="--i:45"><circle cx="409.5" cy="76.5" r="2.3"/></g><g class="off" style="--i:46"><circle cx="418.5" cy="76.5" r="2.3"/></g><g class="off" style="--i:47"><circle cx="427.5" cy="76.5" r="2.3"/></g></svg>
+        <div class="deep-axis" aria-hidden="true"><span>Highest forecast</span><span>Lowest</span></div>
+        <dl class="deep-key">
+          <div><dt>Top forecast</dt><dd class="num">8.6 / 10</dd></div>
+          <div><dt>Forecast &ge; 7</dt><dd class="num">9 of 48</dd></div>
+          <div><dt>Agents trading</dt><dd class="num">12</dd></div>
+        </dl>
+      </figure>
+    </article>
+
+    <!-- 04 OPPORTUNITY -->
+    <article class="feat wrap flip" id="opportunity" aria-labelledby="f4-h">
+      <div class="feat-copy">
+        <p class="kicker"><span class="tag num">04</span>Opportunity Markets</p>
+        <h2 id="f4-h">Forecast the pick. Reviewers still make it.</h2>
+        <p>Traders forecast which submissions will be selected &mdash; for a grant, a hire, a call for proposals. The market surfaces strong entries early. The final decision stays with the reviewers.</p>
+        <a class="go" href="./opportunity.html">Open Opportunity Markets<svg width="16" height="16" aria-hidden="true"><use href="#arrow"/></svg></a>
+      </div>
+      <figure class="viz card">
+        <figcaption class="viz-cap"><span>Open call &middot; <span class="num">5</span> submissions</span><span class="illus">Illustrative</span></figcaption>
+        <table class="board">
+          <thead><tr><th scope="col">Submission</th><th scope="col">Market signal</th><th scope="col">Reviewers</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Open-source indexer</th><td><span class="sig"><i style="width:78%"></i></span><span class="num">78%</span></td><td><span class="dec yes"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5 5 9l5-6"/></svg>Selected</span></td></tr>
+            <tr><th scope="row">Dispute-flow redesign</th><td><span class="sig"><i style="width:64%"></i></span><span class="num">64%</span></td><td><span class="dec yes"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5 5 9l5-6"/></svg>Selected</span></td></tr>
+            <tr><th scope="row">Mobile wallet SDK</th><td><span class="sig"><i style="width:41%"></i></span><span class="num">41%</span></td><td><span class="dec wait"><svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4"/></svg>In review</span></td></tr>
+            <tr><th scope="row">Fee-model research</th><td><span class="sig"><i style="width:22%"></i></span><span class="num">22%</span></td><td><span class="dec yes"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2 6.5 5 9l5-6"/></svg>Selected</span></td></tr>
+            <tr><th scope="row">Docs translation</th><td><span class="sig"><i style="width:9%"></i></span><span class="num">9%</span></td><td><span class="dec no"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 6h6"/></svg>Not selected</span></td></tr>
+          </tbody>
+        </table>
+        <p class="viz-foot">Row 4: reviewers picked an entry the market rated low. That is the point &mdash; the signal advises, people decide.</p>
+      </figure>
+    </article>
+
+    <!-- 05 RISK -->
+    <article class="feat wrap" id="risk" aria-labelledby="f5-h">
+      <div class="feat-copy">
+        <p class="kicker"><span class="tag num">05</span>Risk Pricing</p>
+        <h2 id="f5-h">Compare risk across protocols, not one yes/no.</h2>
+        <p>A single &ldquo;will it be exploited?&rdquo; market gives you one price. Risk Pricing lines up market-estimated risk across many DeFi protocols on the same question and horizon, so they can be compared side by side.</p>
+        <a class="go" href="./risk.html">Open Risk Pricing<svg width="16" height="16" aria-hidden="true"><use href="#arrow"/></svg></a>
+      </div>
+      <figure class="viz card">
+        <figcaption class="viz-cap"><span>Loss event within 12 months</span><span class="illus">Illustrative</span></figcaption>
+        <p class="viz-sub">Market-estimated probability, same question for each protocol</p>
+        <ul class="risk">
+          <li><span class="rk">Protocol A</span><span class="rb"><i style="--w:.084"></i></span><span class="rv num">2.1%</span></li>
+          <li><span class="rk">Protocol B</span><span class="rb"><i style="--w:.136"></i></span><span class="rv num">3.4%</span></li>
+          <li><span class="rk">Protocol C</span><span class="rb"><i style="--w:.232"></i></span><span class="rv num">5.8%</span></li>
+          <li><span class="rk">Protocol D</span><span class="rb"><i style="--w:.368"></i></span><span class="rv num">9.2%</span></li>
+          <li class="hi"><span class="rk">Protocol E</span><span class="rb"><i style="--w:.58"></i></span><span class="rv num">14.5%</span></li>
+        </ul>
+        <div class="risk-scale num" aria-hidden="true"><span></span><span class="rs"><span>0%</span><span>12.5%</span><span>25%</span></span><span></span></div>
+      </figure>
+    </article>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta wrap" aria-labelledby="cta-h">
+    <div class="cta-block">
+      <h2 id="cta-h">Build your decision on the base layer.</h2>
+      <div class="cta-actions">
+        <a class="btn-w" href="./app.html">Launch App</a>
+        <a class="btn-ow" href="#ecosystem">See the ecosystem</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-grid">
+    <div class="foot-brand">
+      <svg width="86" height="24" aria-hidden="true" focusable="false"><use href="#logo"/></svg>
+      <p class="foot-name">Seer</p>
+      <p class="muted">The base layer for decision markets.</p>
+    </div>
+    <nav aria-label="Apps"><h2>Apps</h2><ul>
+      <li><a href="./app.html">Seer app</a></li><li><a href="./futarchy.html">Futarchy</a></li><li><a href="./deep.html">Deep</a></li><li><a href="./opportunity.html">Opportunity Markets</a></li><li><a href="./risk.html">Risk Pricing</a></li></ul></nav>
+    <nav aria-label="Protocol"><h2>Protocol</h2><ul>
+      <li><a href="#ecosystem">Ecosystem</a></li><li><a href="#how">How a market works</a></li><li><a href="#how">Market types</a></li></ul></nav>
+    <div class="foot-theme">
+      <h2>Theme</h2>
+      <button class="theme-toggle wide" type="button" aria-pressed="false" data-theme-toggle><span class="sr">Light theme</span><span class="tt-label" aria-hidden="true">Light theme</span></button>
+    </div>
+  </div>
+  <p class="wrap foot-note">Seer Rebrand Contest &middot; Electric Foundation concept. All market figures on this page are illustrative, not live data.</p>
+</footer>
+</body>
+</html>

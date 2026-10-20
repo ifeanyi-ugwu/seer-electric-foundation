@@ -1,0 +1,114 @@
+/* Shared by futarchy / deep / opportunity / risk. Shell, page head, badge, focus and motion live in shell.css. */
+.page{max-width:1440px;margin:0 auto;padding:24px 40px 64px}
+.head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:24px}
+.cols{display:grid;grid-template-columns:320px minmax(0,1fr);gap:16px;align-items:start}
+.cols.rev{grid-template-columns:minmax(0,1fr) 320px}
+.stack{display:grid;gap:12px;min-width:0}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.panel-c{background:var(--card);border-radius:var(--r-card);padding:16px;min-width:0}
+.panel-c h2{font-size:14px;font-weight:500;margin-bottom:12px}
+/* section marker: the landing's small hard violet square */
+.panel-c > h2:first-child::before,.panel-c > .line > h2::before{content:"";display:inline-block;width:8px;height:8px;background:var(--violet);margin-right:8px;vertical-align:1px}
+.panel-c > .line > h2{margin-bottom:0}
+.muted{color:var(--muted);font-size:12px}
+.list-label{display:flex;align-items:center;gap:8px}
+.seg{display:inline-flex;background:var(--surface);border-radius:999px;padding:3px}
+.seg button{border:0;background:transparent;color:var(--text-2);font:inherit;padding:8px 12px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.seg button:hover{color:var(--text)}
+.seg button[aria-pressed=true]{background:var(--violet);color:#fff}
+.field{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:10px 16px;font:inherit;min-height:40px}
+.pick{display:block;width:100%;text-align:left;border:2px solid transparent;background:var(--card);color:inherit;font:inherit;border-radius:var(--r-card);padding:12px 16px;cursor:pointer}
+.pick:hover{border-color:color-mix(in srgb,var(--violet) 40%,transparent)}
+.pick[aria-pressed=true]{border-color:var(--violet);box-shadow:inset 3px 0 0 var(--violet)}
+.pick b{display:block;font-weight:500;margin-bottom:4px}
+/* KPI tiles: diagonal-cut corner + short violet tick */
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpi > div{position:relative;background:var(--row);border-radius:var(--r-card);padding:12px 16px;
+  clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%)}
+.kpi > div::before{content:"";position:absolute;left:0;top:12px;width:2px;height:12px;background:var(--violet)}
+.kpi small{display:block;color:var(--muted);font-size:12px}
+.kpi b{display:block;font-size:22px;font-weight:500;margin-top:4px;letter-spacing:-.01em}
+.page > #root > .kpi > div,.page .kpi.top > div{background:var(--card)}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+.ticket{display:grid;gap:12px}.ticket label{color:var(--text-2);font-size:12px}
+.line{display:flex;justify-content:space-between;align-items:center;gap:8px 12px;flex-wrap:wrap}
+.tbl{overflow-x:auto;border-radius:var(--r-card)}
+.tbl.tall{max-height:min(72vh,760px);overflow:auto;overscroll-behavior:contain}
+.tbl.tall thead th{position:sticky;top:0;z-index:2;background:var(--card);box-shadow:inset 0 -1px 0 var(--line)}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted);font-weight:500;font-size:12px}
+th button{all:unset;cursor:pointer;padding:4px 0}
+th button:focus-visible{outline:2px solid var(--violet-text);outline-offset:2px}
+td.r,th.r{text-align:right}td.w{white-space:normal}
+.note{color:var(--muted);font-size:12px}
+.notice{border-left:3px solid var(--violet);background:var(--violet-soft);color:var(--text);padding:12px 16px;border-radius:0 var(--r-card) var(--r-card) 0}
+.mini{display:inline-block;height:8px;border-radius:2px;vertical-align:middle}
+.legend{display:flex;gap:16px;flex-wrap:wrap;margin:8px 0}
+.legend span{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2)}
+.sw{width:22px;height:0;border-top:3px solid}
+.chart{display:block;width:100%;overflow:visible}
+.ticket .seg,.panel-c .seg{justify-self:start;width:max-content;max-width:100%}
+
+/* ---------- Futarchy: the pass / fail fork ---------- */
+.fork-metric{text-align:center;font-size:13px;background:var(--row);border-radius:var(--r-chip);padding:8px 12px;width:max-content;max-width:100%;margin:0 auto}
+.fork-lines{display:block;width:100%;height:40px}
+.fork-lines path{fill:none;stroke-width:1.5}
+.fork-legs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.leg{position:relative;background:var(--row);border-radius:var(--r-card);padding:12px 16px;clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%)}
+.leg small{display:flex;align-items:center;gap:8px;color:var(--text-2);font-size:12px}
+.leg b{display:block;font-size:26px;font-weight:500;letter-spacing:-.02em;margin-top:4px}
+.mk{display:inline-block;width:9px;height:9px;flex:none}
+.mk.pass{background:var(--pos);border-radius:50%}.mk.fail{background:var(--neg)}
+.fork-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;margin-top:12px}
+.fork-meta div{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--text-2);border-top:1px solid var(--line);padding-top:8px}
+.vote-bar{height:8px;background:var(--surface);overflow:hidden;margin-top:4px}
+.vote-bar i{display:block;height:100%;background:var(--violet);clip-path:polygon(0 0,100% 0,calc(100% - 6px) 100%,0 100%)}
+
+/* ---------- Deep: dense dot field ---------- */
+.dotfield circle{cursor:pointer;transition:stroke var(--t) ease}
+.dotfield circle:hover{stroke:var(--text-2);stroke-width:2}
+.dotfield circle:focus-visible{outline:none;stroke:var(--violet-text);stroke-width:3}
+.cols2{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:16px;margin-bottom:16px;align-items:start}
+
+/* ---------- Opportunity: signal beside decision ---------- */
+.sigbar{display:inline-flex;align-items:center;gap:12px}
+.sigbar .trk{position:relative;display:inline-block;width:120px;height:8px;background:var(--surface);flex:none}
+.sigbar .trk i{position:absolute;inset:0 auto 0 0;background:var(--violet);clip-path:polygon(0 0,100% 0,calc(100% - 4px) 100%,0 100%)}
+.sigbar .trk::after{content:"";position:absolute;left:50%;top:-3px;width:1px;height:14px;background:var(--muted);opacity:.6}
+
+/* ---------- Risk: graded cells ---------- */
+.heat td.h{font-weight:500;position:relative}
+.heat td.h::after{content:"";position:absolute;right:16px;bottom:8px;height:3px;width:calc((100% - 32px) * var(--g));background:var(--violet);clip-path:polygon(0 0,100% 0,calc(100% - 3px) 100%,0 100%)}
+.heat td.h{min-width:96px}
+
+@media(max-width:960px){.cols,.cols.rev,.cols2{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:760px){
+  .page{padding:16px 16px 40px}
+  .seg{display:flex;flex-wrap:wrap;border-radius:var(--r-card);width:100%;gap:2px}
+  .seg button{flex:1 1 auto;border-radius:6px;padding:8px 10px}
+  .ticket .seg,.panel-c .seg{width:100%}
+  .head{gap:8px;margin-bottom:16px}
+  .head > *{min-width:0;max-width:100%}
+  .head input.field{flex:1 1 100%}
+  .head > div:has(> input.field){width:100%}
+  /* long segmented controls scroll sideways instead of orphaning a button */
+  .seg:has(> :nth-child(4)){flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+  .seg:has(> :nth-child(4)) button{flex:0 0 auto}
+  .seg::-webkit-scrollbar{display:none}
+  /* keep the protocol name in view while the heatmap scrolls */
+  .heat th:first-child,.heat td:first-child{position:sticky;left:0;z-index:1;background:var(--card);box-shadow:inset -1px 0 0 var(--line)}
+  .kpi{grid-template-columns:1fr 1fr;gap:8px}
+  .kpi b{font-size:20px}
+  .leg b{font-size:22px}
+  .fork-meta{grid-template-columns:1fr}
+  /* Opportunity table becomes stacked rows so the signal stays beside the decision */
+  .opp table,.opp tbody{display:block}
+  .opp thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .opp tr{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"n v" "s s" "d f";gap:8px 12px;padding:12px 16px;border-bottom:1px solid var(--line)}
+  .opp td{padding:0;border:0;white-space:normal;background:none!important}
+  .opp tr.is-sel{background:var(--violet-soft);box-shadow:inset 3px 0 0 var(--violet)}
+  .opp tr.is-sel td:first-child{box-shadow:none}
+  .opp .c-n{grid-area:n}.opp .c-v{grid-area:v;align-self:start}.opp .c-s{grid-area:s}.opp .c-d{grid-area:d}.opp .c-f{grid-area:f;text-align:right}
+  .opp .sigbar .trk{width:calc(100vw - 120px);max-width:240px}
+}
