@@ -229,11 +229,11 @@ function ghost(el,f){var g=el.cloneNode(true),host=doc.createElement("div");
 function enterKf(el,i,dist){if(el.__flip){el.__flip.cancel();el.__flip=null}unreveal(el);
   el.__flip=anim(el,[{opacity:0,transform:"translateY("+(dist||8)+"px)"},{opacity:1,transform:"none"}],{duration:SE.settle.duration+90,easing:SE.settle.easing,delay:Math.min(i,MAXSTAG)*STAG,fill:"backwards"})}
 /* a list move: the spring starts at the old visual offset and keeps whatever velocity it already had.
-   Long moves (more than 600px) take the softer spring and start no further than 1.2 screens away, so a row
-   arriving from the far end of a long table flies in readably instead of streaking. */
-function flipTo(el,dx,dy){el.__fl=1;var lim=innerHeight*1.2,far=Math.abs(dy)>600||Math.abs(dx)>600;
-  if(Math.abs(dy)>lim)dy=dy<0?-lim:lim;if(Math.abs(dx)>lim)dx=dx<0?-lim:lim;
+   Long moves (more than 600px) take the softer spring, so a row heading for the far end of a long table
+   leaves readably instead of streaking. */
+function flipTo(el,dx,dy){el.__fl=1;var far=Math.abs(dy)>600||Math.abs(dx)>600;
   drive(el,{fx:0,fy:0},far?"gentle":"settle",{from:{fx:dx,fy:dy},eps:.3})}
+function flipStop(el){el.__fl=0;if(SP)SP.stop(el,true);applyVars({fx:0,fy:0},el);physDone(el)}
 
 M.patch=function(target,next,o){o=o||{};
   var ctx={added:[],removed:[],swapped:new Set(),animate:o.animate!==false&&!reduced()},sel=o.flip;
@@ -264,12 +264,12 @@ function settle(target,job){var first=job.first,sel=job.sel,moves=[],enters=[];
     each(all,function(el){if(el.__flip){el.__flip.cancel();el.__flip=null}if(el.__fl){el.style.setProperty("--m-fx","0px");el.style.setProperty("--m-fy","0px");if(el.__mv){el.__mv.fx=el.__mv.fy=null}}});
     each(all,function(el){var r=el.getBoundingClientRect(),f=first.get(el),c=clipOf(el);
       if(f){var dx=f.r.left-r.left,dy=f.r.top-r.top;if(Math.abs(dx)>=1||Math.abs(dy)>=1)moves.push([el,dx,dy,r.height,visIn(r,c)?0:1]);
-        else if(el.__fl){el.__fl=0;if(el.__mv){el.__mv.fx=el.__mv.fy=null}SP&&SP.stop(el,true)}}
+        else if(el.__fl)flipStop(el)}
       else if(visIn(r,c))enters.push(el)});
     /* at most 60 rows glide at once; the ones that stay on screen come first, the ones leaving it may simply go */
     moves.sort(function(a,b){return a[4]-b[4]});
     moves.slice(0,60).forEach(function(m){flipTo(m[0],m[1],m[2]);if(Math.abs(m[2])>m[3]*2.5)wash(m[0])});
-    moves.slice(60).forEach(function(m){if(m[0].__fl){m[0].__fl=0;SP&&SP.stop(m[0],true)}});
+    moves.slice(60).forEach(function(m){if(m[0].__fl)flipStop(m[0])});
     enters.slice(0,24).forEach(function(el,i){enterKf(el,i)})}
   var k=0;
   job.added.forEach(function(n){if(n.nodeType!==1||!n.isConnected)return;
