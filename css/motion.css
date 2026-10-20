@@ -42,7 +42,7 @@ html{scroll-padding-top:var(--m-hdr,88px)}
   -webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);
   box-shadow:inset 0 -1px 0 color-mix(in srgb,var(--text) 14%,transparent),0 10px 24px -18px rgba(0,0,0,.55)}
 .shell-bar.is-condensed .shell-in{transform:translateY(-6px)}
-@media (max-width:760px){.shell-bar.is-condensed::before{transform:none}.shell-bar.is-condensed .shell-in{transform:none}}
+@media (max-width:800px){.shell-bar.is-condensed::before{transform:none}.shell-bar.is-condensed .shell-in{transform:none}}
 
 /* product nav: active indicator (glides from the previous product on page change, see js/motion.js) + hover pill */
 .shell-products.m-ind-host{position:relative}
@@ -199,6 +199,11 @@ html{scroll-padding-top:var(--m-hdr,88px)}
 @media (prefers-reduced-motion:no-preference){
   .scrim{animation:m-fade var(--dur-3) var(--ease-standard) both}
   .panel{animation:m-panel-in var(--dur-4) var(--ease-decel) both,m-fade var(--dur-2) var(--ease-standard) both}
+}
+/* phones: the detail panel is a bottom sheet, so it rises instead of sliding in */
+@keyframes m-sheet-up{from{transform:translateY(40px)}}
+@media (prefers-reduced-motion:no-preference) and (max-width:600px){
+  .panel{animation-name:m-sheet-up,m-fade}
 }
 
 /* ---------- ghosts of removed list items (fade out in place) ---------- */

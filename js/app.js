@@ -1,5 +1,5 @@
 (function(){
-  SeerShell.mount({product:"app",cta:"Create Market"});
+  SeerShell.mount({product:"app",cta:"Connect wallet"});
   var M=window.MARKETS,TYPES=["Categorical","Multi-categorical","Scalar","Multi-scalar","Conditional"];
   var st={cat:"All",type:"",status:"",q:"",sort:"vol",view:"grid"};
   function h(tag,attrs,kids){var n=document.createElement(tag);for(var k in attrs||{}){if(k==="text")n.textContent=attrs[k];else if(k==="class")n.className=attrs[k];else if(k.slice(0,2)==="on")n[k]=attrs[k];else n.setAttribute(k,attrs[k])}
@@ -17,8 +17,9 @@
   function stats(){var open=M.filter(function(m){return m.status==="Open"||m.status==="Live"}).length;
     var vol=M.reduce(function(a,m){return a+m.vol},0);var liq=M.reduce(function(a,m){return a+m.liq},0);
     var el=document.getElementById("stats");el.textContent="";
-    [["Markets listed",String(M.length)],["Open or live",String(open)],["Total volume",money(vol)],["Liquidity",money(liq)]].forEach(function(s){
-      el.appendChild(h("div",{class:"stat"},[h("span",{text:s[0]}),h("b",{class:"num",text:s[1]})]))})}
+    /* the market count lives once, in the results line; the tiles carry what the list cannot */
+    [["Open or live",String(open)],["Total volume",money(vol)],["Liquidity",money(liq)]].forEach(function(s){
+      el.appendChild(h("div",{},[h("small",{text:s[0]}),h("b",{class:"num",text:s[1]})]))})}
 
   function cats(){var el=document.getElementById("cats"),f=h("div"),sel=document.getElementById("cat-m"),all=["All"].concat(M.map(function(m){return m.cat}).filter(function(c,i,a){return a.indexOf(c)===i}));
     all.forEach(function(c){
@@ -27,7 +28,7 @@
     if(sel){if(!sel.options.length)all.forEach(function(c){sel.appendChild(h("option",{value:c,text:c==="All"?"All categories":c}))});if(sel.value!==st.cat)sel.value=st.cat}}
   function types(){var el=document.getElementById("types"),f=h("div");
     [""].concat(TYPES).forEach(function(t){var n=M.filter(function(m){return!t||m.type===t}).length;
-      f.appendChild(h("button",{class:"chip",type:"button","data-key":t||"all","aria-pressed":String(st.type===t),text:(t||"All types")+" · "+n,onclick:function(){st.type=t;types();render()}}))});patch(el,f)}
+      f.appendChild(h("button",{class:"chip",type:"button","data-key":t||"all","aria-pressed":String(st.type===t),text:t?t+" · "+n:"All types",onclick:function(){st.type=t;types();render()}}))});patch(el,f)}
 
   function card(m){
     var body=[];
@@ -41,7 +42,7 @@
       return h("span",{class:"acts","aria-hidden":"true"},[h("span",{class:"yn buy",text:"Buy"})])}
     if(m.outs){m.outs.slice(0,m.outs.length>3?3:m.outs.length).forEach(function(o){
       body.push(h("div",{class:"orow"},[h("span",{text:o[0]}),h("span",{class:"pct"},[h("span",{class:"num",text:pc(o[1])}),acts(o)])]))});
-      if(m.outs.length>3)body.push(h("span",{class:"note",text:"+ "+(m.outs.length-3)+" more outcomes"}))}
+      if(m.outs.length>3)body.push(h("span",{class:"more",text:"+ "+(m.outs.length-3)+(m.outs.length-3===1?" more outcome":" more outcomes")}))}
     else if(m.scalar){var s=m.scalar,p=(s.est-s.lo)/(s.hi-s.lo)*100;
       body.push(h("div",{},[h("div",{class:"range"},[h("b",{class:"num",text:s.unit==="$"?"$"+s.est:s.est+s.unit,style:"left:"+p+"%"}),h("i",{style:"left:"+p+"%"})]),h("div",{class:"rl num"},[h("span",{text:String(s.lo)}),h("span",{text:"Market estimate"}),h("span",{text:String(s.hi)})])]))}
     else if(m.cond){var c=m.cond,f=function(v){return(c.unit==="$"?"$":"")+v.toLocaleString("en-US")};
@@ -64,7 +65,7 @@
     t.appendChild(tb);w.appendChild(roles(t));return f}
 
   function render(){var list=sorted(M.filter(matches)),out=document.getElementById("out"),f=h("div");
-    document.getElementById("count").textContent=list.length+" of "+M.length+" markets";
+    document.getElementById("count").textContent=list.length===M.length?M.length+" markets":list.length+" of "+M.length+" markets";
     if(!list.length)f.appendChild(h("div",{class:"empty",text:"No markets match these filters."}));
     else if(st.view==="table")f.appendChild(table(list));else{var g=h("div",{class:"mgrid"});list.forEach(function(m){g.appendChild(card(m))});f.appendChild(g)}
     patch(out,f,{flip:".mcard, tbody tr"})}
@@ -74,45 +75,49 @@
   function closePanel(){var r=document.getElementById("panel-root"),p=r.querySelector(".panel"),s=r.querySelector(".scrim");document.removeEventListener("keydown",esc);
     var clear=function(){if(!p||p.isConnected)r.textContent=""};
     if(window.Motion&&p)Motion.exit([p,s],clear);else clear();if(lastFocus)lastFocus.focus()}
-  function esc(e){if(e.key==="Escape")closePanel()}
-  function spark(seed,end){var pts=[],v=Math.max(.05,end-.18),n=24,i;for(i=0;i<n;i++){seed=(seed*9301+49297)%233280;v+= (seed/233280-.5)*.06+(end-v)*.08;pts.push(Math.min(.97,Math.max(.03,v)))}
+  /* Escape closes; Tab and Shift+Tab stay inside the open panel */
+  function esc(e){if(e.key==="Escape"){closePanel();return}if(e.key!=="Tab")return;var p=document.querySelector("#panel-root .panel");if(!p)return;
+    var f=[].filter.call(p.querySelectorAll("button,input,select,[tabindex]:not([tabindex='-1'])"),function(n){return!n.disabled&&n.getClientRects().length});if(!f.length)return;
+    var a=f[0],z=f[f.length-1];if(e.shiftKey&&(document.activeElement===a||!p.contains(document.activeElement))){e.preventDefault();z.focus()}else if(!e.shiftKey&&(document.activeElement===z||!p.contains(document.activeElement))){e.preventDefault();a.focus()}}
+  function spark(seed,end,name){var pts=[],v=Math.max(.05,end-.18),n=24,i;for(i=0;i<n;i++){seed=(seed*9301+49297)%233280;v+= (seed/233280-.5)*.06+(end-v)*.08;pts.push(Math.min(.97,Math.max(.03,v)))}
     pts[n-1]=end;var lo=Math.min.apply(null,pts),hi=Math.max.apply(null,pts),pad=Math.max(.02,(hi-lo)*.12);lo-=pad;hi+=pad;
     var Y=function(p){return((hi-p)/(hi-lo)*64).toFixed(1)},d=pts.map(function(p,i){return(i?"L":"M")+(i/(n-1)*300).toFixed(1)+" "+Y(p)}).join(" ");
     var NS="http://www.w3.org/2000/svg",s=document.createElementNS(NS,"svg");s.setAttribute("viewBox","0 0 300 64");s.setAttribute("preserveAspectRatio","none");s.setAttribute("class","spark");s.setAttribute("role","img");
-    s.setAttribute("aria-label","Illustrative price history, ending at "+pc(end));
+    s.setAttribute("aria-label","Price history of "+name+", ending at "+pc(end));
     var a=document.createElementNS(NS,"path");a.setAttribute("class","m-area");a.setAttribute("d",d+" L300 64 L0 64 Z");a.setAttribute("fill","var(--violet)");a.setAttribute("fill-opacity",".12");s.appendChild(a);
     var p=document.createElementNS(NS,"path");p.setAttribute("class","m-line");p.setAttribute("d",d);p.setAttribute("fill","none");p.setAttribute("stroke","var(--violet)");p.setAttribute("stroke-width","2");p.setAttribute("vector-effect","non-scaling-stroke");s.appendChild(p);
-    var box=h("div",{class:"spark-box"},[h("div",{class:"spark-head"},[h("span",{text:"Price history · leading outcome"}),h("span",{class:"num",text:pc(end)})]),s,h("div",{class:"note",text:"Illustrative price history"})]);return box}
+    var box=h("div",{class:"spark-box"},[h("div",{class:"spark-head"},[h("span",{text:"Price history"}),h("span",{text:"Leading: "+name})]),s]);return box}
   function openPanel(m){lastFocus=document.activeElement;var root=document.getElementById("panel-root");root.textContent="";
     var pick=0,side="Yes",amt=50;
     var price=function(){return m.outs?(side==="Yes"?m.outs[pick][1]:1-m.outs[pick][1]):.5};
     var tk=h("div",{class:"ticket"}),
     drawTicket=function(){var p=Math.min(.99,Math.max(.01,price())),f=h("div");
-      if(m.status!=="Open"&&m.status!=="Live"){f.appendChild(h("div",{text:"Trading is closed for this market.",class:"note"}));patch(tk,f);return}
+      if(m.status!=="Open"&&m.status!=="Live"){f.appendChild(h("p",{text:"Trading is closed for this market.",class:"note"}));patch(tk,f);return}
       var tk0=tk;tk=f;
       if(m.outs){tk.appendChild(h("div",{class:"seg",role:"group","aria-label":"Side"},["Yes","No"].map(function(s){return h("button",{type:"button","aria-pressed":String(side===s),text:"Buy "+s,onclick:function(){side=s;drawTicket()}})})))}
       else tk.appendChild(h("div",{class:"note",text:m.scalar?"Scalar markets trade a long/short position on the value.":"Conditional markets trade each branch separately."}));
       var inp=h("input",{class:"field",type:"number",min:"1",value:String(amt),id:"amt","aria-label":"Amount in USDC",oninput:function(e){amt=Math.max(0,Number(e.target.value)||0);upd(true)}});
-      tk.appendChild(h("label",{for:"amt",text:"Amount (USDC)"}));tk.appendChild(inp);
+      tk.appendChild(h("div",{class:"field-grp"},[h("label",{for:"amt",text:"Amount (USDC)"}),inp]));
       var l1=h("span",{class:"num","data-k":"price"}),l2=h("span",{class:"num","data-k":"shares"}),l3=h("span",{class:"num","data-k":"payout"});
       tk.appendChild(h("div",{class:"line"},[h("span",{text:"Price per share"}),l1]));tk.appendChild(h("div",{class:"line"},[h("span",{text:"Shares"}),l2]));tk.appendChild(h("div",{class:"line"},[h("span",{text:"Payout if correct"}),l3]));
       /* live: values tick to the new amount; the spans are looked up because a morph keeps the on-screen nodes */
       function upd(live){var s=amt/p,v=[["price","$"+p.toFixed(2)],["shares",s.toFixed(1)],["payout","$"+s.toFixed(2)]];
         v.forEach(function(x){var n=live?tk0.querySelector('[data-k="'+x[0]+'"]'):[l1,l2,l3][["price","shares","payout"].indexOf(x[0])];if(!n)return;
           if(live&&window.Motion)Motion.num(n,x[1]);else n.textContent=x[1]})}upd();
-      tk.appendChild(h("button",{class:"btn lg",type:"button",text:"Connect wallet to trade"}));
-      tk.appendChild(h("div",{class:"note",text:"Demo only. No wallet or funds involved."}));tk=tk0;patch(tk,f)};
+      /* one wallet control per page (the header); the ticket action waits for it and says so */
+      tk.appendChild(h("button",{class:"btn lg",type:"button","aria-disabled":"true","aria-describedby":"tk-hint",text:"Place trade"}));
+      tk.appendChild(h("p",{class:"note",id:"tk-hint",text:"Connect a wallet to trade. Demo only, no funds move."}));tk=tk0;patch(tk,f)};
     var list=null;
-    if(m.outs){list=h("div",{style:"display:grid;gap:8px"},[]);var draw=function(){var f=h("div");m.outs.forEach(function(o,i){f.appendChild(h("button",{type:"button",class:"orow sel","data-key":"o"+i,"aria-pressed":String(pick===i),onclick:function(){pick=i;draw();drawTicket()}},[h("span",{text:o[0]}),h("span",{class:"num",text:pc(o[1])})]))});patch(list,f)};draw()}
+    if(m.outs){list=h("div",{class:"olist"},[]);var draw=function(){var f=h("div");m.outs.forEach(function(o,i){f.appendChild(h("button",{type:"button",class:"orow sel","data-key":"o"+i,"aria-pressed":String(pick===i),onclick:function(){pick=i;draw();drawTicket()}},[h("span",{text:o[0]}),h("span",{class:"num",text:pc(o[1])})]))});patch(list,f)};draw()}
     else{var c=card(m);list=h("div",{class:"mcard static"});while(c.firstChild)list.appendChild(c.firstChild)}
-    var end=(lead(m)||[0,.5])[1];
+    var ld=lead(m);
     var p=h("div",{class:"panel",role:"dialog","aria-modal":"true","aria-label":m.q},[
       h("div",{class:"panel-top"},[h("span",{class:"badge",text:m.type}),h("button",{class:"btn soft",type:"button",text:"Close",onclick:closePanel})]),h("h2",{text:m.q}),
       h("div",{class:"kv"},[h("div",{},[h("small",{text:"Volume"}),h("b",{class:"num",text:money(m.vol)})]),h("div",{},[h("small",{text:"Liquidity"}),h("b",{class:"num",text:money(m.liq)})]),h("div",{},[h("small",{text:"Closes"}),h("b",{text:m.close})]),h("div",{},[h("small",{text:"Status"}),h("b",{text:m.status})])]),
-      list,spark(m.id*37,end),tk]);
+      list,ld?spark(m.id*37,ld[1],ld[0]):null,tk]);
     drawTicket();
     root.appendChild(h("div",{class:"scrim",onclick:closePanel}));root.appendChild(p);document.addEventListener("keydown",esc);p.querySelector(".panel-top button").focus();
-    if(window.Motion){Motion.scan(p);Motion.stagger(p.querySelectorAll(".kv > div, .sel, .mcard.static, .spark-box, .ticket"),140,35);Motion.draw(p.querySelector(".spark"),{delay:320})}}
+    if(window.Motion){Motion.scan(p);Motion.stagger(p.querySelectorAll(".kv > div, .sel, .mcard.static, .spark-box, .ticket"),140,35);if(ld)Motion.draw(p.querySelector(".spark"),{delay:320})}}
 
   document.getElementById("q").oninput=function(e){st.q=e.target.value;render()};
   document.getElementById("cat-m").onchange=function(e){st.cat=e.target.value;cats();render()};
@@ -122,5 +127,5 @@
   document.getElementById("vg").onclick=function(){view("grid")};document.getElementById("vt").onclick=function(){view("table")};
   stats();cats();types();render();
   if(window.Motion){Motion.ready();
-    Motion.reveal(".stats .stat",{onIn:Motion.dataIn});Motion.reveal("#cats, .toolbar, #types, #count",{rise:8});Motion.reveal("#out .mcard, #out tbody tr")}
+    Motion.reveal("#stats > div",{onIn:Motion.dataIn});Motion.reveal("#cats, .toolbar, #types, #count",{rise:8});Motion.reveal("#out .mcard, #out tbody tr")}
 })();

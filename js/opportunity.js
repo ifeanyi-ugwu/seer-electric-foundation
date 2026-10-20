@@ -9,34 +9,45 @@ var slots=6,st={f:"all",sort:"p",div:false,sel:null,side:"Yes",amt:50};
 function differs(s){return(s.r==="Selected"&&s.p<.3)||(s.r==="Not selected"&&s.p>=.5)}
 var ICON={"Selected":"✓","Not selected":"✕","In review":"…","Pending":"–"};
 function badge(s){var c=s==="Selected"?"var(--pos)":s==="Not selected"?"var(--neg)":"var(--text-2)";return h("span",{style:"color:"+c,class:"num",text:ICON[s]+" "+s})}
-function draw(){var target=document.getElementById("root"),root=h("div");
+/* the trade panel for one submission: inline beside the table on desktop, in a sheet on tablet and phone */
+function sideKids(s){var p=st.side==="Yes"?s.p:1-s.p,open=s.r==="In review"||s.r==="Pending",k=[];
+ k.push(h("div",{class:"line"},[h("span",{class:"muted",text:"Reviewer decision"}),badge(s.r)]));
+ if(!open){k.push(h("p",{class:"note",text:"Reviewers have decided. This market is settled by their decision."}));return k}
+ k.push(h("div",{class:"seg",role:"group","aria-label":"Side"},["Yes","No"].map(function(x){return h("button",{type:"button","aria-pressed":String(st.side===x),text:"Will "+(x==="Yes"?"":"not ")+"be selected",onclick:function(){st.side=x;draw()}})})));
+ var pay=function(){return"$"+(st.amt/Math.min(.99,Math.max(.01,p))).toFixed(2)};
+ k.push(h("div",{class:"line"},[h("span",{text:"Price"}),h("b",{class:"num",text:"$"+p.toFixed(2)})]));
+ k.push(h("div",{class:"field-grp"},[h("label",{for:"amt",text:"Amount (USDC)"}),
+  h("input",{class:"field",id:"amt",type:"number",min:"1",value:String(st.amt),oninput:function(e){st.amt=Math.max(0,+e.target.value||0);var o=document.getElementById("opp-out");if(window.Motion)Motion.num(o,pay());else o.textContent=pay()}})]));
+ k.push(h("div",{class:"line"},[h("span",{text:"Payout if reviewers agree"}),h("b",{class:"num",id:"opp-out",text:pay()})]));
+ k.push(h("button",{class:"btn lg",type:"button","aria-disabled":"true","aria-describedby":"tk-hint",text:"Place trade"}));
+ k.push(h("p",{class:"note",id:"tk-hint",text:"Connect a wallet to trade. Demo only, no funds move."}));return k}
+function close(){var s=st.sel;st.sel=null;draw();if(s){var r=document.querySelector('tr[data-key="s'+s.id+'"]');if(r)r.focus({preventScroll:true})}}
+function draw(){var target=document.getElementById("root"),root=h("div"),narrow=U.narrow.matches;
  var sel=S.filter(function(s){return s.r==="Selected"}).length,dv=S.filter(differs).length;
  var l=S.filter(function(s){return(st.f==="all"||s.r===st.f)&&(!st.div||differs(s))}).sort(function(a,b){return st.sort==="p"?b.p-a.p:a.n.localeCompare(b.n)});
- root.appendChild(h("div",{class:"kpi top",style:"margin-bottom:16px"},[["Submissions",String(S.length)],["Slots available",String(slots)],["Chosen by reviewers",sel+" of "+slots],["Where reviewers differ from the market",String(dv)]].map(function(k){return h("div",{},[h("small",{text:k[0]}),h("b",{class:"num",text:k[1]})])})));
- root.appendChild(h("div",{class:"notice",style:"margin-bottom:16px",text:"The market signal is a forecast of what reviewers will do. It is shown beside their decision and never replaces it."}));
- root.appendChild(h("div",{class:"head",style:"margin:0 0 12px"},[
-  h("div",{style:"display:flex;gap:10px;flex-wrap:wrap;align-items:center"},[h("div",{class:"seg",role:"group","aria-label":"Reviewer status"},["all","Selected","In review","Pending","Not selected"].map(function(f){return h("button",{type:"button","aria-pressed":String(st.f===f),text:f==="all"?"All":f,onclick:function(){st.f=f;draw()}})})),
-   h("label",{style:"display:flex;gap:8px;align-items:center;color:var(--text-2);min-height:44px;cursor:pointer"},[h("input",{type:"checkbox",checked:st.div?"checked":null,onchange:function(e){st.div=e.target.checked;draw()}}),"Only where they differ"])]),
-  h("select",{class:"field","aria-label":"Sort",onchange:function(e){st.sort=e.target.value;draw()}},[h("option",{value:"p",text:"Sort: market signal",selected:st.sort==="p"?"selected":null}),h("option",{value:"n",text:"Sort: name",selected:st.sort==="n"?"selected":null})])]));
- function pick(s){st.sel=s;draw();var t=document.querySelector(".opp-side");if(t&&window.innerWidth<=960&&t.scrollIntoView)t.scrollIntoView({block:"nearest",behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth"})}
- var body=h("tbody");l.forEach(function(s){body.appendChild(h("tr",{tabindex:"0","data-key":"s"+s.id,class:st.sel===s?"is-sel":null,"aria-current":st.sel===s?"true":null,onclick:function(){pick(s)},onkeydown:function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(s);var r=document.querySelector("tr.is-sel");if(r)r.focus({preventScroll:true})}}},[
-  h("td",{class:"w c-n"},[h("b",{style:"font-weight:500",text:s.n}),h("div",{class:"note",text:s.t})]),
+ /* the count of differences is the summary; the flag on each row is the detail; the filter shows only those rows */
+ root.appendChild(h("div",{class:"kpi top"},[["Submissions",String(S.length)],["Slots filled",sel+" of "+slots],["Reviewers differ",String(dv)]].map(function(k){return h("div",{},[h("small",{text:k[0]}),h("b",{class:"num",text:k[1]})])})));
+ var bar=h("div",{class:"head"},[
+  h("div",{class:"ctrls"},[h("div",{class:"seg",role:"group","aria-label":"Reviewer status"},["all","Selected","In review","Pending","Not selected"].map(function(f){return h("button",{type:"button","aria-pressed":String(st.f===f),text:f==="all"?"All":f,onclick:function(){st.f=f;draw()}})})),
+   h("label",{class:"check"},[h("input",{type:"checkbox",checked:st.div?"checked":null,onchange:function(e){st.div=e.target.checked;draw()}}),"Only where they differ"])]),
+  h("select",{class:"field","aria-label":"Sort",onchange:function(e){st.sort=e.target.value;draw()}},[h("option",{value:"p",text:"Sort: market signal",selected:st.sort==="p"?"selected":null}),h("option",{value:"n",text:"Sort: name",selected:st.sort==="n"?"selected":null})])]);
+ function pick(s){st.sel=s;draw()}
+ var body=h("tbody");l.forEach(function(s){var df=differs(s);body.appendChild(h("tr",{tabindex:"0","data-key":"s"+s.id,class:st.sel===s?"is-sel":null,"aria-current":st.sel===s?"true":null,onclick:function(){pick(s)},onkeydown:function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(s);if(!U.narrow.matches){var r=document.querySelector("tr.is-sel");if(r)r.focus({preventScroll:true})}}}},[
+  h("td",{class:"w c-n"},[h("b",{text:s.n}),h("div",{class:"note",text:s.t})]),
   h("td",{class:"c-s","data-label":"Market signal"},[h("span",{class:"sigbar","aria-label":"Market signal "+Math.round(s.p*100)+"% chance of selection"},[h("span",{class:"trk","aria-hidden":"true"},[h("i",{style:"width:"+Math.round(s.p*100)+"%"})]),h("span",{class:"num",text:Math.round(s.p*100)+"%"})])]),
-  h("td",{class:"r num c-v","data-label":"Volume",text:U.money(s.v)}),h("td",{class:"c-d"},[badge(s.r)]),
-  h("td",{class:"c-f"},[differs(s)?h("span",{class:"neg",text:"\u25C6 Reviewers differ"}):h("span",{class:"muted",text:"Consistent"})])]))});
- var tbl=h("div",{class:"tbl opp rtbl"},[U.roles(h("table",{},[h("thead",{},[h("tr",{},[["Submission",""],["Market signal: chance of selection",""],["Volume","r"],["Reviewer decision",""],["Signal vs decision",""]].map(function(c){return h("th",{scope:"col",class:c[1],text:c[0]})}))]),body]))]);
- var side=h("div",{class:"panel-c ticket opp-side"});
- if(st.sel){var s=st.sel,p=st.side==="Yes"?s.p:1-s.p,open=s.r==="In review"||s.r==="Pending";
-  side.appendChild(h("h2",{text:s.n}));side.appendChild(h("div",{class:"line"},[h("span",{class:"muted",text:"Reviewer decision"}),badge(s.r)]));
-  if(!open)side.appendChild(h("p",{class:"note",text:"Reviewers have decided. This market is settled by their decision."}));
-  else{side.appendChild(h("div",{class:"seg",role:"group","aria-label":"Side"},["Yes","No"].map(function(x){return h("button",{type:"button","aria-pressed":String(st.side===x),text:"Will "+(x==="Yes"?"":"not ")+"be selected",onclick:function(){st.side=x;draw()}})})));
-   var inp=h("input",{class:"field",id:"amt",type:"number",min:"1",value:String(st.amt),oninput:function(e){st.amt=Math.max(0,+e.target.value||0);var o=document.getElementById("opp-out"),v="$"+(st.amt/Math.min(.99,Math.max(.01,p))).toFixed(2);if(window.Motion)Motion.num(o,v);else o.textContent=v}}),out=h("b",{class:"num",id:"opp-out",text:"$"+(st.amt/Math.min(.99,Math.max(.01,p))).toFixed(2)});
-   side.appendChild(h("div",{class:"line"},[h("span",{text:"Price"}),h("b",{class:"num",text:"$"+p.toFixed(2)})]));side.appendChild(h("label",{for:"amt",text:"Amount (USDC)"}));side.appendChild(inp);side.appendChild(h("div",{class:"line"},[h("span",{text:"Payout if reviewers agree"}),out]));
-   side.appendChild(h("button",{class:"btn lg",type:"button",text:"Connect wallet to trade"}));}
-  side.appendChild(h("p",{class:"note",text:"Demo only."}))}
- else{side.appendChild(h("h2",{text:"Select a submission"}));side.appendChild(h("p",{class:"note",text:"See its market signal and, while reviewers are still deciding, forecast the outcome."}))}
- root.appendChild(h("div",{class:"cols rev"},[h("div",{style:"min-width:0"},[h("p",{class:"tap-hint",text:"Tap a submission to see its signal and trade"}),tbl]),side]));
- U.patch(target,root,{flip:"tbody tr"})}
+  h("td",{class:"r num c-v","data-label":"Volume",text:U.money(s.v)}),
+  /* agreement is the normal case and prints nothing; only a difference is flagged, inside the decision cell */
+  h("td",{class:"c-d"},[h("span",{class:"dec"},[badge(s.r),df?h("span",{class:"flag",text:"\u25C6 Differs from the market"}):null])])]))});
+ var tbl=h("div",{class:"tbl opp rtbl"},[U.roles(h("table",{},[h("thead",{},[h("tr",{},[["Submission",""],["Market signal: chance of selection",""],["Volume","r"],["Reviewer decision",""]].map(function(c){return h("th",{scope:"col",class:c[1],text:c[0]})}))]),body]))]);
+ var main=h("div",{class:"stack list-sec"},[bar,h("p",{class:"tap-hint",text:"Select a submission to see its signal and trade"}),tbl]);
+ if(narrow)root.appendChild(main);
+ else{var side=h("div",{class:"panel-c ticket opp-side"});
+  if(st.sel){side.appendChild(h("h2",{text:st.sel.n}));sideKids(st.sel).forEach(function(n){side.appendChild(n)})}
+  else{side.appendChild(h("h2",{text:"Select a submission"}));side.appendChild(h("p",{class:"note",text:"See its market signal and, while reviewers are still deciding, forecast the outcome."}))}
+  root.appendChild(h("div",{class:"cols rev"},[main,side]))}
+ U.patch(target,root,{flip:"tbody tr"});
+ U.sheet({open:!!(st.sel&&narrow),label:st.sel?st.sel.n:"",kids:st.sel?[h("h2",{text:st.sel.n}),h("div",{class:"panel-c ticket"},sideKids(st.sel))]:[],onClose:close,instant:!narrow})}
 draw();
-if(window.Motion){Motion.ready();Motion.reveal("#root > .kpi > div, #root > .notice, #root > .head, .opp-side",{onIn:Motion.dataIn});Motion.reveal(".opp tbody tr",{rise:8,onIn:Motion.dataIn})}
+U.narrow.addEventListener("change",function(){draw()});
+if(window.Motion){Motion.ready();Motion.reveal("#root > .kpi > div, .list-sec > .head, .opp-side",{onIn:Motion.dataIn});Motion.reveal(".opp tbody tr",{rise:8,onIn:Motion.dataIn})}
 })();

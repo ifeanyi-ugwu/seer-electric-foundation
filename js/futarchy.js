@@ -22,21 +22,18 @@ function chart(p,cw){
  s.appendChild(U.svg("rect",{class:"m-end","data-tween":"x y",x:X(range-1)-5,y:Y(b[range-1])-5,width:10,height:10,fill:"var(--neg)"}));
  return s}
 function delta(p){var d=(p.pass-p.fail)/p.fail*100,good=(p.better==="higher")===(d>0);
- return{pct:d,good:good,text:(d>0?"+":"")+d.toFixed(1)+"% under pass",msg:"The market expects "+p.metric.toLowerCase()+" to be "+(d>0?"higher":"lower")+" if the proposal passes, which is "+(good?"better":"worse")+" for the DAO's stated goal."}}
+ return{pct:d,good:good,arrow:d>0?"\u25B2 ":"\u25BC ",text:(d>0?"+":"")+d.toFixed(1)+"% under pass",
+  lead:(good?"Better":"Worse")+" for the DAO's goal if it passes.",
+  msg:" The market expects "+p.metric.toLowerCase()+" to be "+(d>0?"higher":"lower")+" under pass, and the DAO wants it "+p.better+"."}}
 function list(){var root=document.getElementById("list"),el=h("div");
  el.appendChild(h("div",{class:"muted list-label",text:"Active proposals · "+P.length}));
  P.forEach(function(p){var d=delta(p);el.appendChild(h("button",{class:"pick",type:"button","data-key":"p"+p.id,"aria-pressed":String(p===sel),onclick:function(){sel=p;list();detail()}},[
   h("b",{text:"#"+p.id+" "+p.t}),h("span",{class:"muted",text:p.metric}),
-  h("div",{class:"line",style:"margin-top:8px"},[h("span",{class:"num "+(d.good?"pos":"neg"),text:(d.pct>0?"▲ ":"▼ ")+d.text+(d.good?" · better":" · worse")}),h("span",{class:"muted num",text:"vote ends "+p.vote.end})])]))});U.patch(root,el)}
+  h("div",{class:"line"},[h("span",{class:"num "+(d.good?"pos":"neg"),text:d.arrow+d.text+(d.good?" · better":" · worse")}),h("span",{class:"muted num",text:"vote ends "+p.vote.end})])]))});U.patch(root,el)}
 function detail(animate){var p=sel,d=delta(p),root=document.getElementById("detail"),el=h("div");
- var head=h("div",{class:"panel-c"},[h("span",{class:"badge",text:"Conditional market · Proposal #"+p.id}),h("h2",{style:"font-size:20px;margin:10px 0 4px",text:p.t}),
-  h("p",{class:"note",text:"Success metric: "+p.metric+". Two markets trade the metric: one pays out only if the proposal passes, the other only if it fails. The branch that does not happen is refunded."})]);
- var rg=h("div",{class:"seg",role:"group","aria-label":"Time range"},[["7 days",20],["30 days",40],["All",60]].map(function(r){return h("button",{type:"button","aria-pressed":String(range===r[1]),text:r[0],onclick:function(){range=r[1];detail()}})}));
- var ch=h("div",{class:"panel-c"},[h("div",{class:"line"},[h("h2",{text:"Market forecast of the success metric"}),rg]),
-  h("div",{class:"legend"},[h("span",{},[h("i",{class:"sw",style:"border-color:var(--pos)"}),"If it passes · "+fmt(p,p.pass)]),h("span",{},[h("i",{class:"sw",style:"border-color:var(--neg);border-top-style:dashed"}),"If it fails · "+fmt(p,p.fail)])])]);
- var cw=(root.clientWidth||600)-32;ch.appendChild(chart(p,cw));
- ch.appendChild(h("div",{class:"notice",style:"margin-top:12px"},[h("b",{class:d.good?"pos":"neg",text:(d.pct>0?"\u25B2 ":"\u25BC ")+d.text+". "}),d.msg]));
- /* The fork: one metric, two conditional branches (same circle / square markers as the chart). */
+ /* Each figure has one home: pass/fail values in the fork, the change under pass in the fork and the list,
+    the reading in the notice, the price of a branch in the ticket. */
+ var head=h("div",{class:"dhead"},[h("span",{class:"badge",text:"Conditional market · Proposal #"+p.id}),h("h2",{text:p.t})]);
  var fork=U.svg("svg",{class:"fork-lines",viewBox:"0 0 200 40",preserveAspectRatio:"none","aria-hidden":"true"});
  fork.appendChild(U.svg("path",{d:"M100 0V12C100 24 50 22 50 40",stroke:"var(--pos)","vector-effect":"non-scaling-stroke"}));
  fork.appendChild(U.svg("path",{d:"M100 0V12C100 24 150 22 150 40",stroke:"var(--neg)","stroke-dasharray":"5 4","vector-effect":"non-scaling-stroke"}));
@@ -44,22 +41,30 @@ function detail(animate){var p=sel,d=delta(p),root=document.getElementById("deta
    h("div",{class:"fork-metric",text:p.metric}),fork,
    h("div",{class:"fork-legs"},[h("div",{class:"leg"},[h("small",{},[h("i",{class:"mk pass"}),"If it passes"]),h("b",{class:"num",text:fmt(p,p.pass)})]),
      h("div",{class:"leg"},[h("small",{},[h("i",{class:"mk fail"}),"If it fails"]),h("b",{class:"num",text:fmt(p,p.fail)})])]),
-   h("div",{class:"fork-meta"},[h("div",{},[h("span",{text:"Gap"}),h("span",{class:"num",text:fmt(p,Math.abs(p.pass-p.fail))})]),h("div",{},[h("span",{text:"Market volume"}),h("span",{class:"num",text:U.money(p.vol)})])]),
-   h("p",{class:"note",style:"margin-top:12px",text:"A signal for voters. It does not execute anything."})]);
+   h("div",{class:"fork-meta"},[h("div",{},[h("span",{text:"Change under pass"}),h("span",{class:"num "+(d.good?"pos":"neg"),text:d.arrow+(d.pct>0?"+":"")+d.pct.toFixed(1)+"%"})]),h("div",{},[h("span",{text:"Market volume"}),h("span",{class:"num",text:U.money(p.vol)})])])]);
  var dao=h("div",{class:"panel-c"},[h("h2",{text:"The DAO's decision"}),h("div",{class:"line"},[h("span",{text:"Voting open"}),h("span",{class:"muted num",text:"ends in "+p.vote.end})]),
-   h("div",{style:"margin-top:12px;display:grid;gap:12px"},[["For",p.vote.f],["Against",p.vote.a]].map(function(v){return h("div",{},[h("div",{class:"line"},[h("span",{text:v[0]}),h("span",{class:"num",text:v[1]+"%"})]),h("div",{class:"vote-bar"},[h("i",{"data-tween":"bar",style:"width:"+v[1]+"%"})])])})),
-   h("p",{class:"note",style:"margin-top:12px",text:"Token holders decide. The outcome is binding; the market forecast is not."})]);
+   h("div",{class:"votes"},[["For",p.vote.f],["Against",p.vote.a]].map(function(v){return h("div",{},[h("div",{class:"line"},[h("span",{text:v[0]}),h("span",{class:"num",text:v[1]+"%"})]),h("div",{class:"vote-bar"},[h("i",{"data-tween":"bar",style:"width:"+v[1]+"%"})])])})),
+   h("p",{class:"note",text:"Token holders decide. The vote is binding; the forecast is not."})]);
  var two=h("div",{class:"two"},[sig,dao]);
- var pr=branch==="pass"?p.pass:p.fail,t=h("div",{class:"panel-c ticket"});
+ var rg=h("div",{class:"seg",role:"group","aria-label":"Time range"},[["7 days",20],["30 days",40],["All",60]].map(function(r){return h("button",{type:"button","aria-pressed":String(range===r[1]),text:r[0],onclick:function(){range=r[1];detail()}})}));
+ /* the legend carries line style only; the values sit in the fork above */
+ var ch=h("div",{class:"panel-c chart-panel"},[h("div",{class:"line"},[h("h2",{text:"Forecast history"}),rg]),
+  h("div",{class:"legend"},[h("span",{},[h("i",{class:"sw",style:"border-color:var(--pos)"}),"If it passes"]),h("span",{},[h("i",{class:"sw",style:"border-color:var(--neg);border-top-style:dashed"}),"If it fails"])])]);
+ ch.appendChild(chart(p,chartW()));
+ ch.appendChild(h("div",{class:"notice"},[h("b",{class:d.good?"pos":"neg",text:d.lead}),d.msg]));
+ var pr=branch==="pass"?p.pass:p.fail,t=h("div",{class:"panel-c ticket fut-tk"});
  t.appendChild(h("h2",{text:"Trade a branch"}));
- t.appendChild(h("div",{class:"seg",role:"group","aria-label":"Branch"},[["pass","If it passes"],["fail","If it fails"]].map(function(b){return h("button",{type:"button","aria-pressed":String(branch===b[0]),text:b[1],onclick:function(){branch=b[0];detail()}})})));
- t.appendChild(h("div",{class:"line"},[h("span",{text:"Current forecast"}),h("b",{class:"num",text:fmt(p,pr)})]));
+ t.appendChild(h("div",{class:"seg t-a",role:"group","aria-label":"Branch"},[["pass","If it passes"],["fail","If it fails"]].map(function(b){return h("button",{type:"button","aria-pressed":String(branch===b[0]),text:b[1],onclick:function(){branch=b[0];detail()}})})));
+ t.appendChild(h("div",{class:"line t-a"},[h("span",{text:"Current forecast"}),h("b",{class:"num",text:fmt(p,pr)})]));
  var inp=h("input",{class:"field",type:"number",min:"1",value:String(amt),id:"amt",oninput:function(e){amt=Math.max(0,+e.target.value||0)}});
- t.appendChild(h("label",{for:"amt",text:"Amount (USDC)"}));t.appendChild(inp);
- t.appendChild(h("button",{class:"btn lg",type:"button",text:"Connect wallet to trade"}));t.appendChild(h("p",{class:"note",text:"Demo only. If the other branch happens, this trade is refunded."}));
- [head,ch,two,t].forEach(function(n){el.appendChild(n)});U.patch(root,el,{animate:animate!==false})}
+ t.appendChild(h("div",{class:"field-grp t-b"},[h("label",{for:"amt",text:"Amount (USDC)"}),inp]));
+ t.appendChild(h("button",{class:"btn lg t-b",type:"button","aria-disabled":"true","aria-describedby":"tk-hint",text:"Place trade"}));
+ t.appendChild(h("p",{class:"note t-b",id:"tk-hint",text:"Connect a wallet to trade. If the other branch happens, this trade is refunded. Demo only."}));
+ [head,two,ch,t].forEach(function(n){el.appendChild(n)});U.patch(root,el,{animate:animate!==false})}
+/* the chart is drawn at its panel's content width so labels stay 11px at every size */
+function chartW(){var r=document.getElementById("detail"),cs=getComputedStyle(document.documentElement),pad=parseFloat(cs.getPropertyValue("--pad-panel"))||16;return(r.clientWidth||600)-2*pad}
 list();detail();
-if(window.Motion){Motion.ready();Motion.reveal("#list > *",{rise:8});Motion.reveal("#detail > .panel-c, #detail .two > .panel-c",{onIn:Motion.dataIn})}
-var lw=document.getElementById("detail").clientWidth,rt;
-window.addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(function(){var w=document.getElementById("detail").clientWidth;if(w!==lw){lw=w;detail(false)}},150)});
+if(window.Motion){Motion.ready();Motion.reveal("#list > *",{rise:8});Motion.reveal("#detail > .dhead, #detail > .panel-c, #detail .two > .panel-c",{onIn:Motion.dataIn})}
+var lw=chartW(),rt;
+window.addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(function(){var w=chartW();if(w!==lw){lw=w;detail(false)}},150)});
 })();

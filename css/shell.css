@@ -1,5 +1,6 @@
-/* Shared shell + cross-page polish for app / futarchy / deep / opportunity / risk.
-   Carries the landing's language (FADES slabs, hard violet blocks, diagonal cuts) into the tools, at low volume. */
+/* Shared shell + components for the five tool pages (app / futarchy / deep / opportunity / risk).
+   Carries the landing's language (FADES slabs, hard violet blocks, diagonal cuts) into the tools, at low volume.
+   Sizes come from the scale in tokens.css. Ranges: phone up to 600px, tablet 601 to 1100px, desktop 1101px and up. */
 
 :root{
   --ph-bg:color-mix(in srgb,#0c0a16 70%,var(--bg));      /* kit hero ground, blended toward the page */
@@ -7,13 +8,18 @@
   --cut:12px;                                             /* diagonal-cut size for tiles */
   --ease:cubic-bezier(.2,.7,.2,1);
   --t:.15s;
+  /* gutters that also clear notches and rounded corners in landscape */
+  --gut-l:max(var(--gut),env(safe-area-inset-left));
+  --gut-r:max(var(--gut),env(safe-area-inset-right));
 }
 :root[data-theme=light]{
   --ph-bg:color-mix(in srgb,var(--violet) 7%,#f3f3f8);
   --ph-lo:rgba(255,255,255,0); --ph-hi:rgba(255,255,255,.95);
 }
 html{-webkit-text-size-adjust:100%}
-body{overflow-x:hidden}
+body{overflow-x:hidden;font-size:var(--fs-body);line-height:var(--lh-snug)}
+h1,h2,h3{text-wrap:balance}
+p{text-wrap:pretty}
 
 /* ---------- skip link ---------- */
 .skip{position:absolute;left:16px;top:-60px;z-index:60;background:var(--violet);color:#fff;padding:12px 16px;border-radius:var(--r-chip);text-decoration:none}
@@ -21,24 +27,24 @@ body{overflow-x:hidden}
 
 /* ---------- header bar ---------- */
 /* The wrapper is the sticky element (a sticky child of a same-height wrapper never sticks), and its height is
-   reserved so the JS-rendered header causes no layout shift. */
+   reserved so the JS-rendered header causes no layout shift. One row from 801px, two rows below. */
 #shell{position:sticky;top:0;z-index:20;min-height:68px}
 .shell-bar{position:relative;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.shell-in{max-width:1440px;margin:0 auto;display:flex;align-items:center;gap:24px;padding:12px 40px}
+.shell-in{max-width:var(--maxw);margin:0 auto;display:flex;align-items:center;gap:var(--s-5);padding:12px var(--gut-r) 12px var(--gut-l)}
 .shell-brand{display:flex;align-items:center;flex:none;min-height:44px}
 :root[data-theme=light] .shell-brand img{filter:invert(1) hue-rotate(180deg) brightness(.35) saturate(3)}
-.shell-products{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.shell-products{display:flex;gap:var(--s-1);overflow-x:auto;scrollbar-width:none}
 .shell-products::-webkit-scrollbar{display:none}
-.shell-products a{display:flex;align-items:center;min-height:40px;padding:8px 12px;border-radius:var(--r-chip);color:var(--text-2);text-decoration:none;white-space:nowrap;font-size:13px}
+.shell-products a{display:flex;align-items:center;min-height:40px;padding:8px 12px;border-radius:var(--r-chip);color:var(--text-2);text-decoration:none;white-space:nowrap;font-size:var(--fs-body)}
 .shell-products a:hover{color:var(--text);background:var(--surface)}
 /* active: hard-edged violet base under a soft fill, like the landing's violet base layer */
 .shell-products a[aria-current=page]{background:var(--violet-soft);color:var(--text);border-radius:var(--r-chip) var(--r-chip) 0 0;box-shadow:inset 0 -2px 0 var(--violet)}
-.shell-end{margin-left:auto;display:flex;align-items:center;gap:12px}
-.shell-icon{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;display:grid;place-items:center}
+.shell-end{margin-left:auto;display:flex;align-items:center;gap:var(--s-3)}
+.shell-icon{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;display:grid;place-items:center;flex:none}
 .shell-icon:hover{border-color:var(--violet-text)}
 .shell-icon svg{transition:transform .3s var(--ease)}
 :root[data-theme=light] .shell-icon svg{transform:rotate(90deg)}
-.btn-pill{border-radius:999px;padding:0 20px;min-height:44px;font-size:13px}
+.btn-pill{border-radius:999px;padding:0 20px;min-height:44px;font-size:var(--fs-body);white-space:nowrap}
 
 /* ---------- shared focus ring ---------- */
 :where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{outline:2px solid var(--violet-text);outline-offset:2px}
@@ -48,14 +54,17 @@ body{overflow-x:hidden}
 .ph-slabs{position:absolute;top:0;right:0;height:100%;width:min(1180px,100%);z-index:-1;pointer-events:none;
   -webkit-mask:linear-gradient(90deg,transparent 0,#000 55%);mask:linear-gradient(90deg,transparent 0,#000 55%)}
 .ph-slabs stop.lo{stop-color:var(--ph-lo)}.ph-slabs stop.hi{stop-color:var(--ph-hi)}
-.phead-in{position:relative;max-width:1440px;margin:0 auto;padding:40px 40px 24px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px 24px;flex-wrap:wrap}
+.phead-in{position:relative;max-width:var(--maxw);margin:0 auto;padding:var(--s-7) var(--gut-r) var(--s-6) var(--gut-l);
+  display:flex;justify-content:space-between;align-items:flex-end;gap:var(--s-4) var(--s-6)}
+.phead-in > div:first-child{min-width:0}
 /* short hard violet segment on the band's bottom edge, aligned to the content gutter */
-.phead-in::after{content:"";position:absolute;left:40px;bottom:-1px;width:40px;height:3px;background:var(--violet)}
-.phead h1{font-size:32px;line-height:1.1;font-weight:500;letter-spacing:-.02em}
-.phead .lede{color:var(--text-2);margin-top:8px;max-width:68ch;font-size:14px;line-height:1.5}
-.kicker{display:flex;align-items:center;gap:12px;color:var(--text-2);font-size:13px;margin:0 0 12px}
-.tag{display:inline-grid;place-items:center;min-width:30px;height:22px;padding:0 6px;background:var(--violet);color:#fff;font-size:12px;border-radius:2px}
-.phead-aside{display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.phead-in::after{content:"";position:absolute;left:var(--gut-l);bottom:-1px;width:40px;height:3px;background:var(--violet)}
+.phead h1{font-size:var(--fs-h1);line-height:var(--lh-tight);font-weight:500;letter-spacing:-.02em}
+.phead .lede{color:var(--text-2);margin-top:var(--s-3);max-width:68ch;font-size:var(--fs-lede);line-height:var(--lh-body)}
+.phead-act{margin-top:var(--s-5)}
+.kicker{display:flex;align-items:center;gap:var(--s-3);color:var(--text-2);font-size:var(--fs-body);margin:0 0 var(--s-3)}
+.tag{display:inline-grid;place-items:center;min-width:30px;height:22px;padding:0 6px;background:var(--violet);color:#fff;font-size:var(--fs-meta);border-radius:2px}
+.phead-aside{display:flex;flex-direction:column;align-items:flex-end;gap:var(--s-3);flex:none}
 .ph-glyph{display:block;width:120px;height:40px;color:var(--text-2)}
 .ph-glyph .g-v{fill:var(--violet)}
 .ph-glyph .g-s{fill:color-mix(in srgb,var(--text) 14%,transparent)}
@@ -64,88 +73,220 @@ body{overflow-x:hidden}
 .ph-glyph .g-neg{fill:none;stroke:var(--neg);stroke-width:2;stroke-dasharray:4 3}
 .ph-glyph .f-pos{fill:var(--pos)}.ph-glyph .f-neg{fill:var(--neg)}
 
+/* ---------- page body: one measure and one rhythm for every tool ---------- */
+.page,.wrap{max-width:var(--maxw);margin:0 auto;padding:var(--gap-block) var(--gut-r) var(--s-8) var(--gut-l)}
+/* query containers: tiles and panels adapt to the space they get, not to the window */
+.page > #root,.wrap,.stack,.panel-c,.panel{container-type:inline-size}
+
 /* ---------- badges (one style everywhere) ---------- */
-.badge{display:inline-block;font-size:11px;line-height:16px;padding:2px 8px;border-radius:var(--r-chip);background:var(--violet-soft);color:var(--violet-text);white-space:nowrap}
+.badge{display:inline-block;font-size:var(--fs-cap);line-height:16px;padding:2px 8px;border-radius:var(--r-chip);background:var(--violet-soft);color:var(--violet-text);white-space:nowrap}
 .badge.ghost{background:transparent;border:1px solid var(--line);color:var(--muted);padding:1px 7px}
 
-/* ---------- numbers ---------- */
+/* ---------- text roles ---------- */
 .num{font-family:var(--num);font-variant-numeric:tabular-nums;letter-spacing:0}
+.muted{color:var(--muted);font-size:var(--fs-meta)}
+.note{color:var(--muted);font-size:var(--fs-meta);line-height:var(--lh-snug)}
+.pos{color:var(--pos)}.neg{color:var(--neg)}
+:root[data-theme=light] .notice .neg{color:#8a4f00}/* amber on the violet tint needs a darker step in light mode (AA) */
+.notice{border-left:3px solid var(--violet);background:var(--violet-soft);color:var(--text);padding:var(--s-3) var(--s-4);border-radius:0 var(--r-card) var(--r-card) 0;line-height:var(--lh-body)}
+.line{display:flex;justify-content:space-between;align-items:center;gap:var(--s-2) var(--s-3);flex-wrap:wrap}
 
-/* ---------- interaction: transitions + hover/active ---------- */
-.btn,.tab,.chip,.seg button,.pick,.mcard,.orow,.sel,.shell-products a,.shell-icon,.field,th button,tr[tabindex] td,.yn{
-  transition:background-color var(--t) ease,color var(--t) ease,border-color var(--t) ease,box-shadow var(--t) ease,transform var(--t) var(--ease)}
-.btn{min-height:28px}
+/* ---------- controls: one height per range (--ctl), one small size (--ctl-sm) ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--s-1);position:relative;min-height:var(--ctl-sm);padding:0 var(--s-3);font-size:var(--fs-meta);white-space:nowrap}
+.btn.lg{position:relative;isolation:isolate;background:transparent;min-height:var(--tap);padding:0 var(--s-4);font-size:var(--fs-body)}
 .btn:hover{background:color-mix(in srgb,var(--violet) 82%,#000)}
 .btn.soft:hover{background:var(--violet-soft);box-shadow:inset 0 0 0 1px var(--violet)}
-.btn:active,.tab:active,.chip:active,.seg button:active{transform:translateY(1px)}
-.btn.lg{position:relative;isolation:isolate;background:transparent;min-height:44px}
 /* primary action: hard violet block with the landing's chamfered corner */
-.btn.lg::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--violet);border-radius:inherit;
+.btn.lg::before,.btn.act::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--violet);border-radius:inherit;
   clip-path:polygon(0 0,100% 0,100% 100%,14px 100%,0 calc(100% - 14px));transition:background-color var(--t) ease}
-.btn.lg:hover{background:transparent}
-.btn.lg:hover::before{background:color-mix(in srgb,var(--violet) 82%,#000)}
-.field{transition:border-color var(--t) ease}
+.btn.lg:hover,.btn.act:hover{background:transparent}
+.btn.lg:hover::before,.btn.act:hover::before{background:color-mix(in srgb,var(--violet) 82%,#000)}
+/* page-level action in the page head (Create market) */
+.btn.act{isolation:isolate;background:transparent;min-height:var(--ctl);padding:0 var(--s-5);font-size:var(--fs-body);border-radius:var(--r-chip)}
+/* a trade action that needs a wallet first: reads as unavailable, the hint below says why */
+.btn.lg[aria-disabled=true]{cursor:not-allowed;color:var(--text-2)}
+.btn.lg[aria-disabled=true]::before,.btn.lg[aria-disabled=true]:hover::before{background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+.btn:active,.tab:active,.chip:active,.seg button:active{transform:translateY(1px)}
+.btn.lg[aria-disabled=true]:active{transform:none}
+
+.field{height:var(--ctl);min-height:var(--ctl);background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:999px;
+  padding:0 var(--s-4);font:inherit;font-size:var(--fs-body);min-width:0}
+.field::placeholder{color:var(--muted)}
 .field:hover{border-color:color-mix(in srgb,var(--text) 26%,transparent)}
-th button{border-radius:2px}
+/* selects: native control, custom chevron. 16px inset from the right edge, text stops 12px before it. */
+select.field{-webkit-appearance:none;appearance:none;cursor:pointer;padding-right:44px;text-overflow:ellipsis;
+  background:var(--chev) right 16px center/12px 12px no-repeat var(--card)}
+select.field::-ms-expand{display:none}
+@media (forced-colors:active){select.field{appearance:auto;-webkit-appearance:auto;background-image:none;padding-right:var(--s-3)}}
+input[type=checkbox]{width:18px;height:18px;margin:0;flex:none}
+
+/* segmented control: the active pill is inset 4px, so buttons are --ctl-sm inside a --ctl track */
+.seg{display:inline-flex;align-items:stretch;height:var(--ctl);max-width:100%;padding:var(--s-1);gap:2px;background:var(--card);border-radius:999px;box-shadow:inset 0 0 0 1px var(--line)}
+.seg button{position:relative;border:0;background:transparent;color:var(--text-2);font:inherit;font-size:var(--fs-body);padding:0 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
+.seg button:hover{color:var(--text)}
+.seg button[aria-pressed=true]{background:var(--violet);color:#fff}
+
+.chip{position:relative;display:inline-flex;align-items:center;min-height:var(--ctl-sm);border:1px solid var(--line);background:transparent;color:var(--text-2);padding:0 var(--s-3);border-radius:999px;font:inherit;font-size:var(--fs-body);cursor:pointer;white-space:nowrap}
+.chip:hover{border-color:color-mix(in srgb,var(--text) 30%,transparent);color:var(--text)}
+.chip[aria-pressed=true]{background:var(--violet-soft);color:var(--violet-text);border-color:var(--violet)}
+
+/* touch: small controls keep a 44px hit area without looking oversized */
+@media (max-width:1100px),(pointer:coarse){
+  .seg button::after,.chip::after,.tab::after,th button::after,.btn:not(.lg):not(.act)::after{content:"";position:absolute;left:0;right:0;top:50%;height:var(--tap);transform:translateY(-50%)}
+}
+
+/* ---------- KPI tiles: diagonal-cut corner + short violet tick ---------- */
+.kpi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap-panel)}
+.kpi.k4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.kpi > div{--kp:var(--s-4);position:relative;min-width:0;background:var(--row);border-radius:var(--r-card);padding:var(--kp);
+  clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%)}
+.kpi > div::before{content:"";position:absolute;left:0;top:var(--kp);width:2px;height:16px;background:var(--violet)}/* level with the label */
+.kpi small{display:block;color:var(--muted);font-size:var(--fs-meta);line-height:16px}
+.kpi b{display:block;font-size:var(--fs-kpi);font-weight:500;line-height:var(--lh-tight);margin-top:var(--s-2);letter-spacing:-.01em;white-space:nowrap}
+.kpi.top > div{background:var(--card)}
+@container (max-width:560px){.kpi.k4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@container (max-width:440px){.kpi{gap:var(--s-2)}.kpi > div{--kp:var(--s-3)}.kpi b{font-size:20px}}
+@container (max-width:300px){.kpi{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- panels ---------- */
+.panel-c{background:var(--card);border-radius:var(--r-card);padding:var(--pad-panel);min-width:0}
+.panel-c h2{font-size:var(--fs-h3);line-height:var(--lh-snug);font-weight:500;margin-bottom:var(--s-4)}
+/* section marker: the landing's small hard violet square */
+.panel-c > h2:first-child::before,.panel-c > .line > h2::before{content:"";display:inline-block;width:8px;height:8px;background:var(--violet);margin-right:var(--s-2);vertical-align:2px}
+.panel-c > .line > h2{margin-bottom:0}
+.ticket{display:grid;gap:var(--s-3)}
+.ticket label{color:var(--text-2);font-size:var(--fs-meta)}
+.field-grp{display:grid;gap:var(--s-2)}/* a label sits closer to its input than to anything else */
+.ticket .line{min-height:24px}
+.ticket .seg{justify-self:start}
+.panel-c.ticket h2{margin-bottom:0}
+.ticket .btn.lg{margin-top:var(--s-1)}
+
+/* ---------- tables ---------- */
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;padding:var(--s-3) var(--s-4);border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:middle}
+th{color:var(--muted);font-weight:500;font-size:var(--fs-meta)}
+tbody tr:last-child > *{border-bottom:0}
+td.r,th.r{text-align:right}td.w{white-space:normal}
+th button{all:unset;position:relative;cursor:pointer;padding:var(--s-1) 0;border-radius:2px}
+th button:focus-visible{outline:2px solid var(--violet-text);outline-offset:2px}
 th button:hover{color:var(--text)}
 th[aria-sort=ascending],th[aria-sort=descending]{color:var(--text)}
-
-/* tables: at tablet widths a wide table scrolls inside its container, with violet edge shadows as the affordance.
-   On phones (max-width 760px) no table scrolls: .rtbl tables reflow into cards (see the end of this file). */
-.tbl,.tbl-wrap{
-  background:
-    linear-gradient(90deg,var(--card) 30%,transparent) left center/40px 100% no-repeat local,
-    linear-gradient(270deg,var(--card) 30%,transparent) right center/40px 100% no-repeat local,
-    radial-gradient(farthest-side at 0 50%,color-mix(in srgb,var(--violet) 55%,transparent),transparent) left center/14px 100% no-repeat scroll,
-    radial-gradient(farthest-side at 100% 50%,color-mix(in srgb,var(--violet) 55%,transparent),transparent) right center/14px 100% no-repeat scroll,
-    var(--card);
-  -webkit-overflow-scrolling:touch}
-.tap-hint{display:none;align-items:center;gap:8px;color:var(--muted);font-size:12px;margin:0 0 8px}
-.tap-hint::before{content:"";width:16px;height:2px;background:var(--violet)}
-.m-only{display:none}
+.tbl,.tbl-wrap{background:var(--card);border-radius:var(--r-card);overflow-x:auto}
 tr[tabindex]{cursor:pointer}
 tr[tabindex]:hover td{background:color-mix(in srgb,var(--surface) 70%,transparent)}
 tr.is-sel td{background:var(--violet-soft)}
 tr.is-sel td:first-child{box-shadow:inset 3px 0 0 var(--violet)}
+.tap-hint{display:none;align-items:center;gap:var(--s-2);color:var(--muted);font-size:var(--fs-meta);margin:0 0 var(--s-3)}
+.tap-hint::before{content:"";width:16px;height:2px;background:var(--violet)}
+.narrow-only{display:none}/* not "m-": that prefix is reserved for motion state, which morphs preserve */
+/* desktop: long tables scroll with the page; the column headers stay in view under the header bar */
+@media (min-width:1101px){
+  .tbl.tall{overflow:visible}
+  .tbl.tall thead th{position:sticky;top:56px;z-index:2;background:var(--card);box-shadow:inset 0 -1px 0 var(--line)}
+  .tbl.tall thead th:first-child{border-top-left-radius:var(--r-card)}.tbl.tall thead th:last-child{border-top-right-radius:var(--r-card)}
+}
+@media (min-width:1101px) and (max-height:500px) and (orientation:landscape){.tbl.tall thead th{top:0}}
+/* sort control that stands in for the hidden column headers of a reflowed table */
+.sortbar{align-items:center;gap:var(--s-2);margin:0 0 var(--s-3)}
+.sortbar label{color:var(--text-2);font-size:var(--fs-meta);flex:none}
+.sortbar select.field{flex:1 1 auto;max-width:320px}
+.sortbar .btn{flex:none;min-height:var(--ctl)}
+
+/* ---------- detail sheet: side sheet on tablet and desktop, bottom sheet on phones ---------- */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:40}
+.panel{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--bg);border-left:1px solid var(--line);z-index:41;overflow-y:auto;
+  display:grid;align-content:start;gap:var(--s-4);padding:var(--pad-panel) max(var(--pad-panel),env(safe-area-inset-right)) max(var(--pad-panel),env(safe-area-inset-bottom)) var(--pad-panel)}
+.panel::before{content:"";position:absolute;left:0;top:0;width:3px;height:40px;background:var(--violet)}
+/* panel enter/exit motion: motion.css + js/motion.js */
+.panel-top{display:flex;justify-content:space-between;align-items:center;gap:var(--s-3)}
+.panel h2{font-size:var(--fs-h2);line-height:var(--lh-snug);font-weight:500;letter-spacing:-.01em}
+.panel .panel-c{padding:var(--s-4)}
 
 /* ---------- motion: tokens, entrances, reveals and transitions live in motion.css ---------- */
+.btn,.tab,.chip,.seg button,.pick,.mcard,.orow,.sel,.shell-products a,.shell-icon,.field,th button,tr[tabindex] td,.yn{
+  transition:background-color var(--t) ease,color var(--t) ease,border-color var(--t) ease,box-shadow var(--t) ease,transform var(--t) var(--ease)}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
 }
 
-/* ---------- responsive ---------- */
-@media(max-width:760px){
-  #shell{min-height:116px}
-  .shell-in{padding:8px 16px;flex-wrap:wrap;gap:8px 12px}
-  /* all five products fit one row at 360px (wraps, never scrolls, if narrower) */
-  .shell-products{order:3;width:100%;flex-wrap:wrap;justify-content:space-between;gap:0;overflow:visible;padding-bottom:4px}
-  .shell-products a{min-height:44px;flex:1 1 auto;justify-content:center;padding:8px 6px;font-size:12px}
-  .phead-in{padding:24px 16px 16px;align-items:flex-start}
-  .phead-in::after{left:16px}
-  .phead h1{font-size:28px}
-  .phead-aside{flex-direction:row-reverse;align-items:center;justify-content:space-between;width:100%}
-  .ph-glyph{width:96px;height:32px}
-  .ph-slabs{width:100%;-webkit-mask:linear-gradient(90deg,transparent 0,#000 80%);mask:linear-gradient(90deg,transparent 0,#000 80%)}
+/* =================================================================================================
+   TABLET + FOLDABLE (601 to 1100px) and PHONE: tables never scroll sideways. Explorer, Deep and
+   Opportunity rows reflow into cut-corner cards (two columns where they fit); detail opens in a sheet.
+   ================================================================================================= */
+@media (max-width:1100px){
   .tap-hint{display:flex}
-  .m-only{display:flex}
-  .btn:not(.lg),.tab,.chip,.seg button{min-height:44px}
+  .narrow-only{display:flex}
 
-  /* ---------- reflowed tables: one DOM, a card per row on phones ----------
-     The <table> keeps explicit ARIA table roles (set in JS) because display:block/grid drops the native ones.
-     Column headers are hidden; each cell carries its own label from data-label. Pages set the grid areas. */
-  .tbl.rtbl,.tbl-wrap.rtbl,.tbl.tall.rtbl{overflow:visible;max-height:none;background:none;border-radius:0;margin-bottom:0}
+  /* reflowed tables: one DOM, a card per row. The <table> keeps explicit ARIA table roles (set in JS)
+     because display:block/grid drops the native ones. Column headers are hidden; each cell carries its
+     own label from data-label. Pages set the grid areas. */
+  .tbl.rtbl,.tbl-wrap.rtbl,.tbl.tall.rtbl{overflow:visible;max-height:none;background:none;border-radius:0}
   .rtbl table,.rtbl tbody{display:block;min-width:0;width:100%}
   .rtbl thead{display:none}
-  .rtbl tbody{display:grid;gap:8px}
-  .rtbl tr{position:relative;isolation:isolate;display:grid;gap:8px 12px;align-items:start;padding:12px 16px;
+  .rtbl tbody{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gap-panel)}
+  .rtbl tr{position:relative;isolation:isolate;display:grid;gap:var(--s-2) var(--s-3);align-content:start;padding:var(--s-4);
     background:var(--card);border-radius:var(--r-card);clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%)}
   .rtbl tr[tabindex]{min-height:44px;outline-offset:-2px}
   .rtbl td,.rtbl th{display:block;padding:0;border:0;white-space:normal;min-width:0;text-align:left}
-  .rtbl td[data-label]::before{content:attr(data-label) " ";color:var(--muted);font:500 11px/1.4 var(--font);letter-spacing:0;margin-right:3px}
+  .rtbl td[data-label]::before{content:attr(data-label) " ";color:var(--muted);font:500 var(--fs-cap)/1.4 var(--font);letter-spacing:0;margin-right:3px}
   .rtbl tr[tabindex]:hover td,.rtbl tr.is-sel td,.rtbl tr.is-sel td:first-child{background:none;box-shadow:none}
   .rtbl tr[tabindex]:hover{background:color-mix(in srgb,var(--surface) 70%,var(--card))}
   /* selected: the soft fill sweeps in from the left behind the content, plus a hard violet edge; deselect is immediate */
   .rtbl tr::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--violet-soft);transform:scaleX(0);transform-origin:0 50%}
   .rtbl tr::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--violet);transform:scaleY(0);transform-origin:50% 0}
   .rtbl tr.is-sel::before,.rtbl tr.is-sel::after,.rtbl tr.is-cmp::after{transform:none;transition:transform var(--dur-4,.3s) var(--ease-decel,ease)}
+}
+
+/* ---------- header: two rows below 801px (brand + actions, then the product row) ---------- */
+@media (max-width:1100px){
+  .shell-in{gap:var(--s-4)}
+  .shell-products a{padding:8px 10px;min-height:44px}
+}
+@media (max-width:800px){
+  #shell{min-height:116px}
+  .shell-in{padding-top:var(--s-2);padding-bottom:var(--s-2);flex-wrap:wrap;gap:var(--s-2) var(--s-3)}
+  /* all five products share one row and never scroll; they wrap only below ~300px */
+  .shell-products{order:3;width:100%;flex-wrap:wrap;justify-content:space-between;gap:0;overflow:visible;padding-bottom:var(--s-1)}
+  .shell-products a{min-height:44px;flex:1 1 auto;justify-content:center;padding:8px 6px}
+}
+/* short landscape phones: the header scrolls away instead of holding a third of the screen */
+@media (max-height:500px) and (orientation:landscape){#shell{position:relative}}
+
+/* ---------- tablet page head: copy left, mark right, no wrap ---------- */
+@media (max-width:1100px){
+  .phead-in{padding-top:var(--s-6);padding-bottom:var(--s-5)}
+  .panel .panel-c{padding:var(--s-4)}
+}
+
+/* ================================== PHONE (up to 600px) ================================== */
+@media (max-width:600px){
+  .shell-products a{font-size:var(--fs-meta)}
+  .phead-in{padding-top:var(--s-5);padding-bottom:var(--s-5);flex-direction:column;align-items:stretch}
+  .phead .lede{font-size:var(--fs-ui)}
+  .phead-aside{flex-direction:row-reverse;align-items:center;justify-content:space-between}
+  .ph-glyph{width:96px;height:32px}
+  .ph-slabs{width:100%;-webkit-mask:linear-gradient(90deg,transparent 0,#000 80%);mask:linear-gradient(90deg,transparent 0,#000 80%)}
+  .page,.wrap{padding-bottom:var(--s-7)}
+  .rtbl tbody{grid-template-columns:minmax(0,1fr);gap:var(--s-2)}
+  .seg{display:flex;width:100%}
+  .seg button{flex:1 1 auto;padding:0 var(--s-2)}
+  .sortbar select.field{max-width:none}
+  /* bottom sheet */
+  .panel{top:auto;left:0;width:100%;max-height:calc(100dvh - 48px);border-left:0;border-top:1px solid var(--line);border-radius:12px 12px 0 0;
+    padding-left:max(var(--pad-panel),env(safe-area-inset-left))}
+  .panel::before{left:var(--s-4);width:40px;height:3px}
+}
+/* a 280px folded cover screen: the logo shows its mark only, the product row takes two lines,
+   and the header scrolls away instead of holding a quarter of the screen */
+@media (max-width:340px){
+  #shell{min-height:160px;position:relative}
+  .shell-brand img{width:24px;height:24px;object-fit:cover;object-position:0 50%}
+  .shell-in{column-gap:var(--s-2)}
+  .shell-end{gap:var(--s-2)}
+}
+/* folded cover screens: segment labels may take two lines rather than push the page sideways */
+@media (max-width:360px){
+  .seg{height:auto;min-height:var(--ctl);border-radius:var(--r-card)}
+  .seg button{white-space:normal;line-height:1.2;padding:var(--s-1) var(--s-2);min-height:var(--ctl-sm);border-radius:6px}
 }

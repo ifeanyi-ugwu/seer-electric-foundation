@@ -287,7 +287,7 @@ M.ripple=function(c){if(reduced()||!c||!c.ownerSVGElement)return;var s=c.ownerSV
 /* ---------- panel exit ---------- */
 M.exit=function(els,done){els=els.filter(Boolean);if(reduced()||!els.length||!els[0].animate){done();return}
   var n=els.length;els.forEach(function(el){el.inert=true;el.style.pointerEvents="none";
-    var kf=el.classList.contains("panel")?[{opacity:1,transform:"none"},{opacity:0,transform:"translateX(32px)"}]:[{opacity:1},{opacity:0}];
+    var kf=el.classList.contains("panel")?[{opacity:1,transform:"none"},{opacity:0,transform:innerWidth<=600?"translateY(32px)":"translateX(32px)"}]:[{opacity:1},{opacity:0}];
     var a=el.animate(kf,{duration:D.s+40,easing:E.accel,fill:"forwards"});a.onfinish=a.oncancel=function(){if(--n===0)done()}})};
 
 /* ---------- theme: circular reveal from the toggle, colour cross-fade fallback ---------- */

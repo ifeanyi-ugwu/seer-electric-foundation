@@ -1,123 +1,95 @@
-/* Seer app (explorer) only. Shared shell, badge, focus, transitions and page head live in shell.css. */
-.wrap{max-width:1440px;margin:0 auto;padding:0 40px}
+/* Seer app (explorer) only. Shell, page head, controls, tiles, tables and the detail sheet live in shell.css. */
 
-/* summary tiles: diagonal-cut corner from the landing's slabs */
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:24px 0}
-.stat{position:relative;background:var(--card);border-radius:var(--r-card);padding:16px;
-  clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%)}
-.stat::before{content:"";position:absolute;left:0;top:18px;width:2px;height:12px;background:var(--violet)}
-.stat b{display:block;font-size:24px;font-weight:500;margin-top:8px;letter-spacing:-.01em}
-.stat span{color:var(--muted);font-size:12px}
+/* summary tiles, then one filter group (categories, toolbar, types), then the results */
+#stats{margin-bottom:var(--gap-block)}
+.filters{display:grid;gap:var(--s-3);margin-bottom:var(--gap-block)}
+.results-line{color:var(--muted);font-size:var(--fs-meta);margin:0 0 var(--s-3)}
 
-.tabs{display:flex;gap:4px;overflow-x:auto;padding:4px 0 12px;scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
-.tab{border:0;background:transparent;color:var(--text-2);font:inherit;padding:8px 12px;border-radius:var(--r-chip);cursor:pointer;white-space:nowrap}
+.tabs{display:flex;flex-wrap:wrap;gap:var(--s-1)}
+.tab{position:relative;border:0;background:transparent;color:var(--text-2);font:inherit;font-size:var(--fs-body);min-height:var(--ctl-sm);padding:0 var(--s-3);border-radius:var(--r-chip);cursor:pointer;white-space:nowrap}
 .tab:hover{color:var(--text);background:var(--surface)}
 .tab[aria-pressed=true]{background:var(--violet);color:#fff}
-.toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin:4px 0 16px}
-.field{background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:11px 16px;font:inherit;min-height:44px}
-.field.search{flex:1 1 260px;min-width:200px}
-select.field{padding-right:12px;cursor:pointer}
+.toolbar{display:flex;gap:var(--s-2);align-items:center}
+.toolbar .search{flex:1 1 auto}
+.toolbar select.field{flex:none}
 .cat-m{display:none}
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-.chip{border:1px solid var(--line);background:transparent;color:var(--text-2);padding:7px 12px;border-radius:999px;font:inherit;cursor:pointer}
-.chip:hover{border-color:color-mix(in srgb,var(--text) 30%,transparent);color:var(--text)}
-.chip[aria-pressed=true]{background:var(--violet-soft);color:var(--violet-text);border-color:var(--violet)}
-.seg{display:flex;background:var(--card);border-radius:999px;padding:3px;border:1px solid var(--line)}
-.seg button{border:0;background:transparent;color:var(--text-2);font:inherit;padding:8px 16px;border-radius:999px;cursor:pointer}
-.seg button:hover{color:var(--text)}
-.seg button[aria-pressed=true]{background:var(--violet);color:#fff}
-.result-line{color:var(--muted);font-size:12px;margin:0 0 12px}
+.chips{display:flex;gap:var(--s-2);flex-wrap:wrap}
+/* the 14 category tabs need about 1092px on one row; below that they become the select instead of wrapping an orphan */
+@container (max-width:1099px){.tabs{display:none}.cat-m{display:block}}
 
 /* market cards */
-.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;padding-bottom:40px}
-.mcard{background:var(--card);border-radius:var(--r-card);padding:12px;text-align:left;border:0;color:inherit;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:8px;min-height:210px;box-shadow:0 0 0 1px transparent}
-.mcard:hover{box-shadow:0 0 0 1px var(--violet),0 12px 28px -18px color-mix(in srgb,var(--violet) 70%,transparent);transform:translateY(-2px)}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:var(--gap-panel)}
+.mcard{background:var(--card);border-radius:var(--r-card);padding:var(--s-4);text-align:left;border:0;color:inherit;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:var(--s-2);min-height:216px;box-shadow:0 0 0 1px transparent}
+@media (hover:hover){.mcard:hover{box-shadow:0 0 0 1px var(--violet),0 12px 28px -18px color-mix(in srgb,var(--violet) 70%,transparent);transform:translateY(-2px)}}
 .mcard:active{transform:translateY(0)}
-.q{display:flex;gap:12px;align-items:center;min-height:44px}
-.pfp{width:44px;height:44px;border-radius:var(--r-card);flex:none;display:grid;place-items:center;font-size:16px;background:var(--surface);color:var(--violet-text);
+.q{display:flex;gap:var(--s-3);align-items:center;min-height:44px;margin-bottom:var(--s-1)}
+.pfp{width:40px;height:40px;border-radius:var(--r-card);flex:none;display:grid;place-items:center;font-size:var(--fs-h3);background:var(--surface);color:var(--violet-text);
   clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
-.q span{font-size:14px;line-height:18px}
-.orow{background:var(--row);border-radius:var(--r-card);padding:0 12px;min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:8px}
-.orow > span:first-child{min-width:0}
-.orow .pct{display:flex;align-items:center;gap:8px;flex:none}
-.acts{display:flex;gap:4px;flex:none}
-.yn{border-radius:var(--r-chip);padding:6px 0;width:42px;text-align:center;font-size:11px;background:var(--violet);color:#fff}
+.q span{font-size:var(--fs-ui);line-height:var(--lh-snug);text-wrap:balance}
+.orow{background:var(--row);border-radius:var(--r-card);padding:0 var(--s-3);min-height:44px;display:flex;align-items:center;justify-content:space-between;gap:var(--s-2)}
+.orow > span:first-child{min-width:0;line-height:var(--lh-snug);padding:var(--s-2) 0}
+.orow .pct{display:flex;align-items:center;gap:var(--s-2);flex:none}
+.acts{display:flex;gap:var(--s-1);flex:none}
+.yn{border-radius:var(--r-chip);padding:4px 0;width:40px;text-align:center;font-size:var(--fs-cap);background:var(--violet);color:#fff}
 .yn.n{background:var(--violet-soft);color:var(--violet-text)}
-.yn.buy{width:88px}
-.won{font-size:11px;padding:2px 8px;border-radius:var(--r-chip);background:var(--violet-soft);color:var(--violet-text)}
-.bar{height:6px;border-radius:3px;background:var(--surface);overflow:hidden;position:relative}
-.bar i{position:absolute;inset:0 auto 0 0;background:var(--violet);border-radius:3px}
-.range{position:relative;height:6px;background:var(--surface);border-radius:3px;margin:24px 4px 8px}
+.yn.buy{width:84px}
+.won{font-size:var(--fs-cap);padding:2px 8px;border-radius:var(--r-chip);background:var(--violet-soft);color:var(--violet-text)}
+.range{position:relative;height:6px;background:var(--surface);border-radius:3px;margin:var(--s-5) var(--s-1) var(--s-2)}
 .range i{position:absolute;top:-5px;width:2px;height:16px;background:var(--violet)}
-.range b{position:absolute;top:-24px;transform:translateX(-50%);font-weight:500;font-size:12px}
-.rl{display:flex;justify-content:space-between;color:var(--muted);font-size:11px}
-.cond{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.cond div{background:var(--row);border-radius:var(--r-card);padding:12px}
-.cond small{display:block;color:var(--muted);font-size:11px;margin-bottom:2px}
-.cond b{font-size:16px;font-weight:500}
-.foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:8px;padding-top:4px}
+.range b{position:absolute;top:-24px;transform:translateX(-50%);font-weight:500;font-size:var(--fs-meta)}
+.rl{display:flex;justify-content:space-between;color:var(--muted);font-size:var(--fs-cap)}
+.cond{display:grid;grid-template-columns:1fr 1fr;gap:var(--s-2)}
+.cond div{background:var(--row);border-radius:var(--r-card);padding:var(--s-3)}
+.cond small{display:block;color:var(--muted);font-size:var(--fs-cap);margin-bottom:var(--s-1)}
+.cond b{font-size:var(--fs-h3);font-weight:500}
+.more{color:var(--muted);font-size:var(--fs-cap)}
+.foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:var(--s-2);padding-top:var(--s-2)}
 .status-live{color:var(--neg)}
 
-/* table view */
-.tbl-wrap{overflow-x:auto;border-radius:var(--r-card);margin-bottom:40px}
-table{border-collapse:collapse;width:100%;min-width:860px}
-th,td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
-th{color:var(--muted);font-weight:500;font-size:12px}
-td.r,th.r{text-align:right}
-td.mq{white-space:normal;min-width:280px;max-width:420px}
-.empty{padding:40px;text-align:center;color:var(--muted);background:var(--card);border-radius:var(--r-card)}
+/* table view (desktop): fits without scrolling from 1101px */
+.app-tbl table{min-width:0}
+td.mq{white-space:normal;min-width:240px;max-width:420px;font-size:var(--fs-ui)}
+.empty{padding:var(--s-7) var(--s-4);text-align:center;color:var(--muted);background:var(--card);border-radius:var(--r-card)}
 
-/* detail panel */
-.scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:40}
-.panel{position:fixed;top:0;right:0;bottom:0;width:min(460px,100%);background:var(--bg);border-left:1px solid var(--line);z-index:41;overflow-y:auto;padding:24px}
-.panel::before{content:"";position:absolute;left:0;top:0;width:3px;height:40px;background:var(--violet)}
-/* panel enter/exit motion: motion.css + js/motion.js */
-.panel-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.panel h2{font-size:18px;line-height:24px;font-weight:500;margin:12px 0}
-.kv{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 16px}
-.kv div{background:var(--card);border-radius:var(--r-card);padding:12px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
-.kv small{display:block;color:var(--muted);font-size:11px}
-.kv b{font-weight:500}
+/* detail sheet content */
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:var(--s-2)}
+.kv div{background:var(--card);border-radius:var(--r-card);padding:var(--s-3);clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+.kv small{display:block;color:var(--muted);font-size:var(--fs-cap);margin-bottom:2px}
+.kv b{font-weight:500;font-size:var(--fs-ui)}
+.olist{display:grid;gap:var(--s-2)}
 .sel{cursor:pointer;border:2px solid transparent;width:100%;font:inherit;color:inherit;text-align:left}
 .sel:hover{border-color:color-mix(in srgb,var(--violet) 45%,transparent)}
 .sel[aria-pressed=true]{border-color:var(--violet);box-shadow:inset 3px 0 0 var(--violet)}
-.ticket{background:var(--card);border-radius:var(--r-card);padding:16px;margin-top:16px;display:grid;gap:12px}
-.ticket label{color:var(--text-2);font-size:12px}
-.ticket .line{display:flex;justify-content:space-between}
-.ticket .seg{justify-self:start}
-.spark-box{margin-top:16px;background:var(--card);border-radius:var(--r-card);padding:12px 12px 8px}
-.spark-head{display:flex;justify-content:space-between;color:var(--muted);font-size:11px}
-.spark{width:100%;height:64px;display:block;margin-top:8px;overflow:visible}
-.note{color:var(--muted);font-size:11px;margin-top:8px}
-.spark-box .note{margin-top:4px}
+.panel .ticket{background:var(--card);border-radius:var(--r-card);padding:var(--s-4)}
+.spark-box{background:var(--card);border-radius:var(--r-card);padding:var(--s-3) var(--s-4)}
+.spark-head{display:flex;justify-content:space-between;gap:var(--s-2);color:var(--muted);font-size:var(--fs-cap)}
+.spark{width:100%;height:64px;display:block;margin-top:var(--s-2);overflow:visible}
+.mcard.static{cursor:default;min-height:0;box-shadow:none;transform:none}
 
-@media(max-width:900px){.stats{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:760px){
-  .wrap{padding:0 16px}
-  .mgrid{grid-template-columns:1fr}
-  .stats{margin:16px 0}
-  .stat{padding:12px 16px}.stat b{font-size:20px}
-  /* nothing scrolls sideways: categories become a select, the toolbar a two-column grid, type chips wrap */
+/* ================================ TABLET (601 to 1100px) ================================ */
+@media (max-width:1100px){
+  /* the 14 category tabs become a select; the toolbar is search over one row of four equal controls */
   .tabs{display:none}
   .cat-m{display:block}
-  .toolbar{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-top:0}
-  .toolbar .field{min-width:0;width:100%}
-  .field.search{grid-column:1/-1}
+  .toolbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+  .toolbar .search{grid-column:1/-1}
+  .toolbar select.field{width:100%}
   .toolbar .seg button{flex:1}
-  .chips{gap:8px}
-  .chip{white-space:nowrap}
-  /* table view: one card per market (shared card rules in shell.css) */
-  .app-tbl tbody{gap:8px}
+  /* table view: one card per market, two columns where they fit (shared card rules in shell.css) */
   .app-tbl tr{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"ty ty st" "q q q" "lo lo lo" "vo li cl"}
   .app-tbl td[data-label]::before{display:block;margin:0 0 2px}
-  .app-tbl .c-q{grid-area:q;max-width:none;min-width:0;font-size:14px;line-height:18px}
+  .app-tbl .c-q{grid-area:q;max-width:none;min-width:0;font-size:var(--fs-ui);line-height:var(--lh-snug)}
   .app-tbl .c-ty{grid-area:ty;align-self:center}
-  .app-tbl .c-st{grid-area:st;text-align:right;align-self:center;color:var(--text-2);font-size:12px}
+  .app-tbl .c-st{grid-area:st;text-align:right;align-self:center;color:var(--text-2);font-size:var(--fs-meta)}
   .app-tbl .c-st[data-status=Live]{color:var(--neg)}
-  .rtbl.app-tbl tr td.c-lo{grid-area:lo;background:var(--row);border-radius:var(--r-chip);padding:8px 12px}
+  .rtbl.app-tbl tr td.c-lo{grid-area:lo;background:var(--row);border-radius:var(--r-chip);padding:var(--s-2) var(--s-3)}
   .app-tbl .c-vo{grid-area:vo;text-align:left}.app-tbl .c-li{grid-area:li;text-align:left}.app-tbl .c-cl{grid-area:cl;text-align:right}
   .app-tbl .c-cl::before{text-align:right}
-  .panel{padding:16px}
 }
-.mcard.static{cursor:default;min-height:0;box-shadow:none;transform:none}
+
+/* ================================== PHONE (up to 600px) ================================== */
+@media (max-width:600px){
+  /* search, then two rows of two: category and status, sort and view */
+  .toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mcard{min-height:0}
+}

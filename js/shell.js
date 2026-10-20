@@ -36,9 +36,12 @@
       '<header class="shell-bar"><div class="shell-in"><a class="shell-brand" href="index.html" aria-label="Seer home"><img src="assets/logo.svg" alt="seer" height="24"></a>'+
       '<nav class="shell-products" aria-label="Seer products">'+links+'</nav>'+
       '<div class="shell-end">'+(o.cta?'<button class="btn btn-pill" id="shell-cta" type="button">'+o.cta+'</button>':'')+
-      '<button class="shell-icon" id="shell-theme" type="button" aria-label="Toggle light and dark theme">'+SUN+'</button></div></div></header>';
-    document.getElementById("shell-theme").onclick=function(){var l=document.documentElement.dataset.theme==="light",go=function(){applyTheme(l?"dark":"light");store("seer-theme",l?"dark":"light")};
+      '<button class="shell-icon" id="shell-theme" type="button" aria-label="Light theme" aria-pressed="false">'+SUN+'</button></div></div></header>';
+    /* one toggle per page; aria-pressed always mirrors the theme in use (also after a reload) */
+    var tg=document.getElementById("shell-theme"),sync=function(){var l=document.documentElement.dataset.theme==="light";tg.setAttribute("aria-pressed",String(l));tg.title=l?"Light theme on":"Light theme off"};
+    tg.onclick=function(){var l=document.documentElement.dataset.theme==="light",go=function(){applyTheme(l?"dark":"light");store("seer-theme",l?"dark":"light");sync()};
       if(window.Motion)Motion.theme(go,this);else go()};
+    sync();
     var cur=el.querySelector(".shell-products [aria-current]"),nv=el.querySelector(".shell-products");
     if(cur&&nv.scrollWidth>nv.clientWidth)nv.scrollLeft=Math.max(0,cur.offsetLeft-nv.offsetLeft-(nv.clientWidth-cur.offsetWidth)/2);
     var ph=document.querySelector(".phead");

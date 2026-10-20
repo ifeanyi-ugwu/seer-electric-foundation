@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Seer app | Market explorer</title>
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <script>try{if(localStorage.getItem('seer-theme')==='light')document.documentElement.dataset.theme='light'}catch(e){}</script>
@@ -9,21 +9,24 @@
 <main id="main">
  <header class="phead"><div class="phead-in">
   <div><p class="kicker"><span class="tag num">01</span>The explorer</p><h1>Every market on Seer</h1>
-  <p class="lede">Categorical, multi-categorical, scalar, multi-scalar and conditional markets in one explorer.</p></div>
+  <p class="lede">Categorical, multi-categorical, scalar, multi-scalar and conditional markets in one explorer.</p>
+  <p class="phead-act"><button class="btn act" id="create" type="button">Create market</button></p></div>
   <div class="phead-aside"><span class="badge ghost">Illustrative data</span></div>
  </div></header>
  <div class="wrap">
-  <section class="stats" id="stats" aria-label="Summary"></section>
+  <section class="kpi top" id="stats" aria-label="Summary"></section>
+  <div class="filters">
   <div class="tabs" id="cats" role="group" aria-label="Category"></div>
   <div class="toolbar">
-    <input class="field search" id="q" type="search" placeholder="Search markets, outcomes or categories" aria-label="Search markets">
+    <input class="field search" id="q" type="search" placeholder="Search markets or outcomes" aria-label="Search markets">
     <select class="field cat-m" id="cat-m" aria-label="Category"></select>
     <select class="field" id="status" aria-label="Status"><option value="">All statuses</option><option>Open</option><option>Live</option><option>Closed</option><option>Resolved</option></select>
-    <select class="field" id="sort" aria-label="Sort"><option value="vol">Volume</option><option value="liq">Liquidity</option><option value="name">Title A–Z</option></select>
+    <select class="field" id="sort" aria-label="Sort by"><option value="vol">Sort: volume</option><option value="liq">Sort: liquidity</option><option value="name">Sort: title, A to Z</option></select>
     <div class="seg" role="group" aria-label="View"><button id="vg" type="button" aria-pressed="true">Grid</button><button id="vt" type="button" aria-pressed="false">Table</button></div>
   </div>
   <div class="chips" id="types" role="group" aria-label="Market type"></div>
-  <p class="result-line" id="count" aria-live="polite"></p>
+  </div>
+  <p class="results-line" id="count" aria-live="polite"></p>
   <div id="out"></div>
  </div>
 </main>
