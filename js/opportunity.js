@@ -21,10 +21,10 @@ function draw(){var target=document.getElementById("root"),root=h("div");
  function pick(s){st.sel=s;draw();var t=document.querySelector(".opp-side");if(t&&window.innerWidth<=960&&t.scrollIntoView)t.scrollIntoView({block:"nearest",behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth"})}
  var body=h("tbody");l.forEach(function(s){body.appendChild(h("tr",{tabindex:"0","data-key":"s"+s.id,class:st.sel===s?"is-sel":null,"aria-current":st.sel===s?"true":null,onclick:function(){pick(s)},onkeydown:function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(s);var r=document.querySelector("tr.is-sel");if(r)r.focus({preventScroll:true})}}},[
   h("td",{class:"w c-n"},[h("b",{style:"font-weight:500",text:s.n}),h("div",{class:"note",text:s.t})]),
-  h("td",{class:"c-s"},[h("span",{class:"sigbar","aria-label":"Market signal "+Math.round(s.p*100)+"% chance of selection"},[h("span",{class:"trk","aria-hidden":"true"},[h("i",{style:"width:"+Math.round(s.p*100)+"%"})]),h("span",{class:"num",text:Math.round(s.p*100)+"%"})])]),
-  h("td",{class:"r num c-v",text:U.money(s.v)}),h("td",{class:"c-d"},[badge(s.r)]),
+  h("td",{class:"c-s","data-label":"Market signal"},[h("span",{class:"sigbar","aria-label":"Market signal "+Math.round(s.p*100)+"% chance of selection"},[h("span",{class:"trk","aria-hidden":"true"},[h("i",{style:"width:"+Math.round(s.p*100)+"%"})]),h("span",{class:"num",text:Math.round(s.p*100)+"%"})])]),
+  h("td",{class:"r num c-v","data-label":"Volume",text:U.money(s.v)}),h("td",{class:"c-d"},[badge(s.r)]),
   h("td",{class:"c-f"},[differs(s)?h("span",{class:"neg",text:"\u25C6 Reviewers differ"}):h("span",{class:"muted",text:"Consistent"})])]))});
- var tbl=h("div",{class:"tbl opp"},[h("table",{},[h("thead",{},[h("tr",{},[["Submission",""],["Market signal: chance of selection",""],["Volume","r"],["Reviewer decision",""],["Signal vs decision",""]].map(function(c){return h("th",{scope:"col",class:c[1],text:c[0]})}))]),body])]);
+ var tbl=h("div",{class:"tbl opp rtbl"},[U.roles(h("table",{},[h("thead",{},[h("tr",{},[["Submission",""],["Market signal: chance of selection",""],["Volume","r"],["Reviewer decision",""],["Signal vs decision",""]].map(function(c){return h("th",{scope:"col",class:c[1],text:c[0]})}))]),body]))]);
  var side=h("div",{class:"panel-c ticket opp-side"});
  if(st.sel){var s=st.sel,p=st.side==="Yes"?s.p:1-s.p,open=s.r==="In review"||s.r==="Pending";
   side.appendChild(h("h2",{text:s.n}));side.appendChild(h("div",{class:"line"},[h("span",{class:"muted",text:"Reviewer decision"}),badge(s.r)]));
@@ -35,7 +35,7 @@ function draw(){var target=document.getElementById("root"),root=h("div");
    side.appendChild(h("button",{class:"btn lg",type:"button",text:"Connect wallet to trade"}));}
   side.appendChild(h("p",{class:"note",text:"Demo only."}))}
  else{side.appendChild(h("h2",{text:"Select a submission"}));side.appendChild(h("p",{class:"note",text:"See its market signal and, while reviewers are still deciding, forecast the outcome."}))}
- root.appendChild(h("div",{class:"cols rev"},[h("div",{style:"min-width:0"},[h("p",{class:"tbl-hint opp-hint",text:"Tap a submission to see its signal and trade"}),tbl]),side]));
+ root.appendChild(h("div",{class:"cols rev"},[h("div",{style:"min-width:0"},[h("p",{class:"tap-hint",text:"Tap a submission to see its signal and trade"}),tbl]),side]));
  U.patch(target,root,{flip:"tbody tr"})}
 draw();
 if(window.Motion){Motion.ready();Motion.reveal("#root > .kpi > div, #root > .notice, #root > .head, .opp-side",{onIn:Motion.dataIn});Motion.reveal(".opp tbody tr",{rise:8,onIn:Motion.dataIn})}

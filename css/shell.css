@@ -90,7 +90,8 @@ th button{border-radius:2px}
 th button:hover{color:var(--text)}
 th[aria-sort=ascending],th[aria-sort=descending]{color:var(--text)}
 
-/* tables: scroll inside their container with violet edge shadows as the affordance */
+/* tables: at tablet widths a wide table scrolls inside its container, with violet edge shadows as the affordance.
+   On phones (max-width 760px) no table scrolls: .rtbl tables reflow into cards (see the end of this file). */
 .tbl,.tbl-wrap{
   background:
     linear-gradient(90deg,var(--card) 30%,transparent) left center/40px 100% no-repeat local,
@@ -99,8 +100,9 @@ th[aria-sort=ascending],th[aria-sort=descending]{color:var(--text)}
     radial-gradient(farthest-side at 100% 50%,color-mix(in srgb,var(--violet) 55%,transparent),transparent) right center/14px 100% no-repeat scroll,
     var(--card);
   -webkit-overflow-scrolling:touch}
-.tbl-hint{display:none;align-items:center;gap:8px;color:var(--muted);font-size:12px;margin:0 0 8px}
-.tbl-hint::before{content:"";width:16px;height:2px;background:var(--violet)}
+.tap-hint{display:none;align-items:center;gap:8px;color:var(--muted);font-size:12px;margin:0 0 8px}
+.tap-hint::before{content:"";width:16px;height:2px;background:var(--violet)}
+.m-only{display:none}
 tr[tabindex]{cursor:pointer}
 tr[tabindex]:hover td{background:color-mix(in srgb,var(--surface) 70%,transparent)}
 tr.is-sel td{background:var(--violet-soft)}
@@ -115,15 +117,35 @@ tr.is-sel td:first-child{box-shadow:inset 3px 0 0 var(--violet)}
 @media(max-width:760px){
   #shell{min-height:116px}
   .shell-in{padding:8px 16px;flex-wrap:wrap;gap:8px 12px}
-  .shell-products{order:3;width:calc(100% + 32px);margin:0 -16px;padding:0 16px 4px;
-    -webkit-mask:linear-gradient(90deg,#000 85%,transparent);mask:linear-gradient(90deg,#000 85%,transparent)}
-  .shell-products a{min-height:44px}
+  /* all five products fit one row at 360px (wraps, never scrolls, if narrower) */
+  .shell-products{order:3;width:100%;flex-wrap:wrap;justify-content:space-between;gap:0;overflow:visible;padding-bottom:4px}
+  .shell-products a{min-height:44px;flex:1 1 auto;justify-content:center;padding:8px 6px;font-size:12px}
   .phead-in{padding:24px 16px 16px;align-items:flex-start}
   .phead-in::after{left:16px}
   .phead h1{font-size:28px}
   .phead-aside{flex-direction:row-reverse;align-items:center;justify-content:space-between;width:100%}
   .ph-glyph{width:96px;height:32px}
   .ph-slabs{width:100%;-webkit-mask:linear-gradient(90deg,transparent 0,#000 80%);mask:linear-gradient(90deg,transparent 0,#000 80%)}
-  .tbl-hint{display:flex}
+  .tap-hint{display:flex}
+  .m-only{display:flex}
   .btn:not(.lg),.tab,.chip,.seg button{min-height:44px}
+
+  /* ---------- reflowed tables: one DOM, a card per row on phones ----------
+     The <table> keeps explicit ARIA table roles (set in JS) because display:block/grid drops the native ones.
+     Column headers are hidden; each cell carries its own label from data-label. Pages set the grid areas. */
+  .tbl.rtbl,.tbl-wrap.rtbl,.tbl.tall.rtbl{overflow:visible;max-height:none;background:none;border-radius:0;margin-bottom:0}
+  .rtbl table,.rtbl tbody{display:block;min-width:0;width:100%}
+  .rtbl thead{display:none}
+  .rtbl tbody{display:grid;gap:8px}
+  .rtbl tr{position:relative;isolation:isolate;display:grid;gap:8px 12px;align-items:start;padding:12px 16px;
+    background:var(--card);border-radius:var(--r-card);clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%)}
+  .rtbl tr[tabindex]{min-height:44px;outline-offset:-2px}
+  .rtbl td,.rtbl th{display:block;padding:0;border:0;white-space:normal;min-width:0;text-align:left}
+  .rtbl td[data-label]::before{content:attr(data-label) " ";color:var(--muted);font:500 11px/1.4 var(--font);letter-spacing:0;margin-right:3px}
+  .rtbl tr[tabindex]:hover td,.rtbl tr.is-sel td,.rtbl tr.is-sel td:first-child{background:none;box-shadow:none}
+  .rtbl tr[tabindex]:hover{background:color-mix(in srgb,var(--surface) 70%,var(--card))}
+  /* selected: the soft fill sweeps in from the left behind the content, plus a hard violet edge; deselect is immediate */
+  .rtbl tr::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--violet-soft);transform:scaleX(0);transform-origin:0 50%}
+  .rtbl tr::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--violet);transform:scaleY(0);transform-origin:50% 0}
+  .rtbl tr.is-sel::before,.rtbl tr.is-sel::after,.rtbl tr.is-cmp::after{transform:none;transition:transform var(--dur-4,.3s) var(--ease-decel,ease)}
 }

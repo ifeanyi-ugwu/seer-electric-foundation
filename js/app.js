@@ -20,9 +20,11 @@
     [["Markets listed",String(M.length)],["Open or live",String(open)],["Total volume",money(vol)],["Liquidity",money(liq)]].forEach(function(s){
       el.appendChild(h("div",{class:"stat"},[h("span",{text:s[0]}),h("b",{class:"num",text:s[1]})]))})}
 
-  function cats(){var el=document.getElementById("cats"),f=h("div");
-    ["All"].concat(M.map(function(m){return m.cat}).filter(function(c,i,a){return a.indexOf(c)===i})).forEach(function(c){
-      f.appendChild(h("button",{class:"tab",type:"button","data-key":c,"aria-pressed":String(st.cat===c),text:c,onclick:function(){st.cat=c;cats();render()}}))});patch(el,f)}
+  function cats(){var el=document.getElementById("cats"),f=h("div"),sel=document.getElementById("cat-m"),all=["All"].concat(M.map(function(m){return m.cat}).filter(function(c,i,a){return a.indexOf(c)===i}));
+    all.forEach(function(c){
+      f.appendChild(h("button",{class:"tab",type:"button","data-key":c,"aria-pressed":String(st.cat===c),text:c,onclick:function(){st.cat=c;cats();render()}}))});patch(el,f);
+    /* phones: the same category state as a select, so the long tab row never scrolls sideways */
+    if(sel){if(!sel.options.length)all.forEach(function(c){sel.appendChild(h("option",{value:c,text:c==="All"?"All categories":c}))});if(sel.value!==st.cat)sel.value=st.cat}}
   function types(){var el=document.getElementById("types"),f=h("div");
     [""].concat(TYPES).forEach(function(t){var n=M.filter(function(m){return!t||m.type===t}).length;
       f.appendChild(h("button",{class:"chip",type:"button","data-key":t||"all","aria-pressed":String(st.type===t),text:(t||"All types")+" · "+n,onclick:function(){st.type=t;types();render()}}))});patch(el,f)}
@@ -49,14 +51,17 @@
       h("div",{class:"q"},[h("div",{class:"pfp",text:m.q.charAt(0)}),h("span",{text:m.q})])].concat(body,[
       h("div",{class:"foot"},[h("div",{class:"meta"},[h("span",{class:"num",text:money(m.vol)+" Vol."}),h("i"),h("span",{text:live?"LIVE":m.status==="Open"?"Closes "+m.close:m.status,class:live?"status-live":""})]),h("span",{class:"badge",text:m.type})])]))}
 
-  function table(list){var w=h("div",{class:"tbl-wrap"}),t=h("table"),hd=h("tr"),f=document.createDocumentFragment();
-    f.appendChild(h("p",{class:"tbl-hint",text:"Scroll the table sideways for more columns"}));f.appendChild(w);
+  /* explicit table roles: on phones the table is laid out as cards, which drops the native semantics (see shell.css) */
+  function roles(t){t.setAttribute("role","table");Array.prototype.forEach.call(t.querySelectorAll("thead,tbody,tr,th,td"),function(n){n.setAttribute("role",{THEAD:"rowgroup",TBODY:"rowgroup",TR:"row",TH:"columnheader",TD:"cell"}[n.tagName])});return t}
+  function table(list){var w=h("div",{class:"tbl-wrap rtbl app-tbl"}),t=h("table"),hd=h("tr"),f=document.createDocumentFragment();
+    f.appendChild(w);
     [["Market",""],["Type",""],["Leading outcome",""],["Volume","r"],["Liquidity","r"],["Closes",""],["Status",""]].forEach(function(c){hd.appendChild(h("th",{class:c[1],scope:"col",text:c[0]}))});
     t.appendChild(h("thead",{},[hd]));var tb=h("tbody");
     list.forEach(function(m){var l=lead(m),lt=l?l[0]+" · "+pc(l[1]):m.scalar?"Estimate "+m.scalar.est+(m.scalar.unit==="$"?" $/bbl":m.scalar.unit):"Pass "+m.cond.a.toLocaleString("en-US")+" / fail "+m.cond.b.toLocaleString("en-US");
       var r=h("tr",{tabindex:"0","data-key":"r"+m.id,onclick:function(){openPanel(m)},onkeydown:function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();openPanel(m)}}},[
-        h("td",{class:"mq",text:m.q}),h("td",{},[h("span",{class:"badge",text:m.type})]),h("td",{class:"num",text:lt}),h("td",{class:"r num",text:money(m.vol)}),h("td",{class:"r num",text:money(m.liq)}),h("td",{text:m.close}),h("td",{text:m.status})]);tb.appendChild(r)});
-    t.appendChild(tb);w.appendChild(t);return f}
+        h("td",{class:"mq c-q",text:m.q}),h("td",{class:"c-ty"},[h("span",{class:"badge",text:m.type})]),h("td",{class:"num c-lo","data-label":"Leading outcome",text:lt}),h("td",{class:"r num c-vo","data-label":"Volume",text:money(m.vol)}),
+        h("td",{class:"r num c-li","data-label":"Liquidity",text:money(m.liq)}),h("td",{class:"c-cl","data-label":"Closes",text:m.close}),h("td",{class:"c-st","data-status":m.status,text:m.status})]);tb.appendChild(r)});
+    t.appendChild(tb);w.appendChild(roles(t));return f}
 
   function render(){var list=sorted(M.filter(matches)),out=document.getElementById("out"),f=h("div");
     document.getElementById("count").textContent=list.length+" of "+M.length+" markets";
@@ -110,6 +115,7 @@
     if(window.Motion){Motion.scan(p);Motion.stagger(p.querySelectorAll(".kv > div, .sel, .mcard.static, .spark-box, .ticket"),140,35);Motion.draw(p.querySelector(".spark"),{delay:320})}}
 
   document.getElementById("q").oninput=function(e){st.q=e.target.value;render()};
+  document.getElementById("cat-m").onchange=function(e){st.cat=e.target.value;cats();render()};
   document.getElementById("status").onchange=function(e){st.status=e.target.value;render()};
   document.getElementById("sort").onchange=function(e){st.sort=e.target.value;render()};
   function view(v){st.view=v;document.getElementById("vg").setAttribute("aria-pressed",String(v==="grid"));document.getElementById("vt").setAttribute("aria-pressed",String(v==="table"));render()}

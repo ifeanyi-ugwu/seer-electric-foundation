@@ -33,7 +33,9 @@ One token file (`css/tokens.css`) and one shell drive all six interfaces. Every 
 | Page-head ground is the kit's hero ink (`#0C0A16`) blended with the page, or light lavender in light mode | Calmer than the landing, but visibly the same family. |
 | Cut-corner KPI tiles and primary trade buttons | Carries the slab and base-block shape into the tools without touching the data. |
 | Active nav link is a soft violet fill with a 2px violet underline | Matches the landing's hard-edged violet base, and the text keeps body-text contrast. |
-| Violet table-scroll shadows on mobile | A neutral shadow doesn't show on the dark card colour, so there'd be no scroll cue. |
+| On phones every table reflows into cut-corner cards from the same table markup, with explicit ARIA table roles and per-cell labels | Tables never scroll sideways on a phone. Violet edge shadows remain only at tablet widths, where tables still scroll inside their box. |
+| On phones, column sorting moves to a "Sort by" select, category tabs become a select, and the product nav fits one row | The column headers are hidden in the card layout, and nothing may scroll sideways. |
+| Risk compare chart uses short horizon labels (30d, 90d, 180d, 12m) on narrow screens | Keeps 11 to 12px text at 360px. |
 | A small decorative glyph per product (fork, dot field, signal bars, graded bars, slab columns) | Gives each product its own mark. Hidden from screen readers. |
 | Charts drawn at their real width and redrawn on resize | Keeps chart text at 11 to 12px on every screen. |
 

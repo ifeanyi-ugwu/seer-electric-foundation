@@ -69,6 +69,7 @@ td.r,th.r{text-align:right}td.w{white-space:normal}
 .dotfield circle{cursor:pointer;transition:stroke var(--t) ease}
 .dotfield circle:hover{stroke:var(--text-2);stroke-width:2}
 .dotfield circle:focus-visible{outline:none;stroke:var(--violet-text);stroke-width:3}
+.split-trk{display:inline-flex;width:60px;vertical-align:middle}
 .cols2{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:16px;margin-bottom:16px;align-items:start}
 
 /* ---------- Opportunity: signal beside decision ---------- */
@@ -92,23 +93,47 @@ td.r,th.r{text-align:right}td.w{white-space:normal}
   .head > *{min-width:0;max-width:100%}
   .head input.field{flex:1 1 100%}
   .head > div:has(> input.field){width:100%}
-  /* long segmented controls scroll sideways instead of orphaning a button */
-  .seg:has(> button:nth-child(4)){flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
-  .seg:has(> button:nth-child(4)) button{flex:0 0 auto}
-  .seg::-webkit-scrollbar{display:none}
-  /* keep the protocol name in view while the heatmap scrolls */
-  .heat th:first-child,.heat td:first-child{position:sticky;left:0;z-index:1;background:var(--card);box-shadow:inset -1px 0 0 var(--line)}
+  /* a five-option segmented control is a 3 + 2 grid: nothing scrolls sideways and no button is orphaned */
+  .seg:has(> button:nth-of-type(5)){display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}
+  .seg:has(> button:nth-of-type(5)) > button{grid-column:span 2}
+  .seg:has(> button:nth-of-type(5)) > button:nth-of-type(n+4){grid-column:span 3}
+  /* sort control that stands in for the hidden column headers of a reflowed table */
+  .sortbar{align-items:center;gap:8px;margin:0 0 12px}
+  .sortbar label{color:var(--text-2);font-size:12px;flex:none}
+  .sortbar select.field{flex:1 1 auto;min-width:0;min-height:44px;padding-right:12px;cursor:pointer}
+  .sortbar .btn{flex:none;min-height:44px;padding:0 12px;font-size:12px}
   .kpi{grid-template-columns:1fr 1fr;gap:8px}
   .kpi b{font-size:20px}
   .leg b{font-size:22px}
   .fork-meta{grid-template-columns:1fr}
-  /* Opportunity table becomes stacked rows so the signal stays beside the decision */
-  .opp table,.opp tbody{display:block}
-  .opp thead{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-  .opp tr{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"n v" "s s" "d f";gap:8px 12px;padding:12px 16px;border-bottom:1px solid var(--line)}
-  .opp td{padding:0;border:0;white-space:normal;background:none!important}
-  .opp tr.is-sel{background:var(--violet-soft);box-shadow:inset 3px 0 0 var(--violet)}
-  .opp tr.is-sel td:first-child{box-shadow:none}
-  .opp .c-n{grid-area:n}.opp .c-v{grid-area:v;align-self:start}.opp .c-s{grid-area:s}.opp .c-d{grid-area:d}.opp .c-f{grid-area:f;text-align:right}
-  .opp .sigbar .trk{width:calc(100vw - 120px);max-width:240px}
+
+  /* ---------- reflowed tables: per-page card layouts (shared card rules in shell.css) ---------- */
+  /* Deep: rank + name, score large on the right with its 7d change, range, agent/human split, both volumes */
+  .deep-tbl tr{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"id n s" "r r ch" "ag ag ag" "av av hv";gap:8px}
+  .deep-tbl .c-id{grid-area:id;line-height:20px}.deep-tbl .c-id::before{content:"#"}
+  .deep-tbl .c-n{grid-area:n;font-size:14px;line-height:20px}
+  .deep-tbl .c-s{grid-area:s;text-align:right;font-size:22px;line-height:1;font-weight:500;letter-spacing:-.01em}
+  .deep-tbl .c-s::before{vertical-align:3px}
+  .deep-tbl .c-r{grid-area:r;align-self:center;text-align:left}
+  .deep-tbl .c-ch{grid-area:ch;text-align:right;align-self:center}
+  .deep-tbl .c-ag{grid-area:ag}
+  .deep-tbl .split{display:flex;align-items:center}
+  .deep-tbl .split-trk{flex:1 1 auto;width:auto}
+  .deep-tbl .c-av{grid-area:av;text-align:left}.deep-tbl .c-hv{grid-area:hv;text-align:right}
+  /* Risk: name + type with the Compare toggle, then a four-cell heat strip that keeps every number and tint */
+  .heat tr{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-areas:"p p c c" "t t c c";gap:4px 8px}
+  .heat .c-p{grid-area:p;font-size:14px;line-height:20px}
+  .heat .c-t{grid-area:t}
+  .heat .c-c{grid-area:c;justify-self:end;align-self:center}
+  .heat .c-c .btn{min-width:104px}
+  .rtbl.heat td.h{grid-row:3;min-width:0;margin-top:8px;padding:8px 8px 14px;border-radius:var(--r-chip);font-size:14px;text-align:left}
+  .rtbl.heat td.h::before{display:block;margin:0 0 2px;color:var(--text);font-weight:400}
+  .rtbl.heat td.h::after{left:8px;right:auto;bottom:6px;width:calc(100% - 16px);transform-origin:0 50%}
+  /* Opportunity: name with volume, the signal bar full width, then decision beside signal-vs-decision */
+  .opp tr{grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"n v" "s s" "d f"}
+  .opp .c-n{grid-area:n}.opp .c-v{grid-area:v;text-align:right}.opp .c-s{grid-area:s}.opp .c-d{grid-area:d}.opp .c-f{grid-area:f;text-align:right}
+  .opp .c-v::before,.opp .c-s::before{display:block;margin:0 0 2px}
+  .opp .c-s::before{content:attr(data-label) / ""}/* the bar's own label already says "Market signal" to screen readers */
+  .opp .sigbar{display:flex}
+  .opp .sigbar .trk{flex:1 1 auto;width:auto}
 }
