@@ -1,4 +1,4 @@
-# Seer × Electric Foundation — design rationale
+# Seer × Electric Foundation: design rationale
 
 One token file (`css/tokens.css`) and one shell drive all six interfaces. Every colour, radius and spacing value comes from the Electric Foundation (EF) Figma kit. Each product keeps the same shell and adds one idea of its own.
 

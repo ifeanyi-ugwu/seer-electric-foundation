@@ -22,7 +22,7 @@ function chart(p,cw){
  s.appendChild(U.svg("rect",{class:"m-end","data-tween":"x y",x:X(range-1)-5,y:Y(b[range-1])-5,width:10,height:10,fill:"var(--neg)"}));
  return s}
 function delta(p){var d=(p.pass-p.fail)/p.fail*100,good=(p.better==="higher")===(d>0);
- return{pct:d,good:good,text:(d>0?"+":"")+d.toFixed(1)+"% under pass",msg:"The market expects "+p.metric.toLowerCase()+" to be "+(d>0?"higher":"lower")+" if the proposal passes — "+(good?"better":"worse")+" for the DAO's stated goal."}}
+ return{pct:d,good:good,text:(d>0?"+":"")+d.toFixed(1)+"% under pass",msg:"The market expects "+p.metric.toLowerCase()+" to be "+(d>0?"higher":"lower")+" if the proposal passes, which is "+(good?"better":"worse")+" for the DAO's stated goal."}}
 function list(){var root=document.getElementById("list"),el=h("div");
  el.appendChild(h("div",{class:"muted list-label",text:"Active proposals · "+P.length}));
  P.forEach(function(p){var d=delta(p);el.appendChild(h("button",{class:"pick",type:"button","data-key":"p"+p.id,"aria-pressed":String(p===sel),onclick:function(){sel=p;list();detail()}},[

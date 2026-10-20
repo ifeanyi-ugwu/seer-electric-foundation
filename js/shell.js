@@ -1,4 +1,4 @@
-/* SeerShell.mount({ product, cta }) — renders the shared header into #shell,
+/* SeerShell.mount({ product, cta }): renders the shared header into #shell,
    and dresses the page head (.phead) with the FADES slabs and the product's glyph. */
 (function(){
   var PRODUCTS=[["app","Seer app","app.html"],["futarchy","Futarchy","futarchy.html"],["deep","Deep","deep.html"],["opportunity","Opportunity","opportunity.html"],["risk","Risk Pricing","risk.html"]];
