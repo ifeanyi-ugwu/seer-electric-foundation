@@ -11,7 +11,7 @@
 .two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:var(--gap-panel)}
 .list-label{display:flex;align-items:center;gap:var(--s-2)}
 .pick{display:block;width:100%;text-align:left;border:2px solid transparent;background:var(--card);color:inherit;font:inherit;border-radius:var(--r-card);padding:var(--s-3) var(--s-4);cursor:pointer}
-.pick:hover{border-color:color-mix(in srgb,var(--violet) 40%,transparent)}
+@media (hover:hover){.pick:hover{border-color:color-mix(in srgb,var(--violet) 40%,transparent)}}
 .pick[aria-pressed=true]{border-color:var(--violet);box-shadow:inset 3px 0 0 var(--violet)}
 .pick b{display:block;font-weight:500;font-size:var(--fs-ui);line-height:var(--lh-snug);margin-bottom:var(--s-1)}
 .pick .line{margin-top:var(--s-2)}
@@ -52,7 +52,7 @@
 /* ---------- Deep: dense dot field ---------- */
 .dotfield{display:block;max-width:100%}
 .dotfield circle{cursor:pointer;transition:stroke var(--t) ease}
-.dotfield circle:hover{stroke:var(--text-2);stroke-width:2}
+@media (hover:hover){.dotfield circle:hover{stroke:var(--text-2);stroke-width:2}}
 .dotfield circle:focus-visible{outline:none;stroke:var(--violet-text);stroke-width:3}
 .split{display:inline-flex;align-items:center;gap:var(--s-2)}
 .split-trk{display:inline-flex;width:60px;vertical-align:middle}

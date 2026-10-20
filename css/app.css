@@ -7,7 +7,7 @@
 
 .tabs{display:flex;flex-wrap:wrap;gap:var(--s-1)}
 .tab{position:relative;border:0;background:transparent;color:var(--text-2);font:inherit;font-size:var(--fs-body);min-height:var(--ctl-sm);padding:0 var(--s-3);border-radius:var(--r-chip);cursor:pointer;white-space:nowrap}
-.tab:hover{color:var(--text);background:var(--surface)}
+@media (hover:hover){.tab:hover{color:var(--text);background:var(--surface)}}
 .tab[aria-pressed=true]{background:var(--violet);color:#fff}
 .toolbar{display:flex;gap:var(--s-2);align-items:center}
 .toolbar .search{flex:1 1 auto}
@@ -20,8 +20,8 @@
 /* market cards */
 .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:var(--gap-panel)}
 .mcard{background:var(--card);border-radius:var(--r-card);padding:var(--s-4);text-align:left;border:0;color:inherit;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:var(--s-2);min-height:216px;box-shadow:0 0 0 1px transparent}
-@media (hover:hover){.mcard:hover{box-shadow:0 0 0 1px var(--violet),0 12px 28px -18px color-mix(in srgb,var(--violet) 70%,transparent);transform:translateY(-2px)}}
-.mcard:active{transform:translateY(0)}
+/* hover lift, press and tilt are springs in js/motion.js; the ring and shadow stay here */
+@media (hover:hover){.mcard:hover{box-shadow:0 0 0 1px var(--violet),0 12px 28px -18px color-mix(in srgb,var(--violet) 70%,transparent)}}
 .q{display:flex;gap:var(--s-3);align-items:center;min-height:44px;margin-bottom:var(--s-1)}
 .pfp{width:40px;height:40px;border-radius:var(--r-card);flex:none;display:grid;place-items:center;font-size:var(--fs-h3);background:var(--surface);color:var(--violet-text);
   clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
@@ -58,13 +58,13 @@ td.mq{white-space:normal;min-width:240px;max-width:420px;font-size:var(--fs-ui)}
 .kv b{font-weight:500;font-size:var(--fs-ui)}
 .olist{display:grid;gap:var(--s-2)}
 .sel{cursor:pointer;border:2px solid transparent;width:100%;font:inherit;color:inherit;text-align:left}
-.sel:hover{border-color:color-mix(in srgb,var(--violet) 45%,transparent)}
+@media (hover:hover){.sel:hover{border-color:color-mix(in srgb,var(--violet) 45%,transparent)}}
 .sel[aria-pressed=true]{border-color:var(--violet);box-shadow:inset 3px 0 0 var(--violet)}
 .panel .ticket{background:var(--card);border-radius:var(--r-card);padding:var(--s-4)}
 .spark-box{background:var(--card);border-radius:var(--r-card);padding:var(--s-3) var(--s-4)}
 .spark-head{display:flex;justify-content:space-between;gap:var(--s-2);color:var(--muted);font-size:var(--fs-cap)}
 .spark{width:100%;height:64px;display:block;margin-top:var(--s-2);overflow:visible}
-.mcard.static{cursor:default;min-height:0;box-shadow:none;transform:none}
+.mcard.static{cursor:default;min-height:0;box-shadow:none}
 
 /* ================================ TABLET (601 to 1100px) ================================ */
 @media (max-width:1100px){

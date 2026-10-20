@@ -74,7 +74,7 @@
   var lastFocus=null;
   function closePanel(){var r=document.getElementById("panel-root"),p=r.querySelector(".panel"),s=r.querySelector(".scrim");document.removeEventListener("keydown",esc);
     var clear=function(){if(!p||p.isConnected)r.textContent=""};
-    if(window.Motion&&p)Motion.exit([p,s],clear);else clear();if(lastFocus)lastFocus.focus()}
+    if(window.Motion&&p)Motion.exit([p,s],clear);else{clear();if(window.Motion&&Motion.sheetOff)Motion.sheetOff()}if(lastFocus)lastFocus.focus()}
   /* Escape closes; Tab and Shift+Tab stay inside the open panel */
   function esc(e){if(e.key==="Escape"){closePanel();return}if(e.key!=="Tab")return;var p=document.querySelector("#panel-root .panel");if(!p)return;
     var f=[].filter.call(p.querySelectorAll("button,input,select,[tabindex]:not([tabindex='-1'])"),function(n){return!n.disabled&&n.getClientRects().length});if(!f.length)return;
@@ -117,7 +117,7 @@
       list,ld?spark(m.id*37,ld[1],ld[0]):null,tk]);
     drawTicket();
     root.appendChild(h("div",{class:"scrim",onclick:closePanel}));root.appendChild(p);document.addEventListener("keydown",esc);p.querySelector(".panel-top button").focus();
-    if(window.Motion){Motion.scan(p);Motion.stagger(p.querySelectorAll(".kv > div, .sel, .mcard.static, .spark-box, .ticket"),140,35);if(ld)Motion.draw(p.querySelector(".spark"),{delay:320})}}
+    if(window.Motion){Motion.scan(p);if(Motion.panelIn)Motion.panelIn(root);Motion.stagger(p.querySelectorAll("h2, .kv > div, .sel, .mcard.static, .spark-box, .ticket"),140,35);if(ld)Motion.draw(p.querySelector(".spark"),{delay:320})}}
 
   document.getElementById("q").oninput=function(e){st.q=e.target.value;render()};
   document.getElementById("cat-m").onchange=function(e){st.cat=e.target.value;cats();render()};

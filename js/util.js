@@ -33,10 +33,10 @@ U.sheet=function(o){var root=document.getElementById("sheet-root"),h=U.h;
  if(!o.open){if(!cur)return;
   if(window.Motion&&!o.instant&&!Motion.reduced()){/* exit plays in a detached layer so the root is free at once */
    var g=h("div",{"aria-hidden":"true"});g.inert=true;document.body.appendChild(g);while(root.firstChild)g.appendChild(root.firstChild);
-   Motion.exit([g.querySelector(".panel"),g.querySelector(".scrim")],function(){g.remove()})}else U.clear(root);return}
+   Motion.exit([g.querySelector(".panel"),g.querySelector(".scrim")],function(){g.remove()})}else{U.clear(root);if(window.Motion&&Motion.sheetOff)Motion.sheetOff()}return}
  var f=h("div",{},[h("div",{class:"scrim","data-key":"scrim",onclick:o.onClose}),
   h("div",{class:"panel sheet",role:"dialog","aria-modal":"true","aria-label":o.label,"data-key":"sheet"},
    [h("div",{class:"panel-top"},[o.badge||h("span"),h("button",{class:"btn soft",type:"button",text:"Close",onclick:o.onClose})])].concat(o.kids))]);
  U.patch(root,f,{animate:!!cur});
  U._esc=function(e){if(e.key==="Escape"){e.preventDefault();o.onClose()}else U.trap(e,root.querySelector(".panel"))};document.addEventListener("keydown",U._esc);
- if(!cur){root.querySelector(".panel-top button").focus({preventScroll:true});if(window.Motion)Motion.scan(root)}};
+ if(!cur){root.querySelector(".panel-top button").focus({preventScroll:true});if(window.Motion){Motion.scan(root);if(Motion.panelIn)Motion.panelIn(root);Motion.stagger(root.querySelectorAll(".panel > :not(.panel-top)"),140,40)}}};

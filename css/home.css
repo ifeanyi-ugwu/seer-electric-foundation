@@ -48,15 +48,15 @@ p{text-wrap:pretty}
 @media (max-width:340px){.brand .brand-l{display:none}.brand .brand-m{display:block}.nav-end{gap:var(--s-2)}}
 .nav-links{display:flex;gap:var(--s-5);list-style:none;padding:0;font-size:14px}
 .nav-links a{display:inline-flex;align-items:center;min-height:var(--ctl);text-decoration:none;color:var(--text)}
-.nav-links a:hover{color:var(--violet-text)}
+@media (hover:hover){.nav-links a:hover{color:var(--violet-text)}}
 .nav-end{margin-left:auto;display:flex;align-items:center;gap:var(--s-3);font-size:14px}
 .pill{display:inline-flex;align-items:center;min-height:var(--ctl);background:var(--text);color:var(--hero-bg);text-decoration:none;border-radius:999px;padding:0 var(--s-5);font-size:14px;line-height:1.2;white-space:nowrap}
-.pill:hover{background:var(--violet);color:#fff}
+@media (hover:hover){.pill:hover{background:var(--violet);color:#fff}}
 .theme-toggle{font:inherit;color:var(--text);background:transparent;border:1px solid var(--line);border-radius:999px;
   width:var(--ctl);height:var(--ctl);display:inline-grid;place-items:center;cursor:pointer}
-.theme-toggle:hover,.theme-toggle[aria-pressed=true]{border-color:var(--violet-text)}
-.theme-toggle[aria-pressed=true] svg{transform:rotate(180deg)}
-.theme-toggle svg{transition:transform .3s}
+.theme-toggle[aria-pressed=true]{border-color:var(--violet-text)}
+@media (hover:hover){.theme-toggle:hover{border-color:var(--violet-text)}}
+/* the icon's half turn in light mode is a spring in js/motion.js, composed in motion.css */
 
 .hero-body{flex:1;position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto 1fr;align-items:end;gap:var(--s-5);padding-block:var(--s-5) var(--s-8);width:100%}
 .hero-copy{grid-column:1/-1;grid-row:2;align-self:end;max-width:none;position:relative;z-index:2}
@@ -67,7 +67,7 @@ p{text-wrap:pretty}
 .btn-v,.btn-w{display:inline-flex;align-items:center;justify-content:center;min-height:var(--tap);padding:0 var(--s-5);
   border-radius:var(--r-chip);text-decoration:none;font-size:16px;white-space:nowrap;transition:background .15s,color .15s,border-color .15s}
 .btn-v{background:var(--violet);color:#fff;border:1px solid var(--violet)}
-.btn-v:hover{background:color-mix(in srgb,var(--violet) 82%,#000)}
+@media (hover:hover){.btn-v:hover{background:color-mix(in srgb,var(--violet) 82%,#000)}}
 
 /* market cards */
 .hero-cards{grid-column:2;grid-row:1;align-self:start;justify-self:center;position:relative;width:min(100%,520px);height:340px;margin-top:8px;justify-self:start}
@@ -98,15 +98,7 @@ p{text-wrap:pretty}
 .mbar i{display:block;height:100%;background:var(--violet);border-radius:inherit}
 .mnote{margin-top:14px;font-size:12px;color:var(--ink-2)}
 
-/* dot-matrix motion: a soft travelling shimmer across the bright columns */
-@media (prefers-reduced-motion:no-preference){
-  .dots .on{animation:shimmer 3.2s ease-in-out infinite;animation-delay:calc(var(--i) * 90ms)}
-  .d-hero .on circle{animation:rise .7s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i) * 28ms)}
-  .mbar i{animation:grow 1.1s cubic-bezier(.2,.7,.2,1) .3s both}
-}
-@keyframes shimmer{0%,100%{opacity:1}50%{opacity:.55}}
-@keyframes rise{from{opacity:0;transform:translateY(6px)}}
-@keyframes grow{from{width:0!important}}
+/* dot-matrix shimmer, card entrances and bar growth live in motion.css */
 
 /* ---------- SECTIONS ---------- */
 .sec{padding-block:var(--sec) 0}
@@ -124,15 +116,18 @@ p{text-wrap:pretty}
 .app::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--surface);
   clip-path:polygon(0 var(--cut),100% 0,100% 100%,0 100%);transition:background .2s}
 .app::after{content:"";position:absolute;left:0;right:0;bottom:-8px;height:8px;background:var(--violet);opacity:.0;transition:opacity .2s}
-.app:hover::before,.app:focus-visible::before{background:var(--violet)}
-.app:hover,.app:focus-visible{color:#fff}
-.app:hover .app-role,.app:focus-visible .app-role,.app:hover .app-n,.app:focus-visible .app-n{color:#fff}
+.app:focus-visible::before{background:var(--violet)}
+.app:focus-visible,.app:focus-visible .app-role,.app:focus-visible .app-n{color:#fff}
+@media (hover:hover){
+  .app:hover::before{background:var(--violet)}
+  .app:hover,.app:hover .app-role,.app:hover .app-n{color:#fff}
+  .app:hover .app-go{transform:translateX(3px)}
+}
 .app:focus-visible{outline-offset:4px}
 .app-n{position:absolute;top:calc(var(--cut) + var(--s-4));left:var(--s-4);font-size:14px;color:var(--violet-text)}
 .app-name{font-size:24px;letter-spacing:-.02em;line-height:1.1}
 .app-role{font-size:14px;color:var(--text-2);line-height:1.4;padding-right:var(--s-5)}
-.app-go{position:absolute;right:var(--s-4);bottom:var(--s-5);transition:transform .2s}
-.app:hover .app-go{transform:translateX(3px)}
+.app-go{position:absolute;right:var(--s-4);bottom:var(--s-5)}
 
 .base{margin-top:var(--s-2);background:var(--violet);color:#fff;padding:var(--s-5) var(--s-6);display:flex;align-items:center;justify-content:space-between;gap:var(--s-5);flex-wrap:wrap;
   clip-path:polygon(0 0,100% 0,100% 100%,24px 100%,0 calc(100% - 24px))}
@@ -141,8 +136,7 @@ p{text-wrap:pretty}
 .base-desc{font-size:14px;opacity:.9;max-width:44ch;margin-top:var(--s-1)}
 /* the five types are explained once, in "How a market works"; the base links there */
 .base-go{display:inline-flex;align-items:center;gap:var(--s-2);min-height:var(--tap);color:#fff;text-decoration:none;font-size:14px;border-bottom:1px solid rgba(255,255,255,.6)}
-.base-go:hover svg{transform:translateX(3px)}
-.base-go svg{transition:transform .2s}
+@media (hover:hover){.base-go:hover svg{transform:translateX(3px)}}
 .base :focus-visible{outline-color:#fff}
 
 /* how it works */
@@ -175,9 +169,8 @@ circle.g-on{fill:var(--violet)}
 .tag{display:inline-grid;place-items:center;min-width:30px;height:22px;padding:0 6px;background:var(--violet);color:#fff;font-size:12px;border-radius:2px}
 .go{display:inline-flex;align-items:center;gap:var(--s-2);margin-top:var(--s-6);color:var(--text);text-decoration:none;font-size:16px;
   border-bottom:1px solid var(--violet);padding-bottom:var(--s-1)}
-.go:hover{color:var(--violet-text)}
 .go{position:relative}.go::after{content:"";position:absolute;left:0;right:0;top:-8px;bottom:-8px}/* 44px hit area, the underline stays tight */
-.go svg{transition:transform .2s}.go:hover svg{transform:translateX(3px)}
+@media (hover:hover){.go:hover{color:var(--violet-text)}.go:hover svg{transform:translateX(3px)}}
 
 .viz{padding:var(--s-5);border:1px solid var(--line);border-radius:12px;min-width:0}
 .viz-cap{display:flex;justify-content:space-between;align-items:center;gap:var(--s-3);font-size:14px;color:var(--text)}
@@ -256,7 +249,7 @@ circle.g-on{fill:var(--violet)}
 .cta h2{max-width:16ch;position:relative;z-index:1}
 .cta-actions{display:flex;gap:var(--s-3);margin-top:var(--s-6);flex-wrap:wrap;position:relative;z-index:1}
 .btn-w{background:#fff;color:#1a1033}
-.btn-w:hover{background:var(--ink);color:#fff}
+@media (hover:hover){.btn-w:hover{background:var(--ink);color:#fff}}
 .cta :focus-visible{outline-color:#fff}
 
 /* footer */
@@ -269,7 +262,7 @@ circle.g-on{fill:var(--violet)}
 .foot ul{list-style:none;padding:0;display:grid;gap:var(--s-1);font-size:14px}
 .foot ul a{display:inline-flex;align-items:center;min-height:32px}
 .foot ul a{text-decoration:none;color:var(--text-2)}
-.foot ul a:hover{color:var(--text)}
+@media (hover:hover){.foot ul a:hover{color:var(--text)}}
 
 /* ---------- RESPONSIVE: tablet (601 to 1100px, with a single-column step at 960px) and phone (up to 600px) ---------- */
 @media (max-width:1100px){

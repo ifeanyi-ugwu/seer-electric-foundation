@@ -36,14 +36,13 @@ p{text-wrap:pretty}
 .shell-products{display:flex;gap:var(--s-1);overflow-x:auto;scrollbar-width:none}
 .shell-products::-webkit-scrollbar{display:none}
 .shell-products a{display:flex;align-items:center;min-height:40px;padding:8px 12px;border-radius:var(--r-chip);color:var(--text-2);text-decoration:none;white-space:nowrap;font-size:var(--fs-body)}
-.shell-products a:hover{color:var(--text);background:var(--surface)}
+@media (hover:hover){.shell-products a:hover{color:var(--text);background:var(--surface)}}
 /* active: hard-edged violet base under a soft fill, like the landing's violet base layer */
 .shell-products a[aria-current=page]{background:var(--violet-soft);color:var(--text);border-radius:var(--r-chip) var(--r-chip) 0 0;box-shadow:inset 0 -2px 0 var(--violet)}
 .shell-end{margin-left:auto;display:flex;align-items:center;gap:var(--s-3)}
 .shell-icon{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;display:grid;place-items:center;flex:none}
-.shell-icon:hover{border-color:var(--violet-text)}
-.shell-icon svg{transition:transform .3s var(--ease)}
-:root[data-theme=light] .shell-icon svg{transform:rotate(90deg)}
+@media (hover:hover){.shell-icon:hover{border-color:var(--violet-text)}}
+/* the icon's turn (90deg in light mode) is a spring in js/motion.js, composed in motion.css */
 .btn-pill{border-radius:999px;padding:0 20px;min-height:44px;font-size:var(--fs-body);white-space:nowrap}
 
 /* ---------- shared focus ring ---------- */
@@ -94,13 +93,17 @@ p{text-wrap:pretty}
 /* ---------- controls: one height per range (--ctl), one small size (--ctl-sm) ---------- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--s-1);position:relative;min-height:var(--ctl-sm);padding:0 var(--s-3);font-size:var(--fs-meta);white-space:nowrap}
 .btn.lg{position:relative;isolation:isolate;background:transparent;min-height:var(--tap);padding:0 var(--s-4);font-size:var(--fs-body)}
-.btn:hover{background:color-mix(in srgb,var(--violet) 82%,#000)}
-.btn.soft:hover{background:var(--violet-soft);box-shadow:inset 0 0 0 1px var(--violet)}
+@media (hover:hover){
+  .btn:hover{background:color-mix(in srgb,var(--violet) 82%,#000)}
+  .btn.soft:hover{background:var(--violet-soft);box-shadow:inset 0 0 0 1px var(--violet)}
+}
 /* primary action: hard violet block with the landing's chamfered corner */
 .btn.lg::before,.btn.act::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--violet);border-radius:inherit;
   clip-path:polygon(0 0,100% 0,100% 100%,14px 100%,0 calc(100% - 14px));transition:background-color var(--t) ease}
-.btn.lg:hover,.btn.act:hover{background:transparent}
-.btn.lg:hover::before,.btn.act:hover::before{background:color-mix(in srgb,var(--violet) 82%,#000)}
+@media (hover:hover){
+  .btn.lg:hover,.btn.act:hover{background:transparent}
+  .btn.lg:hover::before,.btn.act:hover::before{background:color-mix(in srgb,var(--violet) 82%,#000)}
+}
 /* page-level action in the page head (Create market) */
 .btn.act{isolation:isolate;background:transparent;min-height:var(--ctl);padding:0 var(--s-5);font-size:var(--fs-body);border-radius:var(--r-chip)}
 /* a trade action that needs a wallet first: reads as unavailable, the hint below says why */
@@ -112,7 +115,7 @@ p{text-wrap:pretty}
 .field{height:var(--ctl);min-height:var(--ctl);background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:999px;
   padding:0 var(--s-4);font:inherit;font-size:var(--fs-body);min-width:0}
 .field::placeholder{color:var(--muted)}
-.field:hover{border-color:color-mix(in srgb,var(--text) 26%,transparent)}
+@media (hover:hover){.field:hover{border-color:color-mix(in srgb,var(--text) 26%,transparent)}}
 /* selects: native control, custom chevron. 16px inset from the right edge, text stops 12px before it. */
 select.field{-webkit-appearance:none;appearance:none;cursor:pointer;padding-right:44px;text-overflow:ellipsis;
   background:var(--chev) right 16px center/12px 12px no-repeat var(--card)}
@@ -123,11 +126,11 @@ input[type=checkbox]{width:18px;height:18px;margin:0;flex:none}
 /* segmented control: the active pill is inset 4px, so buttons are --ctl-sm inside a --ctl track */
 .seg{display:inline-flex;align-items:stretch;height:var(--ctl);max-width:100%;padding:var(--s-1);gap:2px;background:var(--card);border-radius:999px;box-shadow:inset 0 0 0 1px var(--line)}
 .seg button{position:relative;border:0;background:transparent;color:var(--text-2);font:inherit;font-size:var(--fs-body);padding:0 14px;border-radius:999px;cursor:pointer;white-space:nowrap}
-.seg button:hover{color:var(--text)}
+@media (hover:hover){.seg button:hover{color:var(--text)}}
 .seg button[aria-pressed=true]{background:var(--violet);color:#fff}
 
 .chip{position:relative;display:inline-flex;align-items:center;min-height:var(--ctl-sm);border:1px solid var(--line);background:transparent;color:var(--text-2);padding:0 var(--s-3);border-radius:999px;font:inherit;font-size:var(--fs-body);cursor:pointer;white-space:nowrap}
-.chip:hover{border-color:color-mix(in srgb,var(--text) 30%,transparent);color:var(--text)}
+@media (hover:hover){.chip:hover{border-color:color-mix(in srgb,var(--text) 30%,transparent);color:var(--text)}}
 .chip[aria-pressed=true]{background:var(--violet-soft);color:var(--violet-text);border-color:var(--violet)}
 
 /* touch: small controls keep a 44px hit area without looking oversized */
@@ -170,11 +173,11 @@ tbody tr:last-child > *{border-bottom:0}
 td.r,th.r{text-align:right}td.w{white-space:normal}
 th button{all:unset;position:relative;cursor:pointer;padding:var(--s-1) 0;border-radius:2px}
 th button:focus-visible{outline:2px solid var(--violet-text);outline-offset:2px}
-th button:hover{color:var(--text)}
+@media (hover:hover){th button:hover{color:var(--text)}}
 th[aria-sort=ascending],th[aria-sort=descending]{color:var(--text)}
 .tbl,.tbl-wrap{background:var(--card);border-radius:var(--r-card);overflow-x:auto}
 tr[tabindex]{cursor:pointer}
-tr[tabindex]:hover td{background:color-mix(in srgb,var(--surface) 70%,transparent)}
+@media (hover:hover){tr[tabindex]:hover td{background:color-mix(in srgb,var(--surface) 70%,transparent)}}
 tr.is-sel td{background:var(--violet-soft)}
 tr.is-sel td:first-child{box-shadow:inset 3px 0 0 var(--violet)}
 .tap-hint{display:none;align-items:center;gap:var(--s-2);color:var(--muted);font-size:var(--fs-meta);margin:0 0 var(--s-3)}
@@ -203,9 +206,7 @@ tr.is-sel td:first-child{box-shadow:inset 3px 0 0 var(--violet)}
 .panel h2{font-size:var(--fs-h2);line-height:var(--lh-snug);font-weight:500;letter-spacing:-.01em}
 .panel .panel-c{padding:var(--s-4)}
 
-/* ---------- motion: tokens, entrances, reveals and transitions live in motion.css ---------- */
-.btn,.tab,.chip,.seg button,.pick,.mcard,.orow,.sel,.shell-products a,.shell-icon,.field,th button,tr[tabindex] td,.yn{
-  transition:background-color var(--t) ease,color var(--t) ease,border-color var(--t) ease,box-shadow var(--t) ease,transform var(--t) var(--ease)}
+/* ---------- motion: tokens, transitions, entrances, reveals and physics live in motion.css ---------- */
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
 }
@@ -231,7 +232,7 @@ tr.is-sel td:first-child{box-shadow:inset 3px 0 0 var(--violet)}
   .rtbl td,.rtbl th{display:block;padding:0;border:0;white-space:normal;min-width:0;text-align:left}
   .rtbl td[data-label]::before{content:attr(data-label) " ";color:var(--muted);font:500 var(--fs-cap)/1.4 var(--font);letter-spacing:0;margin-right:3px}
   .rtbl tr[tabindex]:hover td,.rtbl tr.is-sel td,.rtbl tr.is-sel td:first-child{background:none;box-shadow:none}
-  .rtbl tr[tabindex]:hover{background:color-mix(in srgb,var(--surface) 70%,var(--card))}
+  @media (hover:hover){.rtbl tr[tabindex]:hover{background:color-mix(in srgb,var(--surface) 70%,var(--card))}}
   /* selected: the soft fill sweeps in from the left behind the content, plus a hard violet edge; deselect is immediate */
   .rtbl tr::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--violet-soft);transform:scaleX(0);transform-origin:0 50%}
   .rtbl tr::after{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--violet);transform:scaleY(0);transform-origin:50% 0}

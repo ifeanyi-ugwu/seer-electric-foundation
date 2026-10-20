@@ -13,7 +13,9 @@ function chart(p,cw){
  /* Drawn at the container's pixel width so labels stay 11px at every size. */
  var W=Math.max(280,Math.round(cw)),H=W<520?200:240,L=44,B=24,T=12,R=12,a=series(p,"pass",range),b=series(p,"fail",range),all=a.concat(b),mn=Math.min.apply(null,all),mx=Math.max.apply(null,all),pad=(mx-mn)*.15||1;mn-=pad;mx+=pad;
  var X=function(i){return L+i/(range-1)*(W-L-R)},Y=function(v){return T+(1-(v-mn)/(mx-mn))*(H-T-B)};
- var s=U.svg("svg",{class:"chart",viewBox:"0 0 "+W+" "+H,width:W,height:H,role:"img","aria-label":"Forecast of "+p.metric+" if the proposal passes ("+fmt(p,p.pass)+") versus if it fails ("+fmt(p,p.fail)+")"});
+ /* data-y and data-fmt let js/motion.js add a pointer readout: value range, plot top and bottom, plot left and right, and the number format */
+ var s=U.svg("svg",{class:"chart",viewBox:"0 0 "+W+" "+H,width:W,height:H,role:"img","aria-label":"Forecast of "+p.metric+" if the proposal passes ("+fmt(p,p.pass)+") versus if it fails ("+fmt(p,p.fail)+")",
+  "data-y":[mn,mx,T,H-B,L,W-R].map(function(v){return+v.toFixed(2)}).join(" "),"data-fmt":(p.unit==="$"?"$":"")+"|"+p.dec+"|"+(p.unit&&p.unit!=="$"?" "+p.unit.replace("$",""):"")});
  for(var g=0;g<5;g++){var gy=T+g*(H-T-B)/4,gv=mx-g*(mx-mn)/4;s.appendChild(U.svg("line",{x1:L,x2:W-R,y1:gy,y2:gy,stroke:"var(--line)"}));var t=U.svg("text",{x:L-8,y:gy+4,"text-anchor":"end","font-size":"11",fill:"var(--muted)",class:"num"});t.textContent=gv.toFixed(p.dec);s.appendChild(t)}
  var lab=[["Start",0],["Now",range-1]];lab.forEach(function(l,k){var tx=U.svg("text",{x:X(l[1]),y:H-6,"text-anchor":k?"end":"start","font-size":"11",fill:"var(--muted)"});tx.textContent=l[0];s.appendChild(tx)});
  function path(arr,col,dash){var d=arr.map(function(v,i){return(i?"L":"M")+X(i).toFixed(1)+" "+Y(v).toFixed(1)}).join(" ");s.appendChild(U.svg("path",{class:"m-line","data-tween":"d",d:d,fill:"none",stroke:col,"stroke-width":"2.5","stroke-dasharray":dash||"","stroke-linejoin":"round"}))}

@@ -1,26 +1,83 @@
-/* Electric Foundation: motion system. Linked last on every page.
-   One motion language: decelerate in, quick out, short distances (8-16px), purposeful stagger.
-   Everything here is enhancement. Content is visible without it; JS-driven states are added by js/motion.js.
-   Only transform / opacity / clip-path are animated, except colour cross-fades on state changes. */
+/* Electric Foundation: motion system. Linked last on every page; js/spring.js and js/motion.js add the runtime.
+   One language on all six pages: confident, precise, mechanical-meets-organic. Slabs slide along their cut
+   angle, violet blocks wipe in along the 45-degree diagonal, indicators snap with a crisp spring, cards and
+   sheets settle without bounce. Entrances decelerate; exits accelerate and take 60 to 70% of the time.
+   Everything here is enhancement: content is visible without it, and every JS-driven state degrades to the
+   final state. Only transform, opacity, clip-path and mask are animated, with these deliberate exceptions:
+   colour cross-fades on state changes, the sliding indicator's width (a childless absolute box), the
+   row-hover sweep (background-size), value-change washes (background-color), and the focus-ring follower. */
 
-/* ---------- tokens ---------- */
+/* =================================================================================================
+   TOKENS
+   Durations: 1 press and micro feedback, 2 hover and exits, 3 indicators and moves, 4 entrances and value
+   changes, 5 one-off choreography. Stagger: 40ms per item, never more than 8 steps (320ms) on one surface.
+   Distances: 8px for items, 12px for blocks, 16px for panels; 2 to 3px for hover lift; 4deg for tilt.
+   Springs: generated from js/spring.js (same curves the runtime uses), written as linear() easings with a
+   matching duration. press (zeta .83, 1% overshoot), snappy (.77, 2.4%), settle (.92, none visible),
+   gentle and glide (critically damped). Where linear() is unsupported the cubic-bezier tokens stand in.
+   ================================================================================================= */
 :root{
-  --dur-1:120ms;   /* press, focus, micro feedback */
-  --dur-2:200ms;   /* hover, colour, exits */
-  --dur-3:320ms;   /* indicators, list moves, condensing */
-  --dur-4:520ms;   /* entrances, reveals, value changes */
-  --dur-5:900ms;   /* one-off choreography: hero, chart draw */
+  --dur-1:120ms; --dur-2:200ms; --dur-3:320ms; --dur-4:520ms; --dur-5:900ms;
+  --stag:40ms; --stag-max:8;
+  --dist-1:8px; --dist-2:12px; --dist-3:16px; --lift:-2px; --lift-card:-3px; --tilt:4deg;
   --ease-standard:cubic-bezier(.2,0,0,1);      /* moves on screen */
   --ease-decel:cubic-bezier(.05,.7,.1,1);      /* emphasized: things arriving */
   --ease-accel:cubic-bezier(.3,0,.8,.15);      /* things leaving */
-  --ease-spring:cubic-bezier(.3,1.3,.5,1);     /* settle with a whisper of overshoot */
+  --ease-spring:cubic-bezier(.3,1.3,.5,1);     /* legacy alias: a whisper of overshoot */
+  --spring-press-t:260ms; --spring-snappy-t:310ms; --spring-settle-t:330ms; --spring-gentle-t:580ms; --spring-glide-t:760ms;
+  --spring-press:var(--ease-decel); --spring-snappy:var(--ease-spring); --spring-settle:var(--ease-decel); --spring-gentle:var(--ease-standard); --spring-glide:var(--ease-standard);
   /* legacy aliases read by shell.css */
   --ease:var(--ease-standard); --t:var(--dur-2);
+  --m-hov:color-mix(in srgb,var(--surface) 70%,transparent);
+  --m-wipe-g:linear-gradient(135deg,#000 0 33.333%,transparent 33.333%);
+  --m-check:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 6.5 5 9l4.5-6' fill='none' stroke='%23fff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
+@supports (animation-timing-function:linear(0,1)){:root{
+--spring-press:linear(0,0.0226,0.0796,0.158,0.2476,0.3412,0.4336,0.5211,0.6016,0.6739,0.7375,0.7923,0.8388,0.8776,0.9095,0.9353,0.9558,0.9717,0.9839,0.9929,0.9994,1.0039,1.0069,1.0086,1.0094,1.0096,1.0093,1.0087,1.0079,1.007,1.0061,1.0053,1.0044,1.0037,1.003,1.0024,1.0019,1.0015,1.0011,1.0008,1.0006,1.0004,1.0002,1.0001);
+  --spring-snappy:linear(0,0.0146,0.0532,0.1089,0.1762,0.2503,0.3275,0.405,0.4805,0.5524,0.6195,0.6811,0.7369,0.7866,0.8304,0.8684,0.9009,0.9284,0.9513,0.9701,0.9852,0.9971,1.0062,1.013,1.0178,1.0209,1.0227,1.0234,1.0233,1.0226,1.0214,1.0199,1.0182,1.0164,1.0146,1.0128,1.0111,1.0095,1.008,1.0066,1.0054,1.0043,1.0034,1.0026,1.0019,1.0013,1.0008,1.0005,1.0002,0.9999,0.9997,0.9996,0.9995);
+  --spring-settle:linear(0,0.0086,0.0317,0.0656,0.1074,0.1547,0.2053,0.2579,0.311,0.3636,0.415,0.4647,0.5121,0.557,0.5993,0.6387,0.6753,0.7092,0.7403,0.7687,0.7947,0.8182,0.8396,0.8588,0.876,0.8915,0.9053,0.9176,0.9286,0.9382,0.9468,0.9543,0.9609,0.9666,0.9717,0.9761,0.9799,0.9832,0.986,0.9884,0.9905,0.9923,0.9938,0.9951,0.9961,0.997,0.9978,0.9984,0.9989,0.9993,0.9996,0.9999,1.0001,1.0003,1.0004,1.0005);
+  --spring-gentle:linear(0,0.0097,0.0352,0.0721,0.1168,0.1665,0.219,0.2727,0.3262,0.3785,0.4291,0.4775,0.5232,0.5662,0.6062,0.6435,0.6778,0.7094,0.7384,0.7649,0.789,0.8109,0.8307,0.8487,0.8649,0.8794,0.8926,0.9043,0.9149,0.9244,0.9328,0.9404,0.9471,0.9531,0.9585,0.9633,0.9675,0.9713,0.9746,0.9776,0.9802,0.9825,0.9846,0.9864,0.988,0.9894,0.9907,0.9918,0.9928,0.9937,0.9944,0.9951,0.9957,0.9962,0.9967,0.9971,0.9974,0.9977,0.998,0.9983,0.9985,0.9987,0.9988,0.999,0.9991);
+  --spring-glide:linear(0,0.0096,0.0349,0.0715,0.1159,0.1653,0.2175,0.2709,0.3241,0.3763,0.4268,0.475,0.5207,0.5636,0.6037,0.6409,0.6753,0.707,0.7361,0.7626,0.7868,0.8088,0.8288,0.8468,0.8631,0.8778,0.891,0.9029,0.9136,0.9231,0.9317,0.9393,0.9462,0.9522,0.9577,0.9625,0.9668,0.9706,0.974,0.977,0.9797,0.9821,0.9842,0.9861,0.9877,0.9892,0.9904,0.9916,0.9926,0.9935,0.9943,0.9949,0.9956,0.9961,0.9966,0.997,0.9973,0.9977,0.998,0.9982,0.9984,0.9986,0.9988,0.9989,0.9991);
+}}
 
+/* motion state lives in custom properties that one transform rule composes (see .m-phys). Registered so
+   they interpolate and do not inherit, which keeps a per-frame write to a card from restyling its children. */
+@property --m-x{syntax:"<length>";inherits:false;initial-value:0px}
+@property --m-y{syntax:"<length>";inherits:false;initial-value:0px}
+@property --m-fx{syntax:"<length>";inherits:false;initial-value:0px}
+@property --m-fy{syntax:"<length>";inherits:false;initial-value:0px}
+@property --m-s{syntax:"<number>";inherits:false;initial-value:1}
+@property --m-r{syntax:"<angle>";inherits:false;initial-value:0deg}
+@property --m-rx{syntax:"<angle>";inherits:false;initial-value:0deg}
+@property --m-ry{syntax:"<angle>";inherits:false;initial-value:0deg}
 @property --g{syntax:"<number>";inherits:true;initial-value:0}
 
-/* ---------- scroll ---------- */
+/* =================================================================================================
+   PHYSICS: press, hover lift, tilt (js/motion.js writes the variables, the spring engine moves them)
+   ================================================================================================= */
+.m-phys,.m-phys:hover,.m-phys:active{transform:translate(calc(var(--m-x,0px) + var(--m-fx,0px)),calc(var(--m-y,0px) + var(--m-fy,0px))) scale(var(--m-s,1)) rotate(var(--m-r,0deg))}
+.m-live{will-change:transform}
+/* cards: tilt toward the pointer, the icon and badge drift the other way (inner parallax), a specular
+   highlight follows the pointer. Fine pointers only; touch gets press and lift only. */
+@media (hover:hover) and (pointer:fine){
+  .mgrid .mcard.m-phys,.mgrid .mcard.m-phys:hover,.mgrid .mcard.m-phys:active{transform:perspective(900px) translate(calc(var(--m-x,0px) + var(--m-fx,0px)),calc(var(--m-y,0px) + var(--m-fy,0px))) rotateX(var(--m-rx,0deg)) rotateY(var(--m-ry,0deg)) scale(var(--m-s,1))}
+  .mgrid .mcard{position:relative;overflow:hidden}
+  .mgrid .mcard::after{content:"";position:absolute;left:-40%;top:-40%;width:180%;height:180%;pointer-events:none;opacity:var(--m-gl,0);
+    background:radial-gradient(circle at 50% 50%,color-mix(in srgb,var(--violet-text) 11%,transparent),transparent 42%);
+    transform:translate(var(--m-gx,0px),var(--m-gy,0px));transition:opacity var(--dur-3) var(--ease-standard)}
+  .mgrid .mcard .pfp,.mgrid .mcard .foot .badge{transform:translate(var(--m-px,0px),var(--m-py,0px))}
+  .mgrid .mcard .pfp{transition:none}
+}
+/* hard-edged slabs and blocks: a short violet focus edge on hover (colour only, fine pointers) */
+@media (hover:hover){
+  .btn.lg:hover::before,.btn.act:hover::before{box-shadow:inset 0 0 0 1px color-mix(in srgb,#fff 24%,transparent)}
+  .kpi > div:hover::before{height:22px}
+  .kpi > div::before{transition:height var(--dur-3) var(--spring-settle)}
+}
+
+/* =================================================================================================
+   SCROLL: smooth anchors (JS drives a spring; this is the fallback), thin scrollbars, inertia-aware bits
+   ================================================================================================= */
 html{scroll-padding-top:var(--m-hdr,88px)}
 @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
 .tbl,.tbl-wrap,.panel,.shell-products{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--text) 22%,transparent) transparent}
@@ -35,8 +92,8 @@ html{scroll-padding-top:var(--m-hdr,88px)}
 .shell-bar::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
   background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
   box-shadow:inset 0 -1px 0 var(--line);
-  transition:transform var(--dur-3) var(--ease-standard),background-color var(--dur-3) var(--ease-standard),box-shadow var(--dur-3) var(--ease-standard)}
-.shell-in{position:relative;transition:transform var(--dur-3) var(--ease-standard)}
+  transition:transform var(--spring-gentle-t) var(--spring-gentle),background-color var(--dur-3) var(--ease-standard),box-shadow var(--dur-3) var(--ease-standard)}
+.shell-in{position:relative;transition:transform var(--spring-gentle-t) var(--spring-gentle)}
 .shell-in > *{pointer-events:auto}
 .shell-bar.is-condensed::before{transform:translateY(-12px);background:color-mix(in srgb,var(--bg) 86%,transparent);
   -webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);
@@ -44,57 +101,70 @@ html{scroll-padding-top:var(--m-hdr,88px)}
 .shell-bar.is-condensed .shell-in{transform:translateY(-6px)}
 @media (max-width:800px){.shell-bar.is-condensed::before{transform:none}.shell-bar.is-condensed .shell-in{transform:none}}
 
-/* product nav: active indicator (glides from the previous product on page change, see js/motion.js) + hover pill */
+/* product nav: active indicator (springs from the previous product on page change) + gliding hover pill */
 .shell-products.m-ind-host{position:relative}
 .shell-products a{position:relative;z-index:1}
 .m-nav-ind{position:absolute;left:0;top:0;width:0;height:0;z-index:0;pointer-events:none;background:var(--violet-soft);
   border-radius:var(--r-chip) var(--r-chip) 0 0;box-shadow:inset 0 -2px 0 var(--violet)}
 .m-nav-hov{position:absolute;left:0;top:0;z-index:0;pointer-events:none;background:var(--surface);opacity:0;clip-path:inset(0 100% 100% 0);
-  transition:clip-path var(--dur-3) var(--ease-decel),opacity var(--dur-2) var(--ease-standard)}
+  transition:clip-path var(--spring-snappy-t) var(--spring-snappy),opacity var(--dur-2) var(--ease-standard)}
 .m-ind-on.shell-products a[aria-current=page]{background:transparent;box-shadow:none}
 .m-hov-on.shell-products a:hover{background:transparent}
 
 /* ---------- landing nav: fixed + condensing (JS adds .m-nav-fixed after measuring; layout is identical) ---------- */
 .m-nav-fixed .hero{z-index:3;padding-top:var(--m-nav-h,84px)}
 .m-nav-fixed .topnav{position:fixed;top:0;left:0;right:0;z-index:30;pointer-events:none}
-.m-nav-fixed .topnav > *{pointer-events:auto;transition:transform var(--dur-3) var(--ease-standard),opacity var(--dur-2) var(--ease-standard),visibility var(--dur-2)}
+.m-nav-fixed .topnav > *{pointer-events:auto;transition:transform var(--spring-gentle-t) var(--spring-gentle),opacity var(--dur-2) var(--ease-standard),visibility var(--dur-2)}
 .m-nav-fixed .topnav::before{content:"";position:absolute;top:0;bottom:0;left:calc(50% - 50vw);width:100vw;z-index:-1;pointer-events:none;opacity:0;
   background:color-mix(in srgb,var(--bg) 86%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);
   box-shadow:inset 0 -1px 0 var(--line),0 10px 24px -18px rgba(0,0,0,.5);
-  transition:opacity var(--dur-3) var(--ease-standard),transform var(--dur-3) var(--ease-standard)}
+  transition:opacity var(--dur-3) var(--ease-standard),transform var(--spring-gentle-t) var(--spring-gentle)}
 .m-nav-fixed .topnav.is-condensed::before{opacity:1;transform:translateY(calc(var(--m-cut,20px) * -1))}
 .m-nav-fixed .topnav.is-condensed > *{transform:translateY(calc(var(--m-shift,10px) * -1))}
 .m-nav-fixed .topnav.is-wrapped.is-condensed .nav-links{opacity:0;visibility:hidden}
 .home .skip{z-index:40}
 
-/* landing scroll progress */
+/* landing scroll progress: a 2px violet line that follows the scroll with a little inertia (spring in JS) */
 .m-progress{position:fixed;left:0;right:0;top:0;height:2px;z-index:31;pointer-events:none}
 .m-progress i{display:block;height:100%;background:var(--violet);transform-origin:0 50%;transform:scaleX(0)}
-@supports (animation-timeline:scroll()){
-  @media (prefers-reduced-motion:no-preference){
-    .m-progress i{animation:m-progress linear both;animation-timeline:scroll(root block)}
-  }
-}
-@keyframes m-progress{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 
-/* ---------- keyframes ---------- */
+/* =================================================================================================
+   KEYFRAMES
+   ================================================================================================= */
 @keyframes m-fade{from{opacity:0}}
-@keyframes m-rise{from{opacity:0;transform:translateY(12px)}}
+@keyframes m-rise{from{opacity:0;transform:translateY(var(--dist-2))}}
+@keyframes m-rise-s{from{opacity:0;transform:translateY(var(--dist-1))}}
 @keyframes m-line{from{transform:translateY(105%)}}
-@keyframes m-slab{from{transform:translateY(-102%)}}
-@keyframes m-slab-soft{from{opacity:0;transform:translateY(-24%)}}
+@keyframes m-slab{from{opacity:0;transform:translate(-9%,-3.3%)}}        /* along the slabs' cut angle (about 20deg) */
+@keyframes m-slab-soft{from{opacity:0;transform:translate(-5%,-1.8%)}}
 @keyframes m-grow-x{from{transform:scaleX(0)}}
-@keyframes m-card{from{opacity:0;transform:translateY(32px) rotate(-1deg)}}
-@keyframes m-card-b{from{opacity:0;transform:translate(16px,36px) rotate(1deg)}}
+@keyframes m-card{from{opacity:0;translate:0 32px;rotate:-1deg}}
+@keyframes m-card-b{from{opacity:0;translate:16px 36px;rotate:1deg}}
 @keyframes m-dot{from{opacity:0;transform:translateY(6px)}}
-@keyframes m-focus{from{outline-offset:6px;outline-color:transparent}}
-@keyframes m-panel-in{from{transform:translateX(40px)}}
+@keyframes m-focus{from{outline-offset:-1px;outline-color:transparent}}
 @keyframes m-par-slab{to{transform:translateY(18%)}}
+@keyframes m-par-cards{to{transform:translateY(12%)}}
+@keyframes m-fan-b{to{transform:translate(5%,-9%)}}
 @keyframes m-settle{from{transform:translateY(calc(var(--k,1) * 56px))}}
+@keyframes m-wipe{from{-webkit-mask-position:50% 50%;mask-position:50% 50%}to{-webkit-mask-position:0 0;mask-position:0 0}}
+@keyframes m-pop{from{opacity:0;transform:scale(.8)}}
+@keyframes m-wash{from{background-color:var(--violet-soft);box-shadow:0 0 0 3px var(--violet-soft)}to{background-color:transparent;box-shadow:0 0 0 3px transparent}}
+@keyframes m-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
+@keyframes m-glow{0%,100%{opacity:1}50%{opacity:.78}}
+@keyframes m-breathe{0%,100%{opacity:1}50%{opacity:.84}}
+@keyframes m-idle{0%,100%{rotate:1 .6 0 0deg}38%{rotate:1 .5 0 1.1deg}70%{rotate:.4 1 0 -.9deg}}
+@keyframes shimmer{0%,100%{opacity:1}50%{opacity:.6}}
+@keyframes m-ring{from{opacity:.7;transform:scale(1)}to{opacity:0;transform:scale(2.8)}}
 
-/* ---------- landing hero: one-time choreography (pure CSS, so no JS can leave it hidden) ---------- */
+/* violet blocks wipe in along the 45-degree diagonal (a hard-edged mask; JS removes the class when done) */
+.m-wipe{-webkit-mask:var(--m-wipe-g) 0 0/300% 300% no-repeat;mask:var(--m-wipe-g) 0 0/300% 300% no-repeat;animation:m-wipe var(--dur-4) var(--ease-decel) both}
+
+/* =================================================================================================
+   LANDING HERO: one-time choreography (pure CSS, so no JS can leave it hidden), then ambient life
+   ================================================================================================= */
 .hero h1 .ln{display:block;overflow:hidden;padding-bottom:.14em;margin-bottom:-.14em}
 .hero h1 .ln > span{display:inline-block}
+.hero-body{perspective:1400px}
 @media (prefers-reduced-motion:no-preference){
   :root:not(.m-hero-seen) .home .slab-set path{transform-box:fill-box;animation:m-slab var(--dur-5) var(--ease-decel) backwards}
   :root:not(.m-hero-seen) .home .slab-set path:nth-child(1){animation-delay:0ms}
@@ -110,104 +180,175 @@ html{scroll-padding-top:var(--m-hdr,88px)}
   :root:not(.m-hero-seen) .hero h1 .ln + .ln > span{animation-delay:230ms}
   :root:not(.m-hero-seen) .hero-sub{animation:m-rise var(--dur-4) var(--ease-decel) 420ms backwards}
   :root:not(.m-hero-seen) .hero-cta{animation:m-rise var(--dur-4) var(--ease-decel) 500ms backwards}
-  :root:not(.m-hero-seen) .hero-cards .mcard-front{animation:m-card 760ms var(--ease-spring) 260ms backwards}
-  :root:not(.m-hero-seen) .hero-cards .mcard-back{animation:m-card-b 760ms var(--ease-spring) 400ms backwards}
+  /* cards enter on the individual translate/rotate properties, so the scroll-linked fan below (transform) never competes */
+  :root:not(.m-hero-seen) .hero-cards .mcard-front{animation:m-card 760ms var(--spring-settle) 260ms backwards}
+  :root:not(.m-hero-seen) .hero-cards .mcard-back{animation:m-card-b 760ms var(--spring-settle) 400ms backwards}
   :root:not(.m-hero-seen) .home .d-hero .on circle{animation:m-dot var(--dur-4) var(--ease-decel) backwards;animation-delay:calc(620ms + var(--i) * 22ms)}
   :root:not(.m-hero-seen) .home .d-hero .off circle{animation:m-fade var(--dur-4) var(--ease-standard) 1180ms backwards}
   .home .d-hero .on circle,.home .d-hero .off circle{transform-box:fill-box}
-  .home .dots .on{animation:shimmer 3.2s ease-in-out infinite;animation-delay:calc(1.6s + var(--i) * 90ms)}
-  .home .dots.m-off .on{animation-play-state:paused}
-  .home .mbar i{transform-origin:0 50%;animation:m-grow-x var(--dur-5) var(--ease-decel) 700ms backwards}
   :root:not(.m-hero-seen) .home .mnote{animation:m-fade var(--dur-4) var(--ease-standard) 900ms backwards}
   /* return visits in the same session: a short settle instead of the full sequence */
   .m-hero-seen .home .hero-body,.m-hero-seen .home .slab-set{animation:m-fade var(--dur-3) var(--ease-standard) backwards}
-  .m-hero-seen .home .d-hero .on circle,.m-hero-seen .home .mbar i{animation:none}
-  .m-hero-seen .home .dots .on{animation-delay:calc(var(--i) * 90ms)}
+  .m-hero-seen .home .d-hero .on circle{animation:none}
+
+  /* ambient life: slow, small, phase-offset; paused offscreen (.m-off from JS) and in hidden tabs (html.m-hidden) */
+  .home .dots .on{animation:shimmer 7s ease-in-out infinite;animation-delay:calc(1.6s + var(--i) * 110ms)}
+  .home .slabs{animation:m-breathe 14s ease-in-out 1.2s infinite}
+  .home .hero-cards{animation:m-idle 13s ease-in-out 1.5s infinite}
+  .home .mbar i{transform-origin:0 50%;animation:m-grow-x var(--dur-5) var(--ease-decel) 700ms backwards,m-glow 5s ease-in-out 2.4s infinite}
+  .m-hero-seen .home .mbar i{animation:m-glow 5s ease-in-out 1s infinite}
+  .m-hero-seen .home .dots .on{animation-delay:calc(var(--i) * 110ms)}
 }
-/* parallax + the app columns settling onto the protocol base. Compositor-driven where supported; JS fallback otherwise. */
+/* parallax depth layers (slabs deepest, cards mid, copy front, back card fans away) and the app columns
+   settling onto the protocol base. Compositor-driven where supported; JS fallback otherwise. */
 @supports (animation-timeline:view()){
   @media (prefers-reduced-motion:no-preference) and (min-width:961px){
-    .home .slabs{animation:m-par-slab linear both;animation-timeline:scroll(root block);animation-range:0 100vh}
+    .home .slabs{animation:m-par-slab linear both,m-breathe 14s ease-in-out 1.2s infinite;animation-timeline:scroll(root block),auto;animation-range:0 100vh,normal}
+    .home .hero-cards{animation:m-par-cards linear both,m-idle 13s ease-in-out 1.5s infinite;animation-timeline:scroll(root block),auto;animation-range:0 100vh,normal}
+    .home .hero-cards .mcard-back{animation-name:m-card-b,m-fan-b;animation-duration:760ms,auto;animation-timing-function:var(--spring-settle),linear;animation-delay:400ms,0s;animation-fill-mode:backwards,both;animation-timeline:auto,scroll(root block);animation-range:normal,0 100vh}
+    .m-hero-seen .home .hero-cards .mcard-back{animation-name:none,m-fan-b}
     .home .apps > li{animation:m-settle linear both;animation-timeline:view();animation-range:entry 0% cover 38%}
   }
 }
 .home .apps > li:nth-child(1){--k:.7}.home .apps > li:nth-child(2){--k:1.2}.home .apps > li:nth-child(3){--k:.5}
 .home .apps > li:nth-child(4){--k:1}.home .apps > li:nth-child(5){--k:.85}
 
-/* ---------- product page heads ---------- */
+/* =================================================================================================
+   PRODUCT PAGE HEADS: slabs slide along their cut, kicker > title > lede > action rise in, the tag wipes in
+   ================================================================================================= */
 @media (prefers-reduced-motion:no-preference){
   .phead-in > div:first-child > *{animation:m-rise var(--dur-4) var(--ease-decel) backwards}
   .phead-in > div:first-child > :nth-child(2){animation-delay:60ms}
   .phead-in > div:first-child > :nth-child(3){animation-delay:120ms}
-  .phead-aside{animation:m-fade var(--dur-4) var(--ease-standard) 180ms backwards}
-  .phead-in::after{transform-origin:0 50%;animation:m-grow-x var(--dur-4) var(--ease-decel) 200ms backwards}
+  .phead-in > div:first-child > :nth-child(4){animation-delay:180ms}
+  .phead-aside{animation:m-fade var(--dur-4) var(--ease-standard) 200ms backwards}
+  .phead-in::after{transform-origin:0 50%;animation:m-grow-x var(--dur-4) var(--ease-decel) 220ms backwards}
   .ph-slabs path{transform-box:fill-box;animation:m-slab-soft var(--dur-5) var(--ease-decel) backwards}
   .ph-slabs path:nth-child(2n){animation-delay:60ms}.ph-slabs path:nth-child(3n){animation-delay:120ms}
   .ph-slabs path:nth-child(n+6){animation-delay:180ms}
+  .phead .tag{-webkit-mask:var(--m-wipe-g) 0 0/300% 300% no-repeat;mask:var(--m-wipe-g) 0 0/300% 300% no-repeat;animation:m-wipe var(--dur-4) var(--ease-decel) 120ms both}
+  .phead .btn.act::before{-webkit-mask:var(--m-wipe-g) 0 0/300% 300% no-repeat;mask:var(--m-wipe-g) 0 0/300% 300% no-repeat;animation:m-wipe var(--dur-4) var(--ease-decel) 300ms both}
 }
 
-/* ---------- reveal (state added by JS only) ---------- */
+/* ---------- reveal (state added by JS only; print and no-JS never see it) ---------- */
 .m-rv{opacity:0}
 @media print{.m-rv{opacity:1!important}}
 
-/* ---------- interaction: one transition list on tokens ---------- */
-.btn,.tab,.chip,.seg button,.pick,.mcard,.orow,.sel,.shell-products a,.shell-icon,.field,th button,tr[tabindex] td,.yn,.btn-pill{
+/* =================================================================================================
+   INTERACTION: one transition list on tokens; hover only where hover exists; press is a spring in JS
+   ================================================================================================= */
+.btn,.tab,.chip,.seg button,.pick,.mcard,.orow,.sel,.shell-products a,.shell-icon,.field,th button,tr[tabindex] td,.yn,.btn-pill,.rtbl tr,input[type=checkbox]{
   transition:background-color var(--dur-2) var(--ease-standard),color var(--dur-2) var(--ease-standard),border-color var(--dur-2) var(--ease-standard),
-    box-shadow var(--dur-2) var(--ease-standard),transform var(--dur-2) var(--ease-decel)}
-.btn.lg::before{transition:background-color var(--dur-2) var(--ease-standard)}
-.btn-o,.btn-v,.btn-w,.btn-ow,.pill,.theme-toggle,.go,.nav-links a,.nav-start,.foot ul a{
-  transition:background-color var(--dur-2) var(--ease-standard),color var(--dur-2) var(--ease-standard),border-color var(--dur-2) var(--ease-standard),transform var(--dur-2) var(--ease-decel)}
+    box-shadow var(--dur-2) var(--ease-standard)}
+.btn.lg::before,.btn.act::before{transition:background-color var(--dur-2) var(--ease-standard),box-shadow var(--dur-2) var(--ease-standard)}
+.btn-o,.btn-v,.btn-w,.btn-ow,.pill,.theme-toggle,.go,.nav-links a,.nav-start,.foot ul a,.base-go,.app-go{
+  transition:background-color var(--dur-2) var(--ease-standard),color var(--dur-2) var(--ease-standard),border-color var(--dur-2) var(--ease-standard),
+    background-size var(--dur-3) var(--ease-standard),box-shadow var(--dur-2) var(--ease-standard)}
 .app::before{transition:background-color var(--dur-2) var(--ease-standard)}
 .app::after{transition:opacity var(--dur-2) var(--ease-standard)}
-.app-go,.go svg{transition:transform var(--dur-2) var(--ease-decel)}
-.theme-toggle svg,.shell-icon svg{transition:transform var(--dur-3) var(--ease-standard)}
-.dotfield circle{transform-box:fill-box;transform-origin:center;transition:stroke var(--dur-2) var(--ease-standard),transform var(--dur-2) var(--ease-decel)}
+.app-go,.go svg,.base-go svg{transition:transform var(--spring-snappy-t) var(--spring-snappy)}
+.theme-toggle svg,.shell-icon svg{transform:rotate(var(--m-r,0deg))}
+:root[data-theme=light] .shell-icon svg{--m-r:90deg}
+.theme-toggle[aria-pressed=true] svg{--m-r:180deg}
+.dotfield circle{transform-box:fill-box;transform-origin:center;transition:stroke var(--dur-2) var(--ease-standard),transform var(--spring-snappy-t) var(--spring-snappy)}
 .chart rect{transform-box:fill-box;transform-origin:50% 100%}
-.chart .m-end,.m-ripple{transform-box:fill-box;transform-origin:center}
+.chart .m-end,.m-ripple,.m-ring{transform-box:fill-box;transform-origin:center}
 .vote-bar i,.sigbar .trk i,.mini,.bar i,.leg-bar i,.sig i,.rb i{transform-origin:0 50%}
 .opp tr{transition:background-color var(--dur-2) var(--ease-standard),box-shadow var(--dur-2) var(--ease-standard)}
+/* value changes: a soft violet wash that settles, so the eye finds what changed (class added by JS) */
+.m-wash{animation:m-wash 900ms var(--ease-standard) both;border-radius:2px}
+tr.m-wash{animation-duration:1100ms}
+/* chips, badges and flags that appear inside a block that just arrived */
+.m-pop{animation:m-pop var(--spring-snappy-t) var(--spring-snappy) both}
 
-/* press: a small, quick give */
+/* keyboard focus: the ring grows out from the edge; a follower ring glides from the last focused control */
 @media (prefers-reduced-motion:no-preference){
-  .btn:active,.tab:active,.chip:active,.seg button:active,.pick:active,.sel:active,.shell-icon:active,.mgrid .mcard:active,
-  .pill:active,.btn-o:active,.btn-v:active,.btn-w:active,.btn-ow:active,.theme-toggle:active{transform:scale(.98);transition-duration:var(--dur-1)}
-  :where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{animation:m-focus var(--dur-2) var(--ease-decel)}
-  /* row selection sweeps left to right across the cells; deselect is immediate */
+  :where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{animation:m-focus var(--dur-3) var(--spring-snappy)}
+}
+.m-fring{position:fixed;left:0;top:0;width:0;height:0;z-index:70;pointer-events:none;border:2px solid var(--violet-text);border-radius:6px;opacity:0;box-sizing:border-box}
+/* inputs: the border warms on focus, the label follows, the placeholder steps back */
+.field{transition:background-color var(--dur-2) var(--ease-standard),color var(--dur-2) var(--ease-standard),border-color var(--dur-2) var(--ease-standard),box-shadow var(--dur-2) var(--ease-standard),background-position var(--dur-2) var(--ease-standard)}
+.field:focus-visible{border-color:color-mix(in srgb,var(--violet) 55%,var(--line))}
+.field::placeholder{transition:opacity var(--dur-2) var(--ease-standard)}
+.field:focus::placeholder{opacity:.55}
+.field-grp label,.ticket label,.sortbar label{transition:color var(--dur-2) var(--ease-standard)}
+.field-grp:focus-within label{color:var(--violet-text)}
+/* selects: the chevron dips while the control is engaged */
+@media (hover:hover){select.field:hover{background-position:right 16px top calc(50% + 2px)}}
+select.field:focus-visible,select.field:active{background-position:right 16px top calc(50% + 2px)}
+/* checkbox: drawn here so the mark can pop in with a spring; stays a native checkbox for keyboard and AT */
+input[type=checkbox]{-webkit-appearance:none;appearance:none;width:18px;height:18px;margin:0;flex:none;cursor:pointer;border:1.5px solid color-mix(in srgb,var(--text) 38%,transparent);border-radius:4px;
+  background:var(--m-check) center/0 0 no-repeat var(--card);transition:background-color var(--dur-2) var(--ease-standard),border-color var(--dur-2) var(--ease-standard),background-size var(--spring-snappy-t) var(--spring-snappy)}
+input[type=checkbox]:checked{background-color:var(--violet);border-color:var(--violet);background-size:12px 12px}
+@media (hover:hover){input[type=checkbox]:hover{border-color:var(--violet-text)}}
+@media (forced-colors:active){input[type=checkbox]{-webkit-appearance:auto;appearance:auto}}
+/* links: the underline draws in from the left and leaves to the right */
+@media (hover:hover){
+  .nav-links a,.foot ul a{background:linear-gradient(currentColor,currentColor) no-repeat 100% calc(50% + .72em)/0 1px}
+  .nav-links a:hover,.foot ul a:hover{background-size:100% 1px;background-position:0 calc(50% + .72em)}
+  .go{background:linear-gradient(var(--violet-text),var(--violet-text)) no-repeat 100% 100%/0 2px}
+  .go:hover{background-size:100% 2px;background-position:0 100%}
+  .base-go{background:linear-gradient(#fff,#fff) no-repeat 100% calc(100% - 1px)/0 2px}
+  .base-go:hover{background-size:100% 2px;background-position:0 calc(100% - 1px)}
+}
+/* rows: the hover fill sweeps in from the edge the pointer entered (JS marks .m-from-b); selection sweeps across
+   the cells left to right; deselect is immediate */
+@media (hover:hover) and (prefers-reduced-motion:no-preference){
+  tr[tabindex]:not(.is-sel) td{background-image:linear-gradient(var(--m-hov),var(--m-hov));background-repeat:no-repeat;background-size:100% 0;background-position:50% 0;transition:background-size var(--dur-2) var(--ease-decel),background-color var(--dur-2) var(--ease-standard),color var(--dur-2) var(--ease-standard),box-shadow var(--dur-2) var(--ease-standard)}
+  tr[tabindex]:not(.is-sel):hover td{background-color:transparent;background-size:100% 100%}
+  tr.m-from-b:not(.is-sel) td{background-position:50% 100%}
+  .rtbl tr[tabindex]:not(.is-sel) td,.rtbl tr[tabindex]:not(.is-sel):hover td{background-image:none}
+}
+@media (prefers-reduced-motion:no-preference){
   tr.is-sel > td:nth-child(2){transition-delay:25ms}tr.is-sel > td:nth-child(3){transition-delay:50ms}
   tr.is-sel > td:nth-child(4){transition-delay:75ms}tr.is-sel > td:nth-child(5){transition-delay:100ms}
   tr.is-sel > td:nth-child(6){transition-delay:125ms}tr.is-sel > td:nth-child(n+7){transition-delay:150ms}
   .heat td.h{transition:background-color var(--dur-4) var(--ease-standard),--g var(--dur-4) var(--ease-decel)}
 }
-/* hover lift + tilt, pointer devices only */
-@media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
-  .mgrid .mcard:hover{transform:perspective(900px) translateY(-3px) rotateX(var(--m-ty,0deg)) rotateY(var(--m-tx,0deg))}
-  .pick:hover{transform:translateY(-1px)}
-  .dotfield circle:hover{transform:scale(1.15)}
-}
-
 /* heat bars scale from the right edge (transform, not width) so value changes stay on the compositor */
 .heat td.h::after{width:calc(100% - 32px);transform:scaleX(var(--g));transform-origin:100% 50%}
+/* a live market: a small pulse beside the word, slow enough to read past */
+.status-live::before,.c-st[data-status=Live]::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:5px;vertical-align:1px}
+@media (prefers-reduced-motion:no-preference){.status-live::before,.c-st[data-status=Live]::before{animation:m-pulse 2.4s var(--ease-standard) infinite}}
+/* touch: a pressed state is immediate (pointerdown springs the scale), no hover ever sticks */
+@media (hover:none){
+  .btn:hover,.chip:hover,.tab:hover,.seg button:hover,.pick:hover,.sel:hover,.shell-products a:hover,.shell-icon:hover,.field:hover,th button:hover,.mcard:hover{transition-duration:0s}
+}
 
-/* ---------- sliding indicator for segmented controls and tab rows ---------- */
+/* =================================================================================================
+   SLIDING INDICATOR for segmented controls and tab rows: both edges are springs, the leading edge
+   slightly stiffer, so the pill stretches as it leaves and squashes as it lands (js/motion.js)
+   ================================================================================================= */
 .m-ind-host{position:relative;isolation:isolate}
 .m-ind-host > button{position:relative;z-index:1}
-.m-ind{position:absolute;left:0;top:0;width:0;height:0;z-index:0;pointer-events:none;background:var(--violet);
-  transition:transform var(--dur-3) var(--ease-decel),width var(--dur-3) var(--ease-decel),opacity var(--dur-2) var(--ease-standard)}
+.m-ind{position:absolute;left:0;top:0;width:0;height:0;z-index:0;pointer-events:none;background:var(--violet);contain:strict;
+  transition:opacity var(--dur-2) var(--ease-standard)}
 .m-ind-on > button[aria-pressed=true],.m-ind-on > button[aria-pressed=true]:hover{background:transparent}
 
-/* ---------- detail panel ---------- */
+/* =================================================================================================
+   SHEETS, PANELS, DIALOGS: spring enter (JS writes --m-x / --m-y), accelerated exit, scrim fade, the page
+   recedes behind them, drag to dismiss on phones (rubber-band up, velocity release down)
+   ================================================================================================= */
+.panel{transform:translate(var(--m-x,0px),var(--m-y,0px))}
+.panel.m-drag{transition:none;overscroll-behavior:contain}
+main{transform-origin:50% 0}
 @media (prefers-reduced-motion:no-preference){
-  .scrim{animation:m-fade var(--dur-3) var(--ease-standard) both}
-  .panel{animation:m-panel-in var(--dur-4) var(--ease-decel) both,m-fade var(--dur-2) var(--ease-standard) both}
+  main{transition:transform var(--spring-gentle-t) var(--spring-gentle)}
+  html.m-sheet main{transform:scale(.985)}
 }
-/* phones: the detail panel is a bottom sheet, so it rises instead of sliding in */
-@keyframes m-sheet-up{from{transform:translateY(40px)}}
-@media (prefers-reduced-motion:no-preference) and (max-width:600px){
-  .panel{animation-name:m-sheet-up,m-fade}
-}
-
-/* ---------- ghosts of removed list items (fade out in place) ---------- */
 .m-ghost{pointer-events:none}
+
+/* =================================================================================================
+   CHARTS: a hover readout that follows the pointer with damping (js/motion.js builds it)
+   ================================================================================================= */
+.chart{touch-action:pan-y}
+.m-cross{pointer-events:none;opacity:0;transition:opacity var(--dur-2) var(--ease-standard)}
+.m-cross.m-on{opacity:1}
+.m-cross line{stroke:var(--text-2);stroke-dasharray:3 3;opacity:.7}
+.m-cross circle{stroke:var(--bg);stroke-width:2}
+.m-cross rect{fill:var(--card);stroke:var(--line);rx:3}
+.m-cross text{font-size:11px;fill:var(--text);font-family:var(--num);font-variant-numeric:tabular-nums}
+.m-cross text.k{fill:var(--muted)}
 
 /* ---------- theme change fallback (no View Transitions): a short colour cross-fade ---------- */
 html.m-theming,html.m-theming *,html.m-theming *::before,html.m-theming *::after{
@@ -217,9 +358,8 @@ html.m-theming,html.m-theming *,html.m-theming *::before,html.m-theming *::after
 /* ---------- page transitions (cross-document View Transitions; ignored where unsupported) ---------- */
 @view-transition{navigation:auto}
 @media (prefers-reduced-motion:reduce){@view-transition{navigation:none}}
-/* Only <main> moves. Header, page chrome and backgrounds ride the root cross-fade, and since they are the same
-   pixels on both pages they read as staying put. (Naming the header instead would make it a backdrop root and
-   switch off its blur.) */
+/* Only <main> moves: out quick and up, in slower and from below. Header, chrome and backgrounds ride the root
+   cross-fade, and since they are the same pixels on both pages they read as staying put. */
 main{view-transition-name:m-main}
 ::view-transition-group(*){animation-duration:var(--dur-3);animation-timing-function:var(--ease-standard)}
 ::view-transition-old(root),::view-transition-new(root){animation-duration:var(--dur-2)}
@@ -228,11 +368,20 @@ main{view-transition-name:m-main}
 ::view-transition-group(m-main){animation:none}
 @keyframes m-vt-out{to{opacity:0;transform:translateY(-8px)}}
 @keyframes m-vt-in{from{opacity:0;transform:translateY(12px)}}
+/* browsers without cross-document transitions: JS plays this on <main> before following a product link */
+.m-leave{animation:m-vt-out var(--dur-2) var(--ease-accel) both}
 /* theme swap uses a same-document transition: one circular reveal of the whole page */
 html.m-vt-theme::view-transition-old(root),html.m-vt-theme::view-transition-new(root){animation:none;mix-blend-mode:normal}
 html.m-vt-theme main{view-transition-name:none}
 
+/* ---------- pause: ambient loops stop offscreen (.m-off set by an IntersectionObserver) and in hidden tabs ---------- */
+.m-off .dots .on,.m-off.dots .on,.m-off .slabs,.m-off .hero-cards,.m-off .mbar i,.m-off .status-live::before,.m-off.status-live::before,
+html.m-hidden .dots .on,html.m-hidden .slabs,html.m-hidden .hero-cards,html.m-hidden .mbar i,html.m-hidden .status-live::before,html.m-hidden .c-st::before{animation-play-state:paused}
+
 /* ---------- reduced motion: every state change is instant (JS skips its animations too) ---------- */
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+  .m-wipe,.phead .tag,.phead .btn.act::before{-webkit-mask:none;mask:none}
+  main{transform:none!important}
+  .m-cross{opacity:1}
 }
