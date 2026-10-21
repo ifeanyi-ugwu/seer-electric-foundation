@@ -3,7 +3,18 @@ window.U={
   (kids||[]).forEach(function(c){if(c!=null)n.appendChild(typeof c==="string"?document.createTextNode(c):c)});return n},
  svg:function(tag,attrs){var n=document.createElementNS("http://www.w3.org/2000/svg",tag);for(var k in attrs||{})n.setAttribute(k,attrs[k]);return n},
  rng:function(seed){return function(){seed=(seed*9301+49297)%233280;return seed/233280}},
- money:function(v){if(v>=1e6)return"$"+(v/1e6).toFixed(1).replace(/\.0$/,"")+"M";if(v>=1e3)return"$"+Math.round(v/1e3)+"K";return"$"+Math.round(v)},
+ /* The one dollar format. Sign first (U+2212), then B, M and K with one decimal for B and M, whole dollars from $1, two decimals below $1.
+    A rounded figure that reaches the next unit moves up to it ("$999.5K" is "$1M"). */
+ money:function(v){v=Number(v);if(!isFinite(v))return"$0";if(v<0)return"\u2212"+U.money(-v);if(v===0)return"$0";
+  if(v<1)return"$"+v.toFixed(2);
+  if(v<999.5)return"$"+Math.round(v);
+  if(v<999.5e3)return"$"+Math.round(v/1e3)+"K";
+  var m=v/1e6;if(m.toFixed(1)>=1e3)m=m/1e3;else return"$"+m.toFixed(1).replace(/\.0$/,"")+"M";
+  return"$"+m.toFixed(1).replace(/\.0$/,"")+"B"},
+ /* shares: two decimals below 10 so a small trade does not read 0.0, one decimal from 10 */
+ shares:function(v){v=Number(v);return U.num(v,v<10?2:1)},
+ /* a plain number to a fixed count of decimals (min decimals optional), grouped, with the same minus sign */
+ num:function(v,dec,min){v=Number(v);if(!isFinite(v))return"0";var s=Math.abs(v).toLocaleString("en-GB",{minimumFractionDigits:min==null?dec:min,maximumFractionDigits:dec});return(v<0&&/[1-9]/.test(s)?"\u2212":"")+s},
  /* Explicit table roles: on phones .rtbl tables are laid out as cards (display:block/grid), which drops the native
     table semantics in some browsers. The roles keep rows, cells and headers announced in both layouts. */
  roles:function(t){t.setAttribute("role","table");[].forEach.call(t.querySelectorAll("thead,tbody"),function(n){n.setAttribute("role","rowgroup")});

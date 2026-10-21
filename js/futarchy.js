@@ -18,10 +18,11 @@ function bprice(p,b){var lo=Math.min(p.pass,p.fail)*.75,hi=Math.max(p.pass,p.fai
 function place(){var p=view.p,b=branch,a=amt,pr=b==="pass"?p.pass:p.fail,px=bprice(p,b),sh=a/px,name="#"+p.id+" "+p.t;
  flow.place(a,function(){return{amount:a,meta:{type:"Trade",market:name},
   rows:[["Market",name,"tx-q"],["Branch",b==="pass"?"If it passes":"If it fails"],["Forecast",fmt(p,pr)],["Amount",W.money(a)+" USDC","tx-tot"],
-   ["Price per share","$"+px.toFixed(2)],["Shares",sh.toFixed(1)],["Payout if correct","$"+sh.toFixed(2)],["Network fee","Free in demo","tx-free"]],
+   ["Price per share","$"+px.toFixed(2)],["Shares",U.shares(sh)],["Payout if correct","$"+U.num(sh,2)],["Network fee","Free in demo","tx-free"]],
   note:"If the other branch happens, this trade is refunded.",
-  done:"You bought "+sh.toFixed(1)+" shares in the "+(b==="pass"?"pass":"fail")+" branch of proposal #"+p.id+"."}},"amt")}
-function fmt(p,v){return(p.unit==="$"?"$":"")+v.toFixed(p.dec)+(p.unit&&p.unit!=="$"?" "+p.unit.replace("$",""):"")}
+  done:"You bought "+U.shares(sh)+" shares in the "+(b==="pass"?"pass":"fail")+" branch of proposal #"+p.id+"."}},"amt")}
+function fmt(p,v){if(p.unit==="$"&&Math.abs(v)>=1e3)return U.money(v);var n=U.num(v,p.dec),neg=n.charAt(0)==="\u2212";if(neg)n=n.slice(1);
+ return(neg?"\u2212":"")+(p.unit==="$"?"$":"")+n+(p.unit&&p.unit!=="$"?" "+p.unit.replace("$",""):"")}
 function series(p,key,n){var r=U.rng(p.id*7+(key==="pass"?1:2)),end=p[key],start=(p.pass+p.fail)/2,v=start,out=[];
  for(var i=0;i<n;i++){v+=(r()-.5)*Math.abs(end-start)*.9+(end-v)*(.05+i/n*.08);out.push(v)}out[n-1]=end;return out}
 function chartH(cw){return Math.max(280,Math.round(cw))<520?200:240}
@@ -103,8 +104,8 @@ function detail(animate){var p=view.p,d=delta(p),root=document.getElementById("d
  else{var err=W.amountError(amt,flow.tried);
   t.appendChild(h("div",{class:"seg t-a",role:"group","aria-label":"Branch"},[["pass","If it passes"],["fail","If it fails"]].map(function(b){return h("button",{type:"button","aria-pressed":String(branch===b[0]),text:b[1],onclick:function(){branch=b[0];detail()}})})));
   t.appendChild(h("div",{class:"line t-a"},[h("span",{text:"Current forecast"}),h("b",{class:"num",text:fmt(p,pr)})]));
-  var inp=h("input",Object.assign({class:"field",type:"number",min:"1",value:String(amt),id:"amt",oninput:function(e){amt=Math.max(0,+e.target.value||0);W.amountLive(e.target,amt,flow)}},W.amountAttrs("amt",err)));
-  t.appendChild(h("div",{class:"field-grp t-b"},[h("label",{for:"amt",text:"Amount (USDC)"}),inp,W.amountErr("amt",err)]));
+  var inp=h("input",Object.assign({class:"field",type:"number",min:"1",value:String(amt),id:"amt",oninput:function(e){amt=+e.target.value||0;W.amountLive(e.target,amt,flow)}},W.amountAttrs("amt",err)));
+  t.appendChild(h("div",{class:"field-grp t-b"},[W.amountLabel("amt","Amount (USDC)"),inp,W.amountErr("amt",err)]));
   var pb=W.placeBtn({extra:true,onPlace:place});pb.classList.add("t-b");t.appendChild(pb);
   t.appendChild(W.hint({extra:"If the other branch happens, this trade is refunded.",cls:"t-b",after:focusPlace}))}
  [head,two,ch,t].forEach(function(n){el.appendChild(n)});U.patch(root,el,{animate:animate!==false})}

@@ -11,7 +11,7 @@
   var pageSlot=slot(),listSlot=slot(),detSlot=slot(),pageState="ok",listErr=null,listEmpty=false;
   function h(tag,attrs,kids){var n=document.createElement(tag);for(var k in attrs||{}){if(attrs[k]==null)continue;if(k==="text")n.textContent=attrs[k];else if(k==="class")n.className=attrs[k];else if(k.slice(0,2)==="on")n[k]=attrs[k];else n.setAttribute(k,attrs[k])}
     (kids||[]).forEach(function(c){if(c!=null)n.appendChild(typeof c==="string"?document.createTextNode(c):c)});return n}
-  function money(v){if(v>=1e9)return"$"+(v/1e9).toFixed(1)+"B";if(v>=1e6)return"$"+(v/1e6).toFixed(v>=1e8?0:1).replace(/\.0$/,"")+"M";if(v>=1e3)return"$"+Math.round(v/1e3)+"K";return"$"+v}
+  var money=U.money;
   function pc(p){return Math.round(p*100)+"%"}
   /* Close times are worked out from today (markets.js holds closeIn, in days, and closeAt, a UTC hour), so no open market goes stale.
      A market created in a session carries closeTs. A market with neither keeps its plain close label. Dates are British: "14 Nov",
@@ -28,7 +28,8 @@
     var d=new Date(t),day=d.getUTCDate()+" "+MON[d.getUTCMonth()],y=d.getUTCFullYear(),hh=String(d.getUTCHours()).padStart(2,"0");
     return{label:y===now.getUTCFullYear()?day:day+" "+y,full:day+" "+y+", "+hh+":00 UTC",rel:ago(t-now.getTime()),past:t<now.getTime()}}
   /* a scalar value with its unit: "$" leads, a word follows after a space, a symbol follows directly */
-  function sfmt(v,u){return u==="$"?"$"+v:u&&/^[A-Za-z]/.test(u)?v+" "+u:v+(u||"")}
+  function sfmt(v,u){var n=U.num(v,2,0),neg=n.charAt(0)==="\u2212";if(neg)n=n.slice(1);
+    return(neg?"\u2212":"")+(u==="$"?"$"+n:u&&/^[A-Za-z]/.test(u)?n+" "+u:n+(u||""))}
   function lead(m){if(!m.outs)return null;return m.outs.slice().sort(function(a,b){return b[1]-a[1]})[0]}
   function matches(m){
     if(qs.cat!=="All"&&m.cat!==qs.cat)return false;if(qs.type&&m.type!==qs.type)return false;if(qs.status&&m.status!==qs.status)return false;
@@ -69,26 +70,26 @@
     var tradable=m.status==="Open"||m.status==="Live";
     function acts(o){
       if(!tradable)return m.status==="Resolved"&&o[1]===1?h("span",{class:"won",text:"Won"}):null;
-      if(m.outs.length>2)return h("span",{class:"acts","aria-hidden":"true"},[h("span",{class:"yn",text:"Yes"}),h("span",{class:"yn n",text:"No"})]);
+      if(m.outs.length>2)return h("span",{class:"acts","aria-hidden":"true"},[h("span",{class:"yn","data-side":"Yes",text:"Yes"}),h("span",{class:"yn n","data-side":"No",text:"No"})]);
       return h("span",{class:"acts","aria-hidden":"true"},[h("span",{class:"yn buy",text:"Buy"})])}
-    if(m.outs){m.outs.slice(0,m.outs.length>3?3:m.outs.length).forEach(function(o){
-      body.push(h("div",{class:"orow"},[h("span",{text:o[0]}),h("span",{class:"pct"},[h("span",{class:"num",text:pc(o[1])}),acts(o)])]))});
+    if(m.outs){m.outs.slice(0,m.outs.length>3?3:m.outs.length).forEach(function(o,i){
+      body.push(h("div",{class:"orow","data-o":String(i)},[h("span",{text:o[0]}),h("span",{class:"pct"},[h("span",{class:"num",text:pc(o[1])}),acts(o)])]))});
       if(m.outs.length>3)body.push(h("span",{class:"more",text:"+ "+(m.outs.length-3)+(m.outs.length-3===1?" more outcome":" more outcomes")}))}
     else if(m.scalar){var s=m.scalar,p=(s.est-s.lo)/((s.hi-s.lo)||1)*100;p=Math.max(0,Math.min(100,p));
-      body.push(h("div",{},[h("div",{class:"range"},[h("b",{class:"num",text:sfmt(s.est,s.unit),style:"left:"+p+"%"}),h("i",{style:"left:"+p+"%"})]),h("div",{class:"rl num"},[h("span",{text:String(s.lo)}),h("span",{text:"Market estimate"}),h("span",{text:String(s.hi)})])]))}
-    else if(m.cond){var c=m.cond,f=function(v){return v==null?"No trades yet":(c.unit==="$"?"$":"")+v.toLocaleString("en-US")};
+      body.push(h("div",{},[h("div",{class:"range"},[h("b",{class:"num",text:sfmt(s.est,s.unit),style:"left:"+p+"%"}),h("i",{style:"left:"+p+"%"})]),h("div",{class:"rl num"},[h("span",{text:U.num(s.lo,2,0)}),h("span",{text:"Market estimate"}),h("span",{text:U.num(s.hi,2,0)})])]))}
+    else if(m.cond){var c=m.cond,f=function(v){return v==null?"No trades yet":sfmt(v,c.unit==="$"?"$":"")};
       body.push(h("div",{class:"cond"},[h("div",{},[h("small",{text:"If "+c.if.toLowerCase()}),h("b",{class:"num",text:f(c.a)})]),h("div",{},[h("small",{text:"If not"}),h("b",{class:"num",text:f(c.b)})])]))}
     var live=m.status==="Live",tb=h("span",{class:"badge",text:m.type});
     return[h("div",{class:"q"},[h("div",{class:"pfp",text:m.q.charAt(0)}),h("span",{text:m.q})])].concat(body,[
       h("div",{class:"foot"},[h("div",{class:"meta"},[h("span",{class:"num",text:money(m.vol)+" Vol."}),h("i"),h("span",{text:live?"LIVE":m.status==="Open"?(closeOf(m)?"Closes "+closeOf(m).label:"No close date"):m.status,class:live?"status-live":""})]),
         m.isNew?h("span",{class:"foot-b"},[h("span",{class:"badge new",text:"New"}),tb]):tb])])}
-  function card(m){return h("button",{class:"mcard",type:"button","data-key":"m"+m.id,onclick:function(){openPanel(m)},"aria-label":m.q+", "+m.type+(m.isNew?", new":"")},cardBody(m))}
+  function card(m){return h("button",{class:"mcard",type:"button","data-key":"m"+m.id,onclick:function(e){var o=e.target.closest("[data-o]"),s=e.target.closest("[data-side]");openPanel(m,{pick:o?+o.dataset.o:0,side:s?s.dataset.side:"Yes"})},"aria-label":m.q+", "+m.type+(m.isNew?", new":"")},cardBody(m))}
 
   /* explicit table roles: on phones the table is laid out as cards, which drops the native semantics (see shell.css) */
   function roles(t){t.setAttribute("role","table");Array.prototype.forEach.call(t.querySelectorAll("thead,tbody,tr,th,td"),function(n){n.setAttribute("role",{THEAD:"rowgroup",TBODY:"rowgroup",TR:"row",TH:"columnheader",TD:"cell"}[n.tagName])});return t}
   function leadText(m){var l=lead(m);if(l)return l[0]+" · "+pc(l[1]);
-    if(m.scalar)return"Estimate "+(m.scalar.per?m.scalar.est+" "+m.scalar.per:sfmt(m.scalar.est,m.scalar.unit));
-    return m.cond.a==null?"No trades yet":"Pass "+m.cond.a.toLocaleString("en-US")+" / fail "+m.cond.b.toLocaleString("en-US")}
+    if(m.scalar)return"Estimate "+(m.scalar.per?U.num(m.scalar.est,2,0)+" "+m.scalar.per:sfmt(m.scalar.est,m.scalar.unit));
+    return m.cond.a==null?"No trades yet":"Pass "+U.num(m.cond.a,2,0)+" / fail "+U.num(m.cond.b,2,0)}
   function table(list){var w=h("div",{class:"tbl-wrap rtbl app-tbl"}),t=h("table"),hd=h("tr"),f=document.createDocumentFragment();
     f.appendChild(w);
     [["Market",""],["Type",""],["Leading outcome",""],["Volume","r"],["Liquidity","r"],["Closes",""],["Status",""]].forEach(function(c){hd.appendChild(h("th",{class:c[1],scope:"col",text:c[0]}))});
@@ -139,7 +140,7 @@
     k.push(h("div",{class:"ticket"},[DM.skBlock("sk-box","height:var(--ctl);width:200px;max-width:100%;border-radius:999px"),h("div",{class:"field-grp"},[h("label",{},[S("10ch")]),DM.skBlock("sk-box","height:var(--ctl);border-radius:999px")]),
       h("div",{class:"line"},[S("12ch"),S("5ch")]),h("div",{class:"line"},[S("6ch"),S("5ch")]),DM.skBlock("sk-box","height:var(--tap)")]));
     return h("div",{class:"dm-skel"},k)}
-  function openPanel(m){lastFocus=document.activeElement;var root=document.getElementById("panel-root");root.textContent="";detSlot.cancel();
+  function openPanel(m,init){lastFocus=document.activeElement;var root=document.getElementById("panel-root");root.textContent="";detSlot.cancel();
     /* the pinned bar (badge, the title we already know, Close) shows at once; the body loads below it */
     var body=h("div",{class:"dm-body"}),p=h("div",{class:"panel",role:"dialog","aria-modal":"true","aria-label":m.q},[U.sheetTop(h("span",{class:"badge",text:m.isNew?"New · "+m.type:m.type}),m.q,closePanel),body]);
     root.appendChild(h("div",{class:"scrim",onclick:closePanel}));root.appendChild(p);document.addEventListener("keydown",esc);p.querySelector(".panel-top button").focus();
@@ -154,32 +155,43 @@
           titles:{notfound:"This market no longer exists"},texts:{notfound:"It may have been removed after it resolved. Go back to the list to find another market."}}))}})}
     load();
     function fill(info){
-    var pick=0,side="Yes",amt=50;
-    var price=function(){return m.outs?(side==="Yes"?m.outs[pick][1]:1-m.outs[pick][1]):.5};
+    /* side is Yes or No on every type: Yes is Buy Yes, Long, or the "If" branch; No is Buy No, Short, or "If not". A two-outcome market has no side: its outcome rows are the choice. */
+    var bin=!!m.outs&&m.outs.length===2,pick=init&&init.pick<(m.outs||[]).length?init.pick:0,side=!bin&&init&&init.side==="No"?"No":"Yes",amt=50;
+    var sp=m.scalar?Math.max(0,Math.min(1,(m.scalar.est-m.scalar.lo)/((m.scalar.hi-m.scalar.lo)||1))):.5;
+    var cp=m.cond&&m.cond.a!=null&&m.cond.b!=null&&m.cond.a+m.cond.b>0?m.cond.a/(m.cond.a+m.cond.b):.5;
+    var base=function(){return m.outs?m.outs[pick][1]:m.scalar?sp:cp};
+    var price=function(){return side==="Yes"?base():1-base()};
+    var sideName=function(){return m.scalar?(side==="Yes"?"Long":"Short"):m.cond?(side==="Yes"?"If "+m.cond.if.toLowerCase():"If not"):side};
     var tk=h("div",{class:"ticket","data-tx":"app"});
     /* the ticket runs the whole trade in place: form, review, signature, result (js/wallet.js) */
     flow=W.flow({box:function(){return tk},onChange:function(){drawTicket()}});
     var fl=flow;
     function focusPlace(){var b=tk.querySelector("[data-tx-place]");if(b)b.focus()}
-    function place(){var p=Math.min(.99,Math.max(.01,price())),a=amt,s=a/p,o=m.outs?m.outs[pick][0]:null,sd=m.outs?side:m.scalar?"Long":"If "+m.cond.if.toLowerCase();
+    function place(){var p=Math.min(.99,Math.max(.01,price())),a=amt,s=a/p,o=m.outs?m.outs[pick][0]:null,sd=sideName();
       fl.place(a,function(){return{amount:a,meta:{type:"Trade",market:m.q},
-        rows:[["Market",m.q,"tx-q"]].concat(o?[["Outcome",o,"tx-q"]]:[],[["Side",sd],["Amount",W.money(a)+" USDC","tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",s.toFixed(1)],["Payout if correct","$"+s.toFixed(2)],["Network fee","Free in demo","tx-free"]]),
-        done:"You bought "+s.toFixed(1)+" "+(o?side+" shares on "+o:m.scalar?"long shares":"shares in the branch where "+m.cond.if.toLowerCase())+"."}},"amt")}
+        rows:[["Market",m.q,"tx-q"]].concat(o?[["Outcome",o,"tx-q"]]:[],bin?[]:[["Side",sd]],[["Amount",W.money(a)+" USDC","tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(s)],[m.scalar?"Maximum payout":"Payout if correct","$"+U.num(s,2)],["Network fee","Free in demo","tx-free"]]),
+        done:"You bought "+U.shares(s)+" "+(o?(bin?"shares on "+o:side+" shares on "+o):m.scalar?sd.toLowerCase()+" shares":"shares on the branch \u201c"+sd.toLowerCase()+"\u201d")+"."}},"amt")}
     var drawTicket=function(){var p=Math.min(.99,Math.max(.01,price())),f=h("div");
       if(m.status!=="Open"&&m.status!=="Live"){f.appendChild(h("p",{text:"Trading is closed for this market.",class:"note"}));patch(tk,f);return}
       tk.style.minHeight=fl.style()?fl.hold+"px":"";
       if(fl.step!=="form"){f.appendChild(fl.view());patch(tk,f);return}
       var tk0=tk;tk=f;
-      if(m.outs){tk.appendChild(h("div",{class:"seg",role:"group","aria-label":"Side"},["Yes","No"].map(function(s){return h("button",{type:"button","aria-pressed":String(side===s),text:"Buy "+s,onclick:function(){side=s;drawTicket()}})})))}
-      else tk.appendChild(h("div",{class:"note",text:m.scalar?"Scalar markets trade a long/short position on the value.":"Conditional markets trade each branch separately."}));
+      var labs=m.scalar?["Long","Short"]:m.cond?["If "+m.cond.if.toLowerCase(),"If not"]:["Buy Yes","Buy No"];
+      if(!bin)tk.appendChild(h("div",{class:"seg",role:"group","aria-label":m.cond?"Branch":"Side"},["Yes","No"].map(function(s,i){return h("button",{type:"button","aria-pressed":String(side===s),text:labs[i],onclick:function(){side=s;drawTicket()}})})));
+      if(m.scalar)tk.appendChild(h("p",{class:"note",text:"Long gains as the value resolves higher; short gains as it resolves lower."}));
+      if(m.cond)tk.appendChild(h("p",{class:"note",text:"If the other branch happens, this trade is refunded."}));
       var err=W.amountError(amt,fl.tried),at=W.amountAttrs("amt",err);
       var inp=h("input",{class:"field",type:"number",min:"1",value:String(amt),id:"amt","aria-label":"Amount in USDC","aria-invalid":at["aria-invalid"],"aria-describedby":at["aria-describedby"],
-        oninput:function(e){amt=Math.max(0,Number(e.target.value)||0);upd(true);W.amountLive(e.target,amt,fl)}});
-      tk.appendChild(h("div",{class:"field-grp"},[h("label",{for:"amt",text:"Amount (USDC)"}),inp,W.amountErr("amt",err)]));
-      var l1=h("span",{class:"num","data-k":"price"}),l2=h("span",{class:"num","data-k":"shares"}),l3=h("span",{class:"num","data-k":"payout"});
-      tk.appendChild(h("div",{class:"line"},[h("span",{text:"Price per share"}),l1]));tk.appendChild(h("div",{class:"line"},[h("span",{text:"Shares"}),l2]));tk.appendChild(h("div",{class:"line"},[h("span",{text:"Payout if correct"}),l3]));
+        oninput:function(e){amt=Number(e.target.value)||0;upd(true);W.amountLive(e.target,amt,fl)}});
+      tk.appendChild(h("div",{class:"field-grp"},[W.amountLabel("amt","Amount (USDC)"),inp,W.amountErr("amt",err)]));
+      var l1=h("span",{class:"num","data-k":"price"}),l2=h("span",{class:"num","data-k":"shares"}),l3=m.scalar?null:h("span",{class:"num","data-k":"payout"});
+      tk.appendChild(h("div",{class:"line"},[h("span",{text:"Price per share"}),l1]));tk.appendChild(h("div",{class:"line"},[h("span",{text:"Shares"}),l2]));
+      if(m.scalar){var hiT=sfmt(m.scalar.hi,m.scalar.unit),loT=sfmt(m.scalar.lo,m.scalar.unit),up=side==="Yes";
+        tk.appendChild(h("div",{class:"line"},[h("span",{text:"At "+(up?hiT:loT)+" or "+(up?"above":"below")}),h("span",{class:"num",text:"$1.00 per share"})]));
+        tk.appendChild(h("div",{class:"line"},[h("span",{text:"At "+(up?loT:hiT)+" or "+(up?"below":"above")}),h("span",{class:"num",text:"$0"})]))}
+      else tk.appendChild(h("div",{class:"line"},[h("span",{text:"Payout if correct"}),l3]));
       /* live: values tick to the new amount; the spans are looked up because a morph keeps the on-screen nodes */
-      function upd(live){var s=amt/p,v=[["price","$"+p.toFixed(2)],["shares",s.toFixed(1)],["payout","$"+s.toFixed(2)]];
+      function upd(live){var s=Math.max(0,amt)/p,v=[["price","$"+p.toFixed(2)],["shares",U.shares(s)],["payout","$"+U.num(s,2)]];
         v.forEach(function(x){var n=live?tk0.querySelector('[data-k="'+x[0]+'"]'):[l1,l2,l3][["price","shares","payout"].indexOf(x[0])];if(!n)return;
           if(live&&window.Motion)Motion.num(n,x[1]);else n.textContent=x[1]})}upd();
       /* one wallet control per page (the header); until it is connected the ticket action waits, and its hint connects */

@@ -5,7 +5,7 @@
    shows the right control (no flicker).
    API: state (snapshot), subscribe(fn) / onChange(fn) (returns an unsubscribe), connect(kind), disconnect(),
    spend(amount, meta), log(entry), openConnect({from, after}), openAccount(), mount(slot), announce(text),
-   money(n), amountError(n, tried), flow(options) (the review, sign and result steps of a ticket or form).
+   money(n), amountError(n, tried), maxBtn(inputId), amountLabel(id, text), flow(options) (the review, sign and result steps of a ticket or form).
    Needs js/util.js (U.h, U.sheet). js/motion.js is optional (count motion, step entrances). */
 (function(){
 "use strict";
@@ -46,7 +46,7 @@ W.spend=function(amount,meta){meta=meta||{};if(!S.on||!(amount>0)||amount>S.bal+
   S.act.unshift({type:meta.type||"Trade",market:meta.market||"",amount:amount,status:"Confirmed",ref:r.short});if(S.act.length>20)S.act.length=20;
   paintBal(true);emit();return r.short};
 /* ticket amounts: an empty or zero amount is flagged once the person has tried to place; more than the balance at once */
-W.amountError=function(a,tried){if(!(a>0))return tried?"Enter an amount more than 0.":"";
+W.amountError=function(a,tried){if(a<0)return"Enter an amount more than 0.";if(!(a>0))return tried?"Enter an amount more than 0.":"";
   if(S.on&&a>S.bal+1e-9)return"Amount is more than your balance of "+money(S.bal)+" USDC.";return""};
 
 /* ---------- live region: one per page, present before anything is announced ---------- */
@@ -245,6 +245,11 @@ W.amountLive=function(input,amount,flow){if(!input)return;var id=input.id,err=W.
   if(err){input.setAttribute("aria-invalid","true");input.setAttribute("aria-describedby",id+"-err");
     if(!n){n=h("p",{class:"field-err",id:id+"-err"});input.insertAdjacentElement("afterend",n)}if(n.textContent!==err)n.textContent=err}
   else{input.removeAttribute("aria-invalid");input.removeAttribute("aria-describedby");if(n)n.remove()}};
+/* Max: shown only while connected; sets the amount field to the balance rounded down to cents and tells the page through its own input handler */
+W.maxBtn=function(inputId){if(!S.on)return null;
+  return link("Max",function(){var i=doc.getElementById(inputId);if(!i)return;i.value=(Math.floor(S.bal*100+1e-6)/100).toFixed(2);i.dispatchEvent(new Event("input",{bubbles:true}));i.focus({preventScroll:true})},{"aria-label":"Max: use your full balance","data-key":"max"})};
+/* the amount field's label row: the label, and Max at its end once a wallet is connected */
+W.amountLabel=function(id,text){return h("div",{class:"line","data-key":"amt-lbl"},[h("label",{for:id,text:text}),W.maxBtn(id)])};
 /* Place trade: unavailable until a wallet is connected, with one hint whose inline button connects */
 W.placeBtn=function(o){if(!S.on)return h("button",{class:"btn lg",type:"button","aria-disabled":"true","aria-describedby":o.hint||"tk-hint",text:o.text||"Place trade"});
   return h("button",{class:"btn lg",type:"button","data-tx-place":"","aria-describedby":o.extra?o.hint||"tk-hint":null,text:o.text||"Place trade",onclick:o.onPlace})};
