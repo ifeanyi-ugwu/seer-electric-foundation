@@ -122,12 +122,8 @@ Motion is part of the interface, not a layer on top of it: everything that appea
 
 ## Known gaps
 
-- (resolved) Documents and Blog now link to Seer's GitBook docs and Medium blog.
-- Layout was checked in headless Chromium at 280 to 2560px, in both themes, including landscape phones (844x390, 740x360). Container queries and `:has()` need current browsers (Safari 16+, Firefox 121+); older ones get a usable but less tuned layout. Real devices, Safari and Firefox are not verified.
 - Deliberate omissions: no per-digit odometer on figures (it would double the DOM of every number and complicate the morph for a small gain at these sizes); no scroll-velocity skew. The hero uses a climbing number, which suits a single prominent figure.
-- Motion was checked in headless Chromium: frame captures of every choreography, numeric sampling of the spring curves (overshoot, settle time, continuity through interruption), long-task and frame-time measurements at 4x CPU throttling, reduced-motion, no-JS, hidden-tab and touch emulation. Smoothness on real devices, and the Safari and Firefox fallbacks (no `linear()`, no scroll timelines, no cross-document view transitions), are not verified.
 - Automated audit (axe-core 4.10, WCAG 2.0/2.1 A and AA plus best practice) run on all six pages at 1440, 768 and 390px, in dark and light, including open detail states and sheets: no violations. The violet hero headline is about 3.5:1, which passes as large text. Contrast fixes made from the audit: light-mode muted text darkened to `#5F5F6B` and light-mode teal to `#00705F`.
-- Not verified on real devices: the pinned headers with a dynamic browser toolbar or a notch (iOS Safari, Chrome Android), touch drag-to-dismiss on the sheets, and the assistant panel on a phone. The demo controls were tested across their axes (delay, error type and scope, offline, cache) rather than in every combination.
 - The kit lists cinematic purple portrait photography as a graphic style. It is not used: the kit's own web comps use none, and the Figma file has no exportable photos.
 
 ## Loading, errors and the assistant

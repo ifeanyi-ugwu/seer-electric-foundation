@@ -213,12 +213,13 @@ tr.is-sel td:first-child{box-shadow:inset 3px 0 0 var(--violet)}
 .sortbar label{color:var(--text-2);font-size:var(--fs-meta);flex:none}
 .sortbar select.field,.sortbar .sel-wrap{flex:1 1 auto;max-width:320px}
 .sortbar .btn{flex:none;min-height:var(--ctl)}
+@media (max-width:360px){.sortbar{flex-wrap:wrap}.sortbar .sel-wrap{min-width:160px}}/* the select keeps a readable width; the direction button drops to its own line */
 
 /* ---------- detail sheet: side sheet on tablet and desktop, bottom sheet on phones ---------- */
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:40}
 /* the sheet is the scroll box; its insets live in --pp-* so the pinned top bar can reach the edges and clear notches */
 .panel{--pp-t:max(var(--pad-panel),env(safe-area-inset-top));--pp-r:max(var(--pad-panel),env(safe-area-inset-right));
-  --pp-b:max(var(--pad-panel),env(safe-area-inset-bottom));--pp-l:var(--pad-panel);
+  --pp-b:max(var(--s-6),env(safe-area-inset-bottom));--pp-l:var(--pad-panel);
   position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--bg);border-left:1px solid var(--line);z-index:41;overflow-y:auto;overscroll-behavior:contain;
   display:grid;grid-auto-rows:minmax(min-content,auto);align-content:start;gap:var(--s-4);padding:0 var(--pp-r) 0 var(--pp-l)}
 /* min-content rows: a card held at its old height (min-height) must not set a row shorter than its new content */

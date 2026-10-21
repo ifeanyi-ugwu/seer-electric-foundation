@@ -119,7 +119,7 @@
   .deep-tbl tr{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"id n s" "r r ch" "ag ag ag" "av av hv"}
   .deep-tbl tbody tr{contain-intrinsic-size:auto 99px}/* content box: a 131px card less its padding */
   .deep-tbl .c-id{grid-area:id;line-height:20px}.deep-tbl .c-id::before{content:"#"}
-  .deep-tbl .c-n{grid-area:n;font-size:var(--fs-ui);line-height:20px}
+  .deep-tbl .c-n{grid-area:n;font-size:var(--fs-ui);line-height:20px;overflow-wrap:anywhere}
   .deep-tbl .c-s{grid-area:s;text-align:right;font-size:var(--fs-kpi);line-height:1;font-weight:500;letter-spacing:-.01em}
   .deep-tbl .c-s::before{vertical-align:3px}
   .deep-tbl .c-r{grid-area:r;align-self:center;text-align:left}

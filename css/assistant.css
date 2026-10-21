@@ -129,7 +129,7 @@ html.m-hidden .as-glow,.as-paused .as-glow,.as-away .as-glow,.as-open .as-glow{a
 @keyframes as-in{from{opacity:0;translate:0 6px}}
 .as-sugg{display:flex;flex-wrap:wrap;gap:var(--s-2)}
 .as-ask > .as-sugg{padding:0 var(--s-4) var(--s-3)}
-.as-compose{display:flex;gap:var(--s-2);align-items:center;padding:var(--s-3) var(--s-4) calc(var(--s-3) + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--bg)}
+.as-compose{display:flex;gap:var(--s-2);align-items:center;padding:var(--s-3) var(--s-4) calc(var(--s-4) + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--bg)}
 .as-compose .as-q{flex:1 1 auto;width:100%}
 .as-sheet .btn.as-send{flex:none;width:var(--ctl);height:var(--ctl);padding:0;background:var(--violet);border-radius:0;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
 .as-send svg{width:18px;height:18px}
