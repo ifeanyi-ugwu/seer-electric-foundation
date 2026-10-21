@@ -52,6 +52,8 @@
 /* ---------- Deep: dense dot field ---------- */
 .dotfield{display:block;max-width:100%}
 .dotfield circle{cursor:pointer;transition:stroke var(--t) ease}
+/* The browser draws its own ring on a clicked dot (Edge, Chrome); the ring is for keyboard focus only */
+.dotfield circle:focus{outline:none}
 @media (hover:hover){.dotfield circle:hover{stroke:var(--text-2);stroke-width:2}}
 .dotfield circle:focus-visible{outline:none;stroke:var(--violet-text);stroke-width:3}
 .split{display:inline-flex;align-items:center;gap:var(--s-2)}

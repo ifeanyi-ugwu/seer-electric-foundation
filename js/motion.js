@@ -531,7 +531,7 @@ function phys(){if(phys.on||!SP)return;phys.on=1;var pressed=null,hov=null,card=
 /* ---------- keyboard focus: a follower ring glides from the last focused control to the next ---------- */
 function focusRing(){if(focusRing.on||!SP)return;focusRing.on=1;var ring=null,lastR=null,lastT=0;
   doc.addEventListener("focusin",function(e){var t=e.target;if(!t.matches)return;
-    requestAnimationFrame(function(){var vis;try{vis=t.matches(":focus-visible")}catch(x){vis=false}
+    requestAnimationFrame(function(){var vis;try{vis=t.matches(":focus-visible")||t.tagName==="SELECT"}catch(x){vis=false}
       if(!vis||doc.activeElement!==t){lastR=null;return}
       var r=t.getBoundingClientRect();if(!r.width||!r.height)return;
       if(!reduced()&&lastR&&performance.now()-lastT<2500&&(Math.abs(lastR.left-r.left)>2||Math.abs(lastR.top-r.top)>2)&&Math.abs(lastR.top-r.top)<innerHeight){

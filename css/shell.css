@@ -220,7 +220,9 @@ tr.is-sel td:first-child{box-shadow:inset 3px 0 0 var(--violet)}
 .panel{--pp-t:max(var(--pad-panel),env(safe-area-inset-top));--pp-r:max(var(--pad-panel),env(safe-area-inset-right));
   --pp-b:max(var(--pad-panel),env(safe-area-inset-bottom));--pp-l:var(--pad-panel);
   position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--bg);border-left:1px solid var(--line);z-index:41;overflow-y:auto;overscroll-behavior:contain;
-  display:grid;align-content:start;gap:var(--s-4);padding:0 var(--pp-r) var(--pp-b) var(--pp-l)}
+  display:grid;align-content:start;gap:var(--s-4);padding:0 var(--pp-r) 0 var(--pp-l)}
+/* the bottom inset is a trailing box, not padding: Firefox drops a scroll container's end padding, leaving the last control on the edge */
+.panel::after{content:"";display:block;height:max(0px,calc(var(--pp-b) - var(--s-4)))}
 /* panel enter/exit motion: motion.css + js/motion.js */
 .panel h2{font-size:var(--fs-h2);line-height:var(--lh-snug);font-weight:500;letter-spacing:-.01em}
 .panel .panel-c{padding:var(--s-4)}
