@@ -161,13 +161,20 @@ function accountBody(){var a=S.act.slice(0,3);
         h("span",{class:"num wl-act-a",text:(ok?"−":"")+money(x.amount)+" USDC"})])}))
        :h("p",{class:"note",text:"No activity in this session yet. Trades and new markets will show here."})]),
     h("button",{class:"btn soft wl-wide",type:"button",text:"Disconnect",onclick:function(){ws.from=hdr;W.disconnect();close()}})])}
-function copy(){var done=function(ok){if(!ws)return;ws.copied=ok?"ok":"fail";sheet();if(ok)announce("Address copied.");
-  clearTimeout(ws.ct);ws.ct=setTimeout(function(){if(ws&&ws.copied){ws.copied=null;sheet()}},2200)};
-  var legacy=function(){try{var t=doc.createElement("textarea");t.value=S.addr;t.setAttribute("readonly","");t.style.cssText="position:fixed;left:-9999px;top:0";
+/* copyText: the clipboard API, then a hidden textarea where it is blocked; cb(true|false). Used by the wallet sheet and by W.copyBtn. */
+function copyText(text,cb,back){
+  var legacy=function(){try{var t=doc.createElement("textarea");t.value=text;t.setAttribute("readonly","");t.style.cssText="position:fixed;left:-9999px;top:0";
     doc.body.appendChild(t);t.select();var ok=doc.execCommand("copy");t.remove();
-    var b=doc.querySelector("#wallet-root .wl-copy");if(b)b.focus({preventScroll:true});return ok}catch(e){return false}};
-  try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(S.addr).then(function(){done(true)},function(){done(legacy())});return}}catch(e){}
-  done(legacy())}
+    if(back&&back.isConnected)back.focus({preventScroll:true});return ok}catch(e){return false}};
+  try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(function(){cb(true)},function(){cb(legacy())});return}}catch(e){}
+  cb(legacy())}
+function copy(){copyText(S.addr,function(ok){if(!ws)return;ws.copied=ok?"ok":"fail";sheet();if(ok)announce("Address copied.");
+  clearTimeout(ws.ct);ws.ct=setTimeout(function(){if(ws&&ws.copied){ws.copied=null;sheet()}},2200)},doc.querySelector("#wallet-root .wl-copy"))}
+/* the same Copy button outside the wallet sheet (the market address): the label reads "Copied" for a moment */
+W.copyBtn=function(text,name){var b=h("button",{class:"btn soft wl-copy",type:"button","aria-label":"Copy "+name,text:"Copy"}),t=0;
+  b.onclick=function(){copyText(text,function(ok){clearTimeout(t);b.textContent=ok?"Copied":"Not copied";b.setAttribute("aria-label",ok?"Copied":"Not copied, copying is blocked here");
+    if(ok)announce("Copied.");t=setTimeout(function(){b.textContent="Copy";b.setAttribute("aria-label","Copy "+name)},2200)},b)};return b};
+W.short=short;
 W.openAccount=function(o){o=o||{};if(!S.on){W.openConnect(o);return}if(ws)close();ws={mode:"account",from:o.from||hdr};sheet(true)};
 
 /* ---------- the review, sign and result steps of a ticket or form ----------

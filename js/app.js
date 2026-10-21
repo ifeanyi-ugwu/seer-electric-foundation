@@ -27,6 +27,17 @@
     if(t==null)return m.close?{label:m.close,full:m.close,rel:"",past:false}:null;
     var d=new Date(t),day=d.getUTCDate()+" "+MON[d.getUTCMonth()],y=d.getUTCFullYear(),hh=String(d.getUTCHours()).padStart(2,"0");
     return{label:y===now.getUTCFullYear()?day:day+" "+y,full:day+" "+y+", "+hh+":00 UTC",rel:ago(t-now.getTime()),past:t<now.getTime()}}
+  /* a day counted from today, as "5 Oct" (with the year when it is not this one) */
+  function dayIn(n){var now=new Date(),d=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()+n)),s=d.getUTCDate()+" "+MON[d.getUTCMonth()];return d.getUTCFullYear()===now.getUTCFullYear()?s:s+" "+d.getUTCFullYear()}
+  /* what the sheet says about resolution: a market without its own record (one made in a session) gets a plain one */
+  function resOf(m){return m.res||{state:m.status==="Resolved"?"final":"trading",answer:null,reportedIn:null,source:"Reality.eth",rules:"The answer reported for the question decides the outcome."}}
+  function rulesBox(m,cl){var rs=resOf(m),addr=U.addr(m.id),a="Not reported yet",row=function(k,v,c){return h("div",{class:"tx-row"+(c?" "+c:"")},[h("dt",{text:k}),h("dd",{},[].concat(v))])};
+    if(rs.answer)a=rs.answer+(rs.reportedIn!=null?", reported "+dayIn(rs.reportedIn):"")+(rs.state==="disputed"&&rs.disputedIn!=null?". Challenged on "+dayIn(rs.disputedIn)+".":"");
+    var d=h("details",{class:"panel-c rules","data-key":"rules",open:U.narrow.matches?null:""},[h("summary",{text:"Rules and resolution"}),
+      h("dl",{class:"tx-sum"},[row("Resolves by",rs.state==="disputed"?(rs.source||"Reality.eth")+", now in Kleros arbitration":(rs.source||"Reality.eth")+", with Kleros arbitration if disputed","tx-q"),
+        row("Trading closes",cl?cl.full:"Not set"),row("Answer",a,"tx-q"),
+        row("Market address",[h("span",{class:"num",text:W.short(addr)}),W.copyBtn(addr,"market address")],"rules-addr")]),
+      h("p",{class:"note",text:rs.rules+" If the question cannot be answered, it resolves Invalid and holders are refunded pro rata."})]);return d}
   /* a scalar value with its unit: "$" leads, a word follows after a space, a symbol follows directly */
   function sfmt(v,u){var n=U.num(v,2,0),neg=n.charAt(0)==="\u2212";if(neg)n=n.slice(1);
     return(neg?"\u2212":"")+(u==="$"?"$"+n:u&&/^[A-Za-z]/.test(u)?n+" "+u:n+(u||""))}
@@ -123,19 +134,20 @@
   function esc(e){if(e.defaultPrevented||U.covered("panel-root"))return;if(e.key==="Escape"){closePanel();return}if(e.key!=="Tab")return;var p=document.querySelector("#panel-root .panel");if(!p)return;
     var f=[].filter.call(p.querySelectorAll("button,input,select,[tabindex]:not([tabindex='-1'])"),function(n){return!n.disabled&&n.getClientRects().length});if(!f.length)return;
     var a=f[0],z=f[f.length-1];if(e.shiftKey&&(document.activeElement===a||!p.contains(document.activeElement))){e.preventDefault();z.focus()}else if(!e.shiftKey&&(document.activeElement===z||!p.contains(document.activeElement))){e.preventDefault();a.focus()}}
-  function spark(seed,end,name){var pts=[],v=Math.max(.05,end-.18),n=24,i;for(i=0;i<n;i++){seed=(seed*9301+49297)%233280;v+= (seed/233280-.5)*.06+(end-v)*.08;pts.push(Math.min(.97,Math.max(.03,v)))}
+  function spark(seed,end,name,won){var pts=[],v=Math.max(.05,end-.18),n=24,i;for(i=0;i<n;i++){seed=(seed*9301+49297)%233280;v+= (seed/233280-.5)*.06+(end-v)*.08;pts.push(Math.min(.97,Math.max(.03,v)))}
     pts[n-1]=end;var lo=Math.min.apply(null,pts),hi=Math.max.apply(null,pts),pad=Math.max(.02,(hi-lo)*.12);lo-=pad;hi+=pad;
     var Y=function(p){return((hi-p)/(hi-lo)*64).toFixed(1)},d=pts.map(function(p,i){return(i?"L":"M")+(i/(n-1)*300).toFixed(1)+" "+Y(p)}).join(" ");
     var NS="http://www.w3.org/2000/svg",s=document.createElementNS(NS,"svg");s.setAttribute("viewBox","0 0 300 64");s.setAttribute("preserveAspectRatio","none");s.setAttribute("class","spark");s.setAttribute("role","img");
     s.setAttribute("aria-label","Price history of "+name+", ending at "+pc(end));
     var a=document.createElementNS(NS,"path");a.setAttribute("class","m-area");a.setAttribute("d",d+" L300 64 L0 64 Z");a.setAttribute("fill","var(--violet)");a.setAttribute("fill-opacity",".12");s.appendChild(a);
     var p=document.createElementNS(NS,"path");p.setAttribute("class","m-line");p.setAttribute("d",d);p.setAttribute("fill","none");p.setAttribute("stroke","var(--violet)");p.setAttribute("stroke-width","2");p.setAttribute("vector-effect","non-scaling-stroke");s.appendChild(p);
-    var box=h("div",{class:"spark-box"},[h("div",{class:"spark-head"},[h("span",{text:"Price history"}),h("span",{text:"Leading: "+name})]),s]);return box}
+    var box=h("div",{class:"spark-box"},[h("div",{class:"spark-head"},[h("span",{text:"Price history"}),h("span",{text:(won?"Winner: ":"Leading: ")+name})]),s]);return box}
   /* the sheet's body while its details load: the real tiles' labels, outcome rows, the price chart and the ticket, as placeholders */
   function skDetail(m){var S=DM.sk,n=m.outs?Math.min(m.outs.length,4):0,k=[];
     k.push(h("div",{class:"kv"},["Volume","Liquidity","Closes","Status"].map(function(l){return h("div",{},[h("small",{text:l}),h("b",{},[S("56%")])])})));
+    k.push(h("div",{class:"panel-c rules"},[S("18ch")]));
     if(n){k.push(h("div",{class:"olist"},m.outs.slice(0,n).map(function(o,i){return h("div",{class:"orow"},[h("span",{},[S([62,48,56,40][i]+"%")]),S("3ch")])})))}
-    else k.push(h("div",{class:"mcard static"},[h("div",{class:"sk-q"},[DM.skBlock("sk-pfp"),h("span",{class:"sk-stack"},[DM.skBlock("sk-line","--w:80%")])]),DM.skBlock("sk-box","height:64px")]));
+    else k.push(h("div",{class:"mcard static"},[DM.skBlock("sk-box","height:64px")]));
     if(m.outs)k.push(h("div",{class:"spark-box"},[h("div",{class:"spark-head"},[S("9ch"),S("12ch")]),DM.skBlock("sk-box","height:64px;margin-top:8px;border-radius:4px")]));
     k.push(h("div",{class:"ticket"},[DM.skBlock("sk-box","height:var(--ctl);width:200px;max-width:100%;border-radius:999px"),h("div",{class:"field-grp"},[h("label",{},[S("10ch")]),DM.skBlock("sk-box","height:var(--ctl);border-radius:999px")]),
       h("div",{class:"line"},[S("12ch"),S("5ch")]),h("div",{class:"line"},[S("6ch"),S("5ch")]),DM.skBlock("sk-box","height:var(--tap)")]));
@@ -199,14 +211,16 @@
       var hn=W.hint({after:focusPlace});if(hn)tk.appendChild(hn);tk=tk0;patch(tk,f)};
     redrawTicket=drawTicket;
     var list=null;
-    if(m.outs){list=h("div",{class:"olist"},[]);var draw=function(){var f=h("div");m.outs.forEach(function(o,i){f.appendChild(h("button",{type:"button",class:"orow sel","data-key":"o"+i,"aria-pressed":String(pick===i),onclick:function(){pick=i;if(fl.step!=="form")fl.reset();draw();drawTicket()}},[h("span",{text:o[0]}),h("span",{class:"num",text:pc(o[1])})]))});patch(list,f)};draw()}
-    else{list=h("div",{class:"mcard static"},cardBody(m))}
+    if(m.outs&&m.status==="Resolved"){/* a resolved market is not a choice: plain rows, the winner marked */
+      list=h("div",{class:"olist"},m.outs.map(function(o,i){return h("div",{class:"orow","data-key":"o"+i},[h("span",{text:o[0]}),h("span",{class:"pct"},[h("span",{class:"num",text:pc(o[1])}),o[0]===resOf(m).answer?h("span",{class:"won",text:"Won"}):null])])}))}
+    else if(m.outs){list=h("div",{class:"olist"},[]);var draw=function(){var f=h("div");m.outs.forEach(function(o,i){f.appendChild(h("button",{type:"button",class:"orow sel","data-key":"o"+i,"aria-pressed":String(pick===i),onclick:function(){pick=i;if(fl.step!=="form")fl.reset();draw();drawTicket()}},[h("span",{text:o[0]}),h("span",{class:"num",text:pc(o[1])})]))});patch(list,f)};draw()}
+    else{list=h("div",{class:"mcard static"},cardBody(m).slice(1,-1))}
     var ld=lead(m),cl=closeOf(m);
-    [h("div",{class:"kv"},[h("div",{},[h("small",{text:"Volume"}),h("b",{class:"num",text:money(m.vol)})]),h("div",{},[h("small",{text:"Liquidity"}),h("b",{class:"num",text:money(m.liq)})]),h("div",{},[h("small",{text:cl&&cl.past?"Closed":"Closes"}),h("b",{text:cl?cl.full:"Not set"}),cl&&cl.rel?h("span",{class:"rel",text:cl.rel}):null]),h("div",{},[h("small",{text:"Status"}),h("b",{text:m.status})])]),
-      list,ld?spark(m.id*37,ld[1],ld[0]):null,tk].forEach(function(n){if(n)body.appendChild(n)});
+    [h("div",{class:"kv"},[h("div",{},[h("small",{text:"Volume"}),h("b",{class:"num",text:money(m.vol)})]),h("div",{},[h("small",{text:m.status==="Resolved"?"Result":"Liquidity"}),h("b",{class:m.status==="Resolved"?null:"num",text:m.status==="Resolved"?(resOf(m).answer||"Not set"):money(m.liq)})]),h("div",{},[h("small",{text:cl&&cl.past?"Closed":"Closes"}),h("b",{text:cl?cl.full:"Not set"}),cl&&cl.rel?h("span",{class:"rel",text:cl.rel}):null]),h("div",{},[h("small",{text:"Status"}),h("b",{text:m.status})])]),
+      rulesBox(m,cl),list,ld?spark(m.id*37,ld[1],ld[0],m.status==="Resolved"):null,tk].forEach(function(n){if(n)body.appendChild(n)});
     drawTicket();
     /* the same entrance whether the details were at hand or had to load; a load after a skeleton starts at once */
-    if(window.Motion){Motion.scan(p);var late=info&&info.shown;Motion.stagger(p.querySelectorAll((late?"":".pt-title, ")+".kv > div, .sel, .mcard.static, .spark-box, .ticket"),late?0:140,35);if(ld)Motion.draw(p.querySelector(".spark"),{delay:late?180:320})}}}
+    if(window.Motion){Motion.scan(p);var late=info&&info.shown;Motion.stagger(p.querySelectorAll((late?"":".pt-title, ")+".kv > div, .rules, .sel, .olist > .orow:not(.sel), .mcard.static, .spark-box, .ticket"),late?0:140,35);if(ld)Motion.draw(p.querySelector(".spark"),{delay:late?180:320})}}}
 
   /* ======================= create a market =======================
      A sheet with the real form, a live preview drawn by the explorer's own card, and the wallet pattern on its action:

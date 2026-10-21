@@ -57,6 +57,11 @@ td.mq{white-space:normal;min-width:240px;max-width:420px;font-size:var(--fs-ui)}
 .kv small{display:block;color:var(--muted);font-size:var(--fs-cap);margin-bottom:2px}
 .kv b{font-weight:500;font-size:var(--fs-ui);overflow-wrap:anywhere}
 .kv .rel{display:block;color:var(--muted);font-size:var(--fs-cap);margin-top:2px}
+.rules{padding:var(--s-4)}
+.rules > summary{cursor:pointer;display:flex;align-items:center;min-height:var(--tap);font-size:var(--fs-h3);font-weight:500;line-height:var(--lh-snug)}
+.rules[open] > summary{margin-bottom:var(--s-2)}
+.rules > .note{margin-top:var(--s-3)}
+.rules .rules-addr dd{display:flex;align-items:center;justify-content:flex-end;gap:var(--s-2)}
 .olist{display:grid;gap:var(--s-2)}
 .sel{cursor:pointer;border:2px solid transparent;width:100%;font:inherit;color:inherit;text-align:left}
 @media (hover:hover){.sel:hover{border-color:color-mix(in srgb,var(--violet) 45%,transparent)}}

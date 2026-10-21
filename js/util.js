@@ -11,6 +11,8 @@ window.U={
   if(v<999.5e3)return"$"+Math.round(v/1e3)+"K";
   var m=v/1e6;if(m.toFixed(1)>=1e3)m=m/1e3;else return"$"+m.toFixed(1).replace(/\.0$/,"")+"M";
   return"$"+m.toFixed(1).replace(/\.0$/,"")+"B"},
+ /* A demo address for a market: 0x and 40 lowercase hex characters worked out from its id, so the same id always gives the same address. Nothing about it is on a chain. */
+ addr:function(id){var a=(Number(id)||0)+0x9e3779b9>>>0,s="",i;for(i=0;i<5;i++){a=a+0x6d2b79f5>>>0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;s+=(((t^t>>>14)>>>0)).toString(16).padStart(8,"0")}return"0x"+s.slice(0,40)},
  /* shares: two decimals below 10 so a small trade does not read 0.0, one decimal from 10 */
  shares:function(v){v=Number(v);return U.num(v,v<10?2:1)},
  /* a plain number to a fixed count of decimals (min decimals optional), grouped, with the same minus sign */
