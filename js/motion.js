@@ -271,7 +271,7 @@ M.patch=function(target,next,o){o=o||{};
     var tcache=new Map(),cc=new Map(),pcache=new Map();/* per table: wrapper class + column widths, read once from the header row; per scroll box: its clip; per list: its box and whether rows can exit in place */
     each(target.querySelectorAll(sel),function(el){if(job.first.has(el))return;var r=el.getBoundingClientRect(),c=clipOf(el,cc);if(!visIn(r,c))return;
       var par=el.parentNode,pi=pcache.get(par);if(!pi){var ps=getComputedStyle(par);pi={r:par.getBoundingClientRect(),ip:ps.position!=="static"&&ps.display!=="table-row-group"};pcache.set(par,pi)}
-      var f={r:r,c:c,par:par,pr:pi.r,ip:pi.ip};
+      var f={r:r,c:c,par:par,pr:pi.r,ip:pi.ip,pc:par.getAttribute&&par.getAttribute("class")||""};
       if(el.tagName==="TR"){var tb=el.closest("table"),tc=tcache.get(tb);
         if(!tc){var w=el.closest(".tbl,.tbl-wrap"),hr=tb.querySelector("thead tr");tc={wc:w?w.className:"",w:null};
           if(hr&&getComputedStyle(el).display==="table-row")tc.w=Array.prototype.map.call(hr.children,function(th){return th.getBoundingClientRect().width});tcache.set(tb,tc)}
@@ -282,7 +282,12 @@ M.patch=function(target,next,o){o=o||{};
      animate exactly as they do for a morph */
   /* drop(node, parent): take a node out (a list item on screen in a positioned list exits in place);
      back(node): a node still exiting is wanted again, so it returns to the flow where it is */
-  ctx.drop=function(n,p){var f=ctx.animate&&job&&job.first&&job.first.get(n);if(f&&f.ip&&n.nodeType===1){exitAt(n,f);return}
+  /* a container can be re-used for something else in the same pass (the grid becomes the table, the list becomes the empty state): its
+     class changes and it may stop being positioned, and a card fading "in place" would then be drawn at the corner of the page. So a
+     card fades in place only while its container is still the same kind of positioned list. */
+  var posOK=new Map();function stillList(p,f){if(!f||!p||p!==f.par)return false;var c=p.getAttribute&&p.getAttribute("class")||"";if(c!==f.pc)return false;
+    var v=posOK.get(p);if(v==null){v=getComputedStyle(p).position!=="static";posOK.set(p,v)}return v}
+  ctx.drop=function(n,p){var f=ctx.animate&&job&&job.first&&job.first.get(n);if(f&&f.ip&&n.nodeType===1&&stillList(p,f)){exitAt(n,f);return}
     /* removing a focused node fires its blur handler at once, and that handler can re-render and move the node: tolerate it */
     if(n.parentNode!==p)return;ctx.removed.push({n:n,p:p,next:n.nextSibling});try{p.removeChild(n)}catch(e){}};
   ctx.back=back;
