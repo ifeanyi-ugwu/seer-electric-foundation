@@ -1,38 +1,46 @@
-# Seer × Electric Foundation: design rationale
+# Design rationale: Seer in the Electric Foundation kit
 
-One token file (`css/tokens.css`) and one shell drive all six interfaces. Every colour and radius comes from the Electric Foundation (EF) Figma kit; spacing and type sizes come from one shared scale in the same file. Each product keeps the same shell and adds one idea of its own.
+One token file (`css/tokens.css`) and one shell drive all six interfaces. Every colour and radius comes from the Electric Foundation (EF) Figma kit. Spacing and type sizes come from one shared scale in the same file. Each product keeps the shell and adds one idea of its own.
+
+## Scope
+
+This is a visual and interaction concept for the contest brief. It does not cover every control of the live products, and no behaviour of the live products is assumed. Features outside the brief, such as bookmarking markets, watchlists and a portfolio view, are not included. With a specification for them, the same tokens, shell and components extend to cover them.
+
+All data is illustrative and labelled as such, once per page: the "Illustrative data" badge in each tool's page head and the footer note on the landing page. Nothing claims real users, funding or partners.
 
 ## Approach
 
-- **Protocol underneath, apps on top.** The homepage builds the logo's own idea into the page: a hard-edged violet base layer, with the five apps stacked on it in diagonal-cut columns taken from the kit's FADES artwork.
-- **One shell, five products.** Every app page shares the same header and product switcher. Switching products changes the content, not the interface.
-- **Each product shows the hard part of its brief**, not a generic market grid:
-  - **Seer app:** a general explorer for every market type (categorical, multi-categorical, scalar, multi-scalar, conditional), grid or table, with a trade ticket. Seer's Etherscan.
-  - **Futarchy:** a pass-versus-fail forecast of the success metric. "The market's forecast" and "The DAO's decision" are separate panels, and the copy says the vote decides.
-  - **Deep:** 100 outcomes as a dot field plus a sortable table with agent versus human volume per outcome.
-  - **Opportunity Markets:** market signal beside the reviewers' decision, with rows where they differ flagged.
-  - **Risk Pricing:** a protocol-by-horizon comparison heatmap and a side-by-side chart, in place of a single yes/no price. Protocols are anonymised.
-- All data is illustrative and labelled as such, once per page: the "Illustrative data" badge in each tool's page head, and the footer note on the landing page. Nothing claims real users, funding or partners.
+The landing page applies the logo's shape to the page: a hard-edged violet base layer with the five apps stacked on it in diagonal-cut columns taken from the kit's FADES artwork.
+
+Every app page shares one header and product switcher. Switching products changes the content and leaves the interface in place.
+
+Each product shows the part of its brief that a generic market grid would hide:
+
+- Seer app: an explorer for every market type (categorical, multi-categorical, scalar, multi-scalar, conditional), in a grid or a table, with a trade ticket.
+- Futarchy: a pass-versus-fail forecast of the success metric. "The market's forecast" and "The DAO's decision" are separate panels, and the copy states that the vote decides.
+- Deep: 100 outcomes as a dot field beside a sortable table with agent and human volume per outcome.
+- Opportunity Markets: market signal beside the reviewers' decision, with the rows where they differ flagged.
+- Risk Pricing: a protocol-by-horizon heatmap and a side-by-side chart, where a single yes/no price would have stood. Protocols are anonymised.
 
 ## One thing, once
 
-Nothing on a page does the same job twice unless the second adds something. A percentage next to its bar is fine (form and exact value); two theme toggles, one figure printed in four places, or a column of "Consistent" are not.
+A page does not do the same job twice unless the second adds something. A percentage next to its bar adds the exact value to the form. Two theme toggles, one figure printed in four places and a column of "Consistent" add nothing.
 
-- **One theme toggle per page**, in the header. It reports its state (`aria-pressed`) and is correct after toggling and after a reload.
-- **One wallet control per page**, in the header. Until a wallet is connected, trade tickets end in a "Place trade" button that reads as unavailable, with one hint line that holds an inline "Connect wallet" text button. Once connected, the same button runs review, signing and result inside the ticket. "Demo only" is stated once, in the connect sheet.
-- **Each figure has one home.** Futarchy: pass and fail values live in the fork, the change under pass in the fork and in the proposal list (the list is how you compare proposals), the reading in the notice, the branch price in the ticket. The chart legend carries line style only. Explorer: the market count lives in the results line, not in a tile or the "All types" chip.
-- **Exceptions, not non-events.** Opportunity shows a "Differs from the market" flag inside the decision cell only where reviewers and market disagree; the "Signal vs decision" column that printed "Consistent" on most rows is gone. The KPI tile keeps the count, and the filter shows just those rows.
-- **Page-level actions sit with the page.** "Create market" moved from the header into the explorer's page head; the header holds the global actions (wallet, theme).
+- Each page has one theme toggle, in the header. It reports its state with `aria-pressed` and shows the right state after toggling and after a reload.
+- Each page has one wallet control, in the header. Until a wallet is connected, trade tickets end in a "Place trade" button that reads as unavailable, with one hint line holding an inline "Connect wallet" text button. Once connected, the same button runs review, signing and result inside the ticket. "Demo only" appears once, in the connect sheet.
+- Each figure has one home. In Futarchy, pass and fail values live in the fork. The change under pass lives in the fork and in the proposal list, which is how proposals are compared. The reading lives in the notice and the branch price in the ticket. The chart legend carries line style only. In the explorer, the market count lives in the results line, not in a tile or the "All types" chip.
+- Opportunity shows a "Differs from the market" flag inside the decision cell only where reviewers and market disagree. The "Signal vs decision" column that printed "Consistent" on most rows is removed. The KPI tile keeps the count and the filter shows those rows.
+- Page-level actions sit with the page. "Create market" is in the explorer's page head, and the header holds the global actions: wallet and theme.
 
 ## Layout: three ranges
 
 | Range | Layout |
 |---|---|
-| Phone, up to 600px (checked from 280px folded covers) | Single column. Tables become cut-corner cards. Detail opens in a bottom sheet. Controls are 44px; small chips and segment buttons keep a 44px hit area. Product nav sits on its own row. |
-| Tablet and unfolded foldables, 601 to 1100px | Explorer, Deep and Opportunity rows become cards in two columns; the Risk heatmap stays a table (reading down a column is the comparison), compacted to fit. Futarchy's proposal column becomes a row of cards above the detail. Detail opens in a side sheet. Category tabs become a select. The header is one row from 801px and two rows below. |
-| Desktop, 1101px and up | Full tables, side columns, inline detail. Content measure is 1440px with 40px gutters; prose holds to about 68 characters. |
+| Phone, up to 600px (checked from 280px folded covers) | Single column. Tables become cut-corner cards. Detail opens in a bottom sheet. Controls are 44px, and small chips and segment buttons keep a 44px hit area. Product nav sits on its own row. |
+| Tablet and unfolded foldables, 601 to 1100px | Explorer, Deep and Opportunity rows become cards in two columns. The Risk heatmap stays a table, compacted to fit, because reading down a column is the comparison. Futarchy's proposal column becomes a row of cards above the detail. Detail opens in a side sheet. Category tabs become a select. The header is one row from 801px and two rows below. |
+| Desktop, 1101px and up | Full tables, side columns, inline detail. Content measure is 1440px with 40px gutters, and prose holds to about 68 characters. |
 
-No table or toolbar scrolls sideways at any width. The header stays pinned at every width from 280px, portrait and landscape, on all nine pages; on two-row widths its second row tucks away while scrolling down, so a landscape phone or a 280px cover screen keeps a 52 to 60px bar. Gutters, the header and sheets respect safe-area insets.
+No table or toolbar scrolls sideways at any width. The header stays pinned at every width from 280px, in portrait and landscape, on all nine pages. On two-row widths its second row tucks away while scrolling down, which keeps the bar at 52 to 60px on a landscape phone or a 280px cover screen. Gutters, the header and sheets respect safe-area insets.
 
 ## Departures from the EF kit
 
@@ -59,7 +67,7 @@ No table or toolbar scrolls sideways at any width. The header stays pinned at ev
 | Dots pop by growing their radius in one JS loop, not one CSS animation per dot | A replay would otherwise cost about 110ms of style work at 4x CPU. |
 | A single "Next market" chip marks the back card and is retired after the first swap | One affordance, no repeated instructions. |
 | Light hero card meta text is `#44444E` | Keeps 4.5:1 under the dim layer. |
-| Theme change: light leads. Going to light, light radiates out of the toggle; going to dark, the light is withdrawn into the toggle and the dark is what is left behind | Darkness is the absence of light, so the dark is never shone into the page. The toggle reads as where the light lives. A one-line switch (`LIGHT_LEADS` in `js/motion.js`) restores the old direction. Browsers without view transitions get a short cross-fade, and reduced motion is instant. |
+| Theme change: light leads. Going to light, light radiates out of the toggle; going to dark, the light is withdrawn into the toggle and the dark is what is left behind | Going to dark withdraws the light, so no dark is shone into the page. The toggle reads as where the light lives. A one-line switch (`LIGHT_LEADS` in `js/motion.js`) restores the old direction. Browsers without view transitions get a short cross-fade, and reduced motion is instant. |
 | The emerging hero card keeps its shadow off until it has cleared the front card | The shadow would otherwise leak around the front card in light mode. |
 | Detail sheets pin their top bar (handle, badge, title, Close) while the body scrolls; a hairline and shadow fade in on scroll, and after 24px it condenses by transform only | Close and the title stay reachable, and nothing below the bar moves. |
 | On phones the sheet's violet tick is centred and serves as the grab handle; a drag from the bar always moves the sheet, and a drag in the body moves it only when pulling down from the top | Dragging never fights scrolling the sheet body. |
@@ -88,7 +96,7 @@ No table or toolbar scrolls sideways at any width. The header stays pinned at ev
 | Active nav link is a soft violet fill with a 2px violet underline | Matches the landing's hard-edged violet base, and the text keeps body-text contrast. |
 | Up to 1100px, Explorer, Deep and Opportunity tables reflow into cut-corner cards from the same table markup (two columns on tablets), with explicit ARIA table roles and per-cell labels; Risk does so on phones only | No table scrolls sideways at any width. The scroll-shadow affordance is no longer needed and was removed. |
 | Wherever the column headers are hidden, column sorting moves to a "Sort by" select; category tabs become a select up to 1100px | Nothing may scroll sideways, and every sort stays reachable. |
-| Deep's table scrolls with the page on desktop, with sticky column headers, instead of inside a fixed-height box | One scroll, not two. |
+| Deep's table scrolls with the page on desktop, with sticky column headers, instead of inside a fixed-height box | The page has one scroll. |
 | Detail opens in a sheet on tablets and phones (side sheet, then bottom sheet) for the Explorer, Deep and Opportunity | A side column below a long list was off screen when a row was chosen. |
 | Risk compare chart uses short horizon labels (30d, 90d, 180d, 12m) on narrow screens | Keeps 11 to 12px text at 360px. |
 | A small decorative glyph per product (fork, dot field, signal bars, graded bars, slab columns) | Gives each product its own mark. Hidden from screen readers. |
@@ -99,7 +107,7 @@ No table or toolbar scrolls sideways at any width. The header stays pinned at ev
 | Trades and market creation run review, signature (with Reject), rejected (Try again) and result inside the same ticket or sheet, with the ticket's height held while the flow runs | Nothing jumps to a new surface and a short step never makes a sheet shrink. Steps slide in along x on the settle spring; success draws a tick in a cut-corner violet tile, failure an outlined tile with a cross; no confetti. Focus moves to each step's heading or primary control, and connecting, signing, success and errors are announced. |
 | Amount errors are live for "more than your balance" and on submit for an empty amount, wired with aria-invalid and aria-describedby | The constraint is known as you type; an empty field is not scolded before you try. |
 | "Create market" opens a wider sheet with the form beside a live preview drawn by the explorer's own card (one column on phones); fields follow the market type; an error summary takes focus on submit and links to each field | The preview is the real card, so what you make is what the explorer shows. Disconnected, the action reads "Connect wallet to create" and the form keeps its values while you connect. |
-| A created market joins the explorer data, leads the grid and table with a "New" badge in every sort, enters with the list's own motion and a fading violet ring, and is counted by tiles, chips, tabs and filters; it can be opened and traded | It flows through the same render paths as every other market and is kept for the session. Leading in every sort is a deliberate exception so a new market is never lost in the list. |
+| A created market joins the explorer data, leads the grid and table with a "New" badge in every sort, enters with the list's own motion and a fading violet ring, and is counted by tiles, chips, tabs and filters; it can be opened and traded | It flows through the same render paths as every other market and is kept for the session. Leading in every sort is an exception, so a new market stays visible. |
 | The index page has no wallet control | The landing page is outside the tool shell; its "Launch App" leads to the explorer, where the wallet lives. |
 | The page header is pinned on all nine pages at every size, fixed to the viewport over a spacer of the same height (reserved in CSS, safe-area inset included, kept exact by JS) | A sticky header scrolled away wherever an ancestor or a breakpoint got in the way (280px, landscape, the system pages), and a sticky bar inside the scroll-padding band made the browser scroll the page when one of its controls took focus. Fixed over a spacer has neither problem and causes no layout shift. |
 | Page headers condense like the sheet bar: hairline and shadow fade in as soon as the page moves; past 24px (back below 12px) the ground rises by a measured amount, the content by up to 10px and the logo settles to .85, all transforms on the settle spring | One header language on the landing, the five tools and the system pages, and the same one as the sheets. The layout box never changes, so nothing below moves. |
@@ -108,17 +116,53 @@ No table or toolbar scrolls sideways at any width. The header stays pinned at ev
 
 ## Motion
 
-Motion is part of the interface, not a layer on top of it: everything that appears, changes, is touched or leaves has one considered behaviour, and the same behaviour on all six pages. The language is confident and precise, mechanical meeting organic: slabs slide along their cut angle, violet blocks wipe in along the 45-degree diagonal, indicators snap with a crisp spring, cards and sheets settle without bounce.
+Every element that appears, changes, is touched or leaves has one behaviour, and that behaviour is the same on all six pages. Slabs slide along their cut angle, violet blocks wipe in along the 45-degree diagonal, indicators snap with a crisp spring, and cards and sheets settle without bounce.
 
-- **Physics.** `js/spring.js` is a small spring engine (closed-form damped spring, one requestAnimationFrame loop, paused in hidden tabs). Five presets: `press` (k 1400, c 62, 1% overshoot, 260ms) for press and release; `snappy` (k 900, c 46, 2.4% overshoot, 310ms) for toggles, indicators and the theme icon; `settle` (k 520, c 42, no visible overshoot, 330ms) for hover lift, tilt and list moves; `gentle` (k 260, critically damped, 580ms) for entrances, sheets and the header; `glide` (k 150, critically damped, 760ms) for count-ups and anchor scrolling. Every spring is interruptible: a new target keeps the current position and velocity, so a tap during a release, a re-sort mid-glide or a sheet closed while opening continues the motion instead of restarting it. The same curves are exported as CSS `linear()` tokens in `css/motion.css` for the cases CSS handles alone.
-- **Tokens.** Durations 120, 200, 320, 520, 900ms; stagger 40ms, at most 8 steps; distances 8, 12, 16px; lift 2 to 3px; tilt 4deg. Entrances decelerate and finish within about 750ms per surface (the landing hero is the one longer sequence); exits accelerate and take 60 to 70% of the time.
-- **Entrance and exit.** Page heads: slabs slide in along their cut, kicker, title, lede and action rise in turn, the tag and primary button wipe in diagonally. Tiles, controls, cards, rows and chart parts reveal once as they enter the viewport, with figures counting up on a decelerating curve, bars growing and lines drawing. Items that leave after a filter fade out in place as ghosts; sorted rows glide on springs, and a row that jumped far gets a brief violet wash. Sheets spring in (side on tablet and desktop, bottom on phones) while the page behind recedes to 98.5%, and leave faster than they came.
-- **Hover, press, focus.** Press is a spring on scale with a hair of overshoot on release, on pointer down (so touch is immediate) and on keyboard activation. Hover lift, card tilt toward the pointer, a restrained specular highlight and inner parallax of the icon and badge exist only for fine pointers; nothing hovers on touch. Row hover sweeps in from the edge the pointer entered. Segmented indicators travel on two springs, the leading edge stiffer, so the pill stretches and squashes. Links draw their underline in from the left and out to the right. The focus ring grows out from the control, and a follower ring glides from the previously focused control to the next.
-- **Data.** Numbers count on a critically damped curve and keep their own format; changed values get a soft violet wash; charts interpolate between states, endpoints pop and pulse once when they settle; the Futarchy chart has a pointer readout that follows with damping.
-- **Ambient.** Very slow, small and phase-offset: the hero slabs breathe (14s), the dot matrix shimmers (7s), the hero cards tilt idly (13s), the LIVE marker pulses (2.4s). All of it pauses offscreen and in hidden tabs, and none of it exists under reduced motion.
-- **Scroll.** Three depth layers on the landing (slabs, cards, copy), the back card fans away, the app columns settle onto the protocol base, driven by scroll timelines where supported with a JS fallback. The progress line follows the scroll with a little inertia. In-page anchors glide on a spring and hand control back on the first wheel, touch or key.
-- **Discipline.** Only transform, opacity, clip-path and mask animate, with four documented exceptions (colour cross-fades, the indicator's width, the row sweep, value washes). `will-change` is added while a spring runs and removed after. At most 60 rows glide at once, the ones staying on screen first. Re-renders morph the existing DOM, and motion state (classes and inline variables prefixed `m-`) survives the morph. Page changes use cross-document view transitions with only `<main>` moving; browsers without them get an explicit exit of `<main>` before the link is followed.
-- **Reduced motion and robustness.** Every state change is instant: no springs, no loops, no parallax, no transitions. Content is visible without JavaScript. No information is carried by motion alone; focus order and semantics do not change. Every page header reserves its height, so there is no layout shift, and it stays pinned (and condensed) under reduced motion, with the changes made instantly.
+### Physics
+
+`js/spring.js` is a spring engine: a closed-form damped spring on one `requestAnimationFrame` loop, paused in hidden tabs. It has five presets:
+
+| Preset | Constants | Overshoot and time | Used for |
+|---|---|---|---|
+| `press` | k 1400, c 62 | 1%, 260ms | press and release |
+| `snappy` | k 900, c 46 | 2.4%, 310ms | toggles, indicators, the theme icon |
+| `settle` | k 520, c 42 | none visible, 330ms | hover lift, tilt, list moves |
+| `gentle` | k 260, critically damped | 580ms | entrances, sheets, the header |
+| `glide` | k 150, critically damped | 760ms | count-ups, anchor scrolling |
+
+Every spring is interruptible. A new target keeps the current position and velocity, so a tap during a release, a re-sort mid-glide or a sheet closed while opening continues the motion and does not restart it. The same curves are exported as CSS `linear()` tokens in `css/motion.css` where CSS handles the motion alone.
+
+### Tokens
+
+Durations are 120, 200, 320, 520 and 900ms. Stagger is 40ms, up to 8 steps. Distances are 8, 12 and 16px, lift is 2 to 3px and tilt is 4deg. Entrances decelerate and finish within about 750ms per surface, and the landing hero is the one longer sequence. Exits accelerate and take 60 to 70% of the entrance time.
+
+### Entrance and exit
+
+Page heads: slabs slide in along their cut, then the kicker, title, lede and action rise in turn, and the tag and primary button wipe in diagonally. Tiles, controls, cards, rows and chart parts reveal once as they enter the viewport. Figures count up on a decelerating curve, bars grow and lines draw. Items that leave after a filter fade out in place as ghosts. Sorted rows glide on springs, and a row that moved far gets a brief violet wash. Sheets spring in, from the side on tablet and desktop and from the bottom on phones, while the page behind recedes to 98.5%. They leave faster than they came.
+
+### Hover, press and focus
+
+Press is a spring on scale with a small overshoot on release. It starts on pointer down, so touch responds at once, and also runs on keyboard activation. Hover lift, card tilt toward the pointer, a specular highlight and inner parallax of the icon and badge exist for fine pointers only. Nothing hovers on touch. Row hover sweeps in from the edge the pointer entered. Segmented indicators travel on two springs with the leading edge stiffer, so the pill stretches and squashes. Links draw their underline in from the left and out to the right. The focus ring grows out from the control, and a follower ring glides from the previously focused control to the next.
+
+### Data
+
+Numbers count on a critically damped curve and keep their own format. Changed values get a soft violet wash. Charts interpolate between states, and endpoints pop and pulse once when they settle. The Futarchy chart has a pointer readout that follows with damping.
+
+### Ambient
+
+Ambient motion is slow, small and phase-offset: the hero slabs breathe over 14s, the dot matrix shimmers over 7s, the hero cards tilt over 13s and the LIVE marker pulses over 2.4s. All of it pauses offscreen and in hidden tabs, and none of it runs under reduced motion.
+
+### Scroll
+
+The landing page has three depth layers (slabs, cards, copy). The back card fans away and the app columns settle onto the protocol base. Scroll timelines drive these where supported, with a JS fallback. The progress line follows the scroll with a little inertia. In-page anchors glide on a spring and hand control back on the first wheel, touch or key.
+
+### Constraints
+
+Only transform, opacity, clip-path and mask animate, with four documented exceptions: colour cross-fades, the indicator's width, the row sweep and value washes. `will-change` is added while a spring runs and removed after. At most 60 rows glide at once, and the rows staying on screen go first. Re-renders morph the existing DOM, and motion state (classes and inline variables prefixed `m-`) survives the morph. Page changes use cross-document view transitions with only `<main>` moving. Browsers without them run an explicit exit of `<main>` before the link is followed.
+
+### Reduced motion and no JavaScript
+
+Under reduced motion every state change is instant: no springs, no loops, no parallax, no transitions. Content is visible without JavaScript. No information is carried by motion alone, and focus order and semantics do not change. Every page header reserves its height, so there is no layout shift, and it stays pinned and condensed under reduced motion with the changes made instantly.
 
 ## Known gaps
 
@@ -136,4 +180,4 @@ Motion is part of the interface, not a layer on top of it: everything that appea
 | One inline state for errors and empty results, in error.html's language: cut-corner block with the icon, kicker, title, one sentence, Try again (or the way back for not found), reference code with Copy | Page-level states are alerts and take focus; panel and sheet states are statuses and leave focus where it is. Empty ("No markets yet", "Create a market") is outlined, not filled, so it never reads as a failure, and is distinct from "No markets match these filters". |
 | Offline is a slim bar at the foot of the screen; regions that failed for the network retry by themselves when it comes back | The person does not have to find each failed panel. A cached load says "Showing saved data" and then "Updated just now" in a small note at the bottom left. |
 | Trades and market creation end in "Transaction failed" with the reason, Try again and Back, and wallet connect can time out, all in the existing step styles | Failures look like the rest of the flow; nothing is spent and the attempt is logged as Failed in the wallet's activity. |
-| A floating assistant ball (`js/assistant.js`): production role, a scripted chat ("Ask") with page-aware suggestions; demo role, the judges' controls ("Demo") | It is a third floating control, not a second theme or wallet control. It steps away while any sheet is open, carries a small "Demo" tag while an override is on, and its panel is the same pinned-header sheet as every other (popover above the ball from 601px, bottom sheet on phones). "Scripted preview" and the one line about the demo controls are each said once. |
+| A floating assistant ball (`js/assistant.js`): production role, a scripted chat ("Ask") with page-aware suggestions; demo role, the judges' controls ("Demo") | It adds no second theme or wallet control. It steps away while any sheet is open, carries a small "Demo" tag while an override is on, and its panel is the same pinned-header sheet as every other (popover above the ball from 601px, bottom sheet on phones). "Scripted preview" and the one line about the demo controls are each said once. |
