@@ -35,7 +35,7 @@
     if(rs.answer)a=rs.answer+(rs.reportedIn!=null?", reported "+dayIn(rs.reportedIn):"")+(rs.state==="disputed"&&rs.disputedIn!=null?". Challenged on "+dayIn(rs.disputedIn)+".":"");
     var d=h("details",{class:"panel-c rules","data-key":"rules",open:U.narrow.matches?null:""},[h("summary",{text:"Rules and resolution"}),
       h("dl",{class:"tx-sum"},[row("Resolves by",rs.state==="disputed"?(rs.source||"Reality.eth")+", now in Kleros arbitration":(rs.source||"Reality.eth")+", with Kleros arbitration if disputed","tx-q"),
-        row("Trading closes",cl?cl.full:"Not set"),row("Answer",a,"tx-q"),
+        row("Answer",a,"tx-q"),
         row("Market address",[h("span",{class:"num",text:W.short(addr)}),W.copyBtn(addr,"market address")],"rules-addr")]),
       h("p",{class:"note",text:rs.rules+" If the question cannot be answered, it resolves Invalid and holders are refunded pro rata."})]);return d}
   /* a scalar value with its unit: "$" leads, a word follows after a space, a symbol follows directly */
