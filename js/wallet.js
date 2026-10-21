@@ -67,7 +67,7 @@ function addPos(amount,m){if(m.mid==null||!(m.shares>0))return;var n={mid:m.mid,
 /* the positions in one market (or every position), while a wallet is connected */
 W.positions=function(mid,product){if(!S.on)return[];return S.pos.filter(function(p){return(mid==null||p.mid===mid)&&(!product||p.product===product)}).map(function(p){return Object.assign({},p)})};
 W.posKey=pkey;
-var PRODUCT={app:"Seer app",futarchy:"Futarchy",deep:"Deep",opportunity:"Opportunity Markets"};
+var PRODUCT={app:"Seer app",futarchy:"Futarchy",deep:"Deep",opportunity:"Opportunity Markets",risk:"Risk"};
 /* "21.05 Yes shares on No change": a side that is Yes, No, Long or Short is part of the noun; any other side (a branch, a decision) follows */
 /* held shares always show two decimals, so a position reads the same in the ticket, the wallet sheet and the redemption */
 function sh2(v){return U.num(v,2)}

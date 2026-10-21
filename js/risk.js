@@ -13,13 +13,46 @@ var pageSlot=slot(),typeSlot=slot(),pageState="ok";
 /* adding a fourth protocol drops the oldest: the live region says so and the note under the heatmap shows the same text for 3 seconds */
 var dropMsg="",dropT=0;
 function dropped(i){dropMsg=P[i][0]+" removed from the comparison.";clearTimeout(dropT);dropT=setTimeout(function(){dropMsg="";draw(false)},3000);if(DM)DM.announce(dropMsg)}
+/* A heatmap cell opens a sheet with its protocol, horizon and estimate, and a "Buy cover" ticket: Yes pays if the loss event happens, No pays if it does not.
+   The ticket runs review, signature and result in place (js/wallet.js). Price per share is the estimate for Yes and one minus it for No. */
+var W=window.SeerWallet,cell=null,side="Yes",amt=50,flow=W.flow({box:function(){return document.querySelector('[data-tx="risk"]')},onChange:function(){sheet()}});
+function tlabel(t){return TYPES.filter(function(x){return x[0]===t})[0][1]}
+function cname(c){return P[c.i][0]+", "+HZ[c.k]}
+function cmid(c){return(c.i+1)*100+TYPES.map(function(x){return x[0]}).indexOf(c.t)*10+c.k}
+function cpx(c){var e=val(c.t,c.i,c.k)/100;return Math.min(.99,Math.max(.01,side==="Yes"?e:1-e))}
+function focusPlace(){var b=document.querySelector('[data-tx="risk"] [data-tx-place]');if(b)b.focus()}
+function cplace(){var c=cell,p=cpx(c),a=amt,sh=a/p,sd=side,nm=P[c.i][0]+" \u00b7 "+tlabel(c.t)+" \u00b7 "+HZ[c.k];
+ flow.place(a,function(){return{amount:a,meta:{type:"Trade",market:nm,mid:cmid(c),product:"risk",outcome:null,side:sd,shares:sh,price:p,status:"Open"},
+  rows:[["Market",nm,"tx-q"],["Side",sd==="Yes"?"Yes (loss event happens)":"No"],["Amount",W.money(a)+" USDC","tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(sh)],["Max slippage","1%"],["Minimum shares",U.shares(sh*.99)],["Payout if correct","$"+U.num(sh,2)],["Network fee","Free in demo","tx-free"]],
+  done:"You bought "+U.shares(sh)+" "+sd+" shares on "+cname(c)+"."}},"amt")}
+function ticketKids(c){var p=cpx(c),k=[h("h2",{text:"Buy cover"})];
+ if(flow.step!=="form"){k.push(flow.view());return k}
+ var err=W.amountError(amt,flow.tried),pay=function(){return"$"+U.num(Math.max(0,amt)/p,2)};
+ k.push(h("div",{class:"seg",role:"group","aria-label":"Side"},["Yes","No"].map(function(x){return h("button",{type:"button","aria-pressed":String(side===x),text:x,onclick:function(){side=x;sheet()}})})));
+ k.push(h("p",{class:"note",text:side==="Yes"?"Yes pays $1.00 per share if the loss event happens within "+HZ[c.k]+".":"No pays $1.00 per share if it does not."}));
+ k.push(h("div",{class:"line"},[h("span",{text:"Price per share"}),h("b",{class:"num",text:"$"+p.toFixed(2)})]));
+ W.holdLines(cmid(c),"risk").forEach(function(n){k.push(n)});
+ k.push(h("div",{class:"field-grp"},[W.amountLabel("amt","Amount (USDC)"),
+  h("input",Object.assign({class:"field",id:"amt",type:"number",min:"1",value:String(amt),oninput:function(e){amt=+e.target.value||0;var o=document.getElementById("risk-out");if(window.Motion)Motion.num(o,pay());else o.textContent=pay();W.amountLive(e.target,amt,flow)}},W.amountAttrs("amt",err))),W.amountErr("amt",err)]));
+ k.push(h("div",{class:"line"},[h("span",{text:"Payout if correct"}),h("b",{class:"num",id:"risk-out",text:pay()})]));
+ k.push(W.placeBtn({onPlace:cplace}));var hn=W.hint({after:focusPlace});if(hn)k.push(hn);return k}
+function sheet(){var c=cell;
+ if(!c){U.sheet({open:false,onClose:closeCell});return}
+ U.sheet({open:true,label:cname(c)+", "+tlabel(c.t).toLowerCase(),badge:h("span",{class:"badge",text:tlabel(c.t)}),title:P[c.i][0],onClose:closeCell,
+  kids:[h("div",{class:"kpi"},[["Horizon",HZ[c.k]],["Market estimate",val(c.t,c.i,c.k).toFixed(1)+"%"]].map(function(x){return h("div",{},[h("small",{text:x[0]}),h("b",{class:"num",text:x[1]})])})),
+   h("div",{class:"panel-c ticket","data-tx":"risk",style:flow.style()},ticketKids(c))]})}
+function openCell(i,k,btn){flow.reset();cell={t:shown,i:i,k:k};side="Yes";amt=50;sheet()}
+function closeCell(){var c=cell;cell=null;flow.reset();sheet();if(c){var b=document.querySelector('.heat button[data-c="'+c.i+"-"+c.k+'"]');if(b)b.focus({preventScroll:true})}}
+/* a reload of the page's data takes the sheet away with the table it came from */
+function dropCell(){if(!cell)return;cell=null;flow.reset();U.sheet({open:false,onClose:closeCell,instant:true})}
+W.subscribe(function(){if(cell)sheet()});
 function val(t,i,z){return +(base[t][i]*[.22,.55,.8,1.15][z]*(1+((i*7+z*3)%5-2)*.04)).toFixed(1)}
 function draw(animate){if(pageState!=="ok")return;var target=document.getElementById("root"),root=h("div"),t=shown,all=[],tl=tst.state==="loading",ph=phone.matches,sec=h("section",{class:"stack","aria-label":"Risk by protocol and horizon"});P.forEach(function(_,i){HZ.forEach(function(_,z){all.push(val(t,i,z))})});var mx=Math.max.apply(null,all);
  sec.appendChild(h("div",{class:"head"},[h("div",{class:"seg",role:"group","aria-label":"Risk type"},TYPES.map(function(x){return h("button",{type:"button","aria-pressed":String(st.type===x[0]),onclick:function(){if(st.type===x[0])return;st.type=x[0];draw(false);loadType()}},[h("span",{class:"rlabel",text:x[1]}),h("span",{class:"rlabel-s",text:x[2]})])})),
   h("span",{class:"muted",text:"Market-estimated probability of a loss event within each horizon"})]));
  var rows=P.map(function(p,i){return i}).sort(function(a,b){return val(t,b,st.sort)-val(t,a,st.sort)});
  var head=h("tr",{},[h("th",{scope:"col",text:"Protocol"})].concat(HZ.map(function(z,k){return h("th",{scope:"col",class:"r","aria-sort":st.sort===k?"descending":"none"},[h("button",{type:"button",text:z+(st.sort===k?" ↓":""),onclick:function(){st.sort=k;draw()}})])}),[h("th",{scope:"col",class:"r",text:"Compare"})]));
- var body=h("tbody");rows.forEach(function(i){var on=st.sel.indexOf(i)>=0;body.appendChild(h("tr",{"data-key":"p"+i,class:on?"is-cmp":null},[h("td",{class:"c-p"},[h("b",{text:P[i][0]}),h("span",{class:"muted",text:P[i][1]})])].concat(HZ.map(function(z,k){var v=val(t,i,k);return h("td",{class:"r num h","data-label":HS[k],style:"background:color-mix(in srgb,var(--violet) "+Math.round(6+v/mx*44)+"%,transparent);--g:"+(v/mx).toFixed(2),text:v.toFixed(1)+"%"})}),[h("td",{class:"c-c"},[h("button",{class:on?"btn":"btn soft",type:"button","aria-pressed":String(on),"aria-label":(on?"Remove ":"Add ")+P[i][0]+(on?" from":" to")+" comparison",text:on?"Comparing":"Add",onclick:function(){var k=st.sel.indexOf(i);if(k>=0)st.sel.splice(k,1);else{if(st.sel.length>=3)dropped(st.sel.shift());st.sel.push(i)}draw()}})])])))});
+ var body=h("tbody");rows.forEach(function(i){var on=st.sel.indexOf(i)>=0;body.appendChild(h("tr",{"data-key":"p"+i,class:on?"is-cmp":null},[h("td",{class:"c-p"},[h("b",{text:P[i][0]}),h("span",{class:"muted",text:P[i][1]})])].concat(HZ.map(function(z,k){var v=val(t,i,k);return h("td",{class:"r num h","data-label":HS[k],style:"background:color-mix(in srgb,var(--violet) "+Math.round(6+v/mx*44)+"%,transparent);--g:"+(v/mx).toFixed(2)},[h("button",{class:"hc",type:"button","data-key":"c"+k,"data-c":i+"-"+k,"aria-label":P[i][0]+", "+HZ[k]+", "+v.toFixed(1)+"%: buy cover",text:v.toFixed(1)+"%",onclick:function(e){openCell(i,k,e.currentTarget)}})])}),[h("td",{class:"c-c"},[h("button",{class:on?"btn":"btn soft",type:"button","aria-pressed":String(on),"aria-label":(on?"Remove ":"Add ")+P[i][0]+(on?" from":" to")+" comparison",text:on?"Comparing":"Add",onclick:function(){var k=st.sel.indexOf(i);if(k>=0)st.sel.splice(k,1);else{if(st.sel.length>=3)dropped(st.sel.shift());st.sel.push(i)}draw()}})])])))});
  /* phones: the horizon headers are hidden with the card layout, so the same sort state gets a select.
     From 601px the heatmap stays a table: reading down a column is the comparison. */
  if(ph)sec.appendChild(h("div",{class:"sortbar narrow-only","data-key":"sortbar"},[h("label",{for:"risk-sort",text:"Sort by risk at"}),
@@ -70,7 +103,7 @@ function skPage(){var SK=DM.sk,B=DM.skBlock,ph=phone.matches,rows=[];
    h("div",{class:"notice",text:"These are market estimates, not guarantees or advice. A market price is one input to a risk decision."})])]}
 function load(o){o=o||{};typeSlot.cancel();
  pageSlot.run({key:"risk:matrix:"+st.type,producer:function(){return base[st.type]},scope:"page",force:o.force,initial:true,busy:pageEl,label:"Loading risk estimates",
-  show:function(){pageState="loading";rootEl.hidden=false;pageBox.hidden=true;DM.skel(rootEl,skPage())},
+  show:function(){dropCell();pageState="loading";rootEl.hidden=false;pageBox.hidden=true;DM.skel(rootEl,skPage())},
   apply:function(res,info){tst={state:"ok",err:null};shown=st.type;
    if(res.empty||!res.data||!res.data.length){pageState="empty";rootEl.hidden=true;pageBox.hidden=false;U.clear(rootEl);
     DM.renderEmpty(pageBox,{level:"page",title:"No risk markets yet",text:"No protocol has an open risk market right now. Estimates appear here as soon as one opens.",
@@ -78,7 +111,7 @@ function load(o){o=o||{};typeSlot.cancel();
    pageState="ok";rootEl.hidden=false;pageBox.hidden=true;U.clear(pageBox);
    if(info.shown)DM.crossOut(rootEl);else if(o.replay)U.clear(rootEl);
    draw();reveal();if(o.retried&&!modal())DM.focusFirst(rootEl)},
-  fail:function(e){pageState="error";rootEl.hidden=true;pageBox.hidden=false;U.clear(rootEl);
+  fail:function(e){dropCell();pageState="error";rootEl.hidden=true;pageBox.hidden=false;U.clear(rootEl);
    DM.renderError(pageBox,e,{level:"page",subject:"the risk estimates",retry:function(){DM.holdFocus(pageEl);load({retried:true})},back:{text:"Back to home",href:"index.html"},focus:!modal()});
    if(e.kind==="network")DM.onOnline(function(){if(pageState==="error")load()})}})}
 phone.addEventListener("change",function(){draw(false)});
