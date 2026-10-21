@@ -646,6 +646,8 @@ function anchors(){doc.addEventListener("click",function(e){var a=e.target.close
 
 /* ---------- leaving for another page without cross-document View Transitions: <main> exits first ---------- */
 function leave(){if("CSSViewTransitionRule" in window)return;
+  /* Back/forward restores the page from the browser cache with the exit still applied; undo it */
+  window.addEventListener("pageshow",function(){var m=doc.querySelector("main");if(m)m.classList.remove("m-leave")});
   doc.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a[href]");if(!a||reduced()||e.defaultPrevented||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||e.button)return;
     var u=a.getAttribute("href");if(!u||u[0]==="#"||a.target||/^(https?:|mailto:|javascript:)/i.test(u)||!/\.html(\?|#|$)/.test(u))return;var m=doc.querySelector("main");if(!m)return;
     e.preventDefault();m.classList.add("m-leave");setTimeout(function(){location.href=a.href},D.s)})}
