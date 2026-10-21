@@ -91,8 +91,8 @@ p{text-wrap:pretty}
 .hc-veil{position:absolute;inset:-1px;border-radius:inherit;background:var(--hc-dimc);opacity:0;pointer-events:none;z-index:1}
 .is-back > .hc-veil{opacity:.26}
 .hc-body{height:100%;display:grid;grid-template-rows:auto auto 1fr auto auto auto;padding:18px 20px 16px;border-radius:inherit}
-.hc-ink .hc-body{background:var(--ink);color:var(--ink-text);box-shadow:0 0 0 1px rgba(237,237,242,.14),0 30px 60px -20px rgba(0,0,0,.6)}
-.hc-paper .hc-body{background:var(--paper);color:var(--paper-text);box-shadow:0 30px 60px -24px rgba(12,10,22,.45)}
+.hc-ink .hc-body{background:var(--ink);color:var(--ink-text);box-shadow:0 0 0 1px rgba(237,237,242,calc(.14 * var(--hc-sh,1))),0 30px 60px -20px rgba(0,0,0,calc(.6 * var(--hc-sh,1)))}
+.hc-paper .hc-body{background:var(--paper);color:var(--paper-text);box-shadow:0 30px 60px -24px rgba(12,10,22,calc(.45 * var(--hc-sh,1)))}
 .dots{display:block;width:100%;height:auto}
 .dots .on circle{fill:var(--dot)}
 .dots .off circle{fill:var(--dot-off)}

@@ -94,6 +94,12 @@
     put(c, 'o', clamp(p.o.x).toFixed(3), function (v) { st.opacity = v === '1.000' ? '' : v; });
     put(c, 'd', clamp(p.d.x).toFixed(3), function (v) { c.veil.style.opacity = v; });
     put(c, 'b', clamp(p.b.x).toFixed(3), function (v) { st.setProperty('--hc-b', v); });
+    if (c.emerge) {
+      /* the shadow stays off until the card has cleared the front one, so it never leaks out around it */
+      var span = G.back.x - G.front.x, pr = span ? (p.x.x - G.front.x) / span : 1;
+      put(c, 'h', clamp((pr - 0.5) / 0.4).toFixed(3), function (v) { st.setProperty('--hc-sh', v); });
+      if (pr >= 0.995) { c.emerge = false; st.removeProperty('--hc-sh'); delete c.out.h; }
+    }
   }
   /* move a card toward a role; from (optional) sets where it starts, jump lands it there at once */
   function target(c, role, o) {
@@ -266,6 +272,7 @@
       play(f, 120, 200, CLIMB);
       emergeT = setTimeout(function () {
         target(b, 'back', { from: { x: g.x, y: g.y, s: 0.94, d: 1, o: 1, b: 0 } });
+        b.emerge = true; b.el.style.setProperty('--hc-sh', '0'); b.out.h = '0.000';
         play(b, 120, 350, CLIMB);
         roles(true);
         if (chip) { chip.classList.add('hc-off'); chipT = setTimeout(function () { if (chip) chip.classList.remove('hc-off'); }, 700); }

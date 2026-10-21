@@ -400,6 +400,9 @@ main{view-transition-name:m-main}
 /* theme swap uses a same-document transition: one circular reveal of the whole page */
 html.m-vt-theme::view-transition-old(root),html.m-vt-theme::view-transition-new(root){animation:none;mix-blend-mode:normal}
 html.m-vt-theme main{view-transition-name:none}
+/* dark to light: the old (dark) view sits on top and shrinks into the toggle */
+html.m-vt-theme.m-vt-back::view-transition-old(root){z-index:2}
+html.m-vt-theme.m-vt-back::view-transition-new(root){z-index:1}
 
 /* ---------- pause: ambient loops stop offscreen (.m-off set by an IntersectionObserver) and in hidden tabs ---------- */
 .m-off .dots .on,.m-off.dots .on,.m-off .slabs,.m-off .hero-cards,.m-off .mbar i,.m-off .status-live::before,.m-off.status-live::before,

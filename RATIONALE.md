@@ -59,6 +59,8 @@ No table or toolbar scrolls sideways at any width. Short landscape phones get a 
 | Dots pop by growing their radius in one JS loop, not one CSS animation per dot | A replay would otherwise cost about 110ms of style work at 4x CPU. |
 | A single "Next market" chip marks the back card and is retired after the first swap | One affordance, no repeated instructions. |
 | Light hero card meta text is `#44444E` | Keeps 4.5:1 under the dim layer. |
+| Theme change: going to dark, the new theme spreads out of the toggle; going to light, the dark is pulled back into the toggle | The toggle reads as where the dark layer lives, so the two directions feel like one object. Browsers without view transitions get a short cross-fade, and reduced motion is instant. |
+| The emerging hero card keeps its shadow off until it has cleared the front card | The shadow would otherwise leak around the front card in light mode. |
 | FADES slabs reused at low opacity as a page-head band on the app pages, drawn inline and theme-aware | An image can't follow the theme or sit cleanly behind title text. It ties the tools to the landing hero. |
 | Page-head ground is the kit's hero ink (`#0C0A16`) blended with the page, or light lavender in light mode | Calmer than the landing, but visibly the same family. |
 | Cut-corner KPI tiles and primary trade buttons | Carries the slab and base-block shape into the tools without touching the data. |
