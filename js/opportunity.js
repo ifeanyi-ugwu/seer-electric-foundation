@@ -75,7 +75,7 @@ function draw(){if(pageState!=="ok")return;U.tipClose();var tipped=false,target=
  U.patch(target,root,{flip:"tbody tr"});
  U.sheet({open:!!(st.sel&&narrow),label:st.sel?st.sel.n:"",title:st.sel?st.sel.n:"",kids:st.sel&&narrow?[h("div",{class:"panel-c ticket","data-tx":"opp",style:flow.style(),"aria-busy":det.id===st.sel.id&&det.state==="loading"?"true":null},sideKids(st.sel,true))]:[],onClose:close,instant:!narrow})}
 /* the round's two dates, counted from today as on the explorer */
-function meta(){return h("p",{class:"muted",text:"Round closes "+U.dayIn(40)+" \u00b7 Reviewers decide by "+U.dayIn(47)})}
+function meta(){return h("p",{class:"muted"},["Round closes "+U.dayIn(40)+" \u00b7 Reviewers decide by "+U.dayIn(47)+" \u00b7 ",h("a",{class:"wl-link",href:"app.html?m=20",text:"Open in the Seer app"})])}
 function loadSel(s){det={id:s.id,state:"ok",err:null};
  selSlot.run({key:"opp:submission:"+s.id,cacheLabel:"Submission: "+s.n,producer:function(){return s},scope:"details",initial:true,label:"Loading submission",
   show:function(){det={id:s.id,state:"loading",err:null};draw()},

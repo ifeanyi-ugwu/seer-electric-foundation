@@ -53,7 +53,8 @@
 .cond small{display:block;color:var(--muted);font-size:var(--fs-cap);margin-bottom:var(--s-1)}
 .cond b{font-size:var(--fs-h3);font-weight:500}
 .more{color:var(--muted);font-size:var(--fs-cap)}
-.foot{margin-top:auto;display:flex;justify-content:space-between;align-items:center;gap:var(--s-2);padding-top:var(--s-2)}
+.foot{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:var(--s-1) var(--s-2);padding-top:var(--s-2)}
+.foot > :last-child{margin-left:auto}
 .status-live{color:var(--neg)}
 
 /* table view (desktop): fits without scrolling from 1101px */
@@ -112,12 +113,14 @@ td.mq{white-space:normal;min-width:240px;max-width:420px;font-size:var(--fs-ui)}
 
 /* ================================ TABLET (601 to 1100px) ================================ */
 @media (max-width:1100px){
-  /* the 14 category tabs become a select; the toolbar is search over one row of four equal controls */
+  /* the 14 category tabs become a select; the toolbar is search over three selects, then sort and view */
   .tabs{display:none}
   .cat-m{display:block}
   .sel-wrap:has(> .cat-m){display:inline-grid}
-  .toolbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+  .toolbar{display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}
   .toolbar .search{grid-column:1/-1}
+  .toolbar .sel-wrap{grid-column:span 2}
+  .toolbar .sel-wrap:has(> #sort),.toolbar .seg{grid-column:span 3}
   .toolbar select.field,.toolbar .sel-wrap{width:100%}
   .toolbar .seg button{flex:1}
   /* table view: one card per market, two columns where they fit (shared card rules in shell.css) */
@@ -135,8 +138,10 @@ td.mq{white-space:normal;min-width:240px;max-width:420px;font-size:var(--fs-ui)}
 
 /* ================================== PHONE (up to 600px) ================================== */
 @media (max-width:600px){
-  /* search, then two rows of two: category and status, sort and view */
+  /* search, then category and status, app and sort, and the view on its own row */
   .toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .toolbar .sel-wrap,.toolbar .sel-wrap:has(> #sort){grid-column:auto}
+  .toolbar .seg{grid-column:1/-1}
   .mcard{min-height:0}
 }
 
@@ -187,4 +192,3 @@ td.mq .badge.new{margin-right:var(--s-1);vertical-align:1px}
 @container (max-width:340px){.cm-grid{grid-template-columns:minmax(0,1fr)}}
 @media (forced-colors:active){.badge.new{border:1px solid CanvasText}.cm-sum{border:1px solid CanvasText}}
 .cm .check{display:inline-flex;gap:var(--s-2);align-items:center;min-height:var(--tap);color:var(--text-2);cursor:pointer}
-.cm-card .foot{flex-wrap:wrap}

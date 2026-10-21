@@ -55,9 +55,11 @@ function readout(d,inSheet){var S=DM&&DM.sk,L=["Forecast score","90% range","Age
 function close(){var d=st.sel;st.sel=null;selSlot.cancel();flow.reset();render();if(!d)return;var r=rowEls.get(d.id),o=dotEls[d.id-1],ok=function(n){return n&&n.isConnected&&!n.__out},t=src==="dot"?[o,r]:[r,o];(ok(t[0])?t[0]:ok(t[1])?t[1]:o).focus({preventScroll:true})}
 /* desktop: the readout sits beside the field. Tablet and phone: it opens in a sheet, and this panel keeps the hint. */
 function side(narrow){var inline=st.sel&&!narrow;return h("div",{class:"stack"},[h("div",{class:"kpi top"},[h("div",{},[h("small",{text:"Agent volume"}),h("b",{class:"num",text:U.money(TOT.av)})]),h("div",{},[h("small",{text:"Human volume"}),h("b",{class:"num",text:U.money(TOT.hv)})]),h("div",{},[h("small",{text:"Top forecast"}),h("b",{class:"num",text:BEST.toFixed(1)+" / 10"})])]),
-  h("div",{class:"notice",text:"Evaluators still score every proposal. The market forecasts their scores; it does not choose winners."}),
+  notice(),
   inline?h("div",{class:"panel-c"},[h("div",{class:"line"},[h("h2",{text:"#"+st.sel.id+" "+st.sel.name}),h("button",{class:"btn soft",type:"button",text:"Clear",onclick:close})]),readout(st.sel)].concat(tradable(st.sel)?[ticketNode()]:[]))
    :h("div",{class:"panel-c"},[h("h2",{text:"Select a proposal"}),h("p",{class:"note",text:"Pick a dot in the field or a proposal below to see its forecast score, 90% range and who is trading it."})])])}
+/* the notice under the tiles, with the way into this round's market in the explorer (js/markets.js, id 19) */
+function notice(){return h("div",{class:"notice"},["Evaluators still score every proposal. The market forecasts their scores; it does not choose winners. ",h("a",{class:"wl-link",href:"app.html?m=19",text:"Open in the Seer app"})])}
 /* the round's one date: when the evaluators score (a day counted from today, as on the explorer) */
 function meta(){return h("p",{class:"muted"},["Evaluators score by "+U.dayIn(52)])}
 function head(l){return h("div",{class:"head"},[
@@ -187,7 +189,7 @@ function skPage(){var S=DM.sk,B=DM.skBlock,narrow=U.narrow.matches,rows=[];for(v
  var hr=h("tr",{},COLS.map(function(c){return h("th",{scope:"col",class:c[2]||"",text:c[1]})}));
  return[h("div",{class:"cols2"},[h("div",{class:"panel-c"},[h("h2",{text:"Grant round · 100 proposals"}),B("sk-box","aspect-ratio:1"),h("p",{class:"note",text:"Bigger, brighter dot = higher forecast score."})]),
    h("div",{class:"stack"},[h("div",{class:"kpi top"},["Agent volume","Human volume","Top forecast"].map(function(l){return h("div",{},[h("small",{text:l}),h("b",{class:"num"},[S("5ch")])])})),
-    h("div",{class:"notice",text:"Evaluators still score every proposal. The market forecasts their scores; it does not choose winners."}),
+    notice(),
     h("div",{class:"panel-c"},[h("h2",{text:"Select a proposal"}),h("p",{class:"note",text:"Pick a dot in the field or a proposal below to see its forecast score, 90% range and who is trading it."})])])]),
   h("section",{class:"stack list-sec"},[h("div",{class:"head"},[h("div",{class:"ctrls"},[B("sk-box","height:var(--ctl);width:240px;max-width:100%;border-radius:999px"),B("sk-box","height:var(--ctl);width:260px;max-width:100%;border-radius:999px")]),h("span",{class:"muted"},[S("14ch")])]),meta(),
    narrow?h("div",{class:"sortbar narrow-only"},[h("label",{text:"Sort by"}),B("sk-box","height:var(--ctl);flex:1 1 auto;max-width:320px;border-radius:999px"),B("sk-box","height:var(--ctl);width:120px;border-radius:var(--r-chip)")]):null,

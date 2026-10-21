@@ -8,6 +8,9 @@ var h=U.h,P=[
  /* decided: the vote has closed; result.actual is the metric as measured for the branch that happened */
  {id:12,t:"Add a second oracle provider",dao:"Example DAO",metric:"Token price in 90 days",unit:"$",dec:2,pass:1.24,fail:1.08,better:"higher",vote:{f:68,a:32},vol:154e3,result:{passed:true,actual:1.31}},
  {id:11,t:"Pay a one-off bonus to core contributors",dao:"Example DAO",metric:"Token price in 90 days",unit:"$",dec:2,pass:.84,fail:.97,better:"higher",vote:{f:36,a:64},vol:87e3,result:{passed:false,actual:.95}}];
+/* the explorer market of each active proposal (js/markets.js, ids 18, 22, 23 and 24; the figures are the same ones): the head links to it */
+var MKT={14:18,15:22,16:23,17:24};
+function mlink(p){return MKT[p.id]?h("a",{class:"wl-link",href:"app.html?m="+MKT[p.id],text:"Open in the Seer app"}):null}
 /* sel and range are what the person picked; view is what the detail shows (the last proposal and range that loaded) */
 var sel=P[0],range=60,view={p:P[0],range:60},branch="pass",amt=100,W=window.SeerWallet;
 /* ?p=<proposal id> picks the proposal on load and follows the choice (replaceState, so Back leaves the page). The first proposal is the default and is left out; an id that is not a proposal is ignored. */
@@ -94,7 +97,7 @@ function detail(animate){U.tipClose();var p=view.p,d=delta(p),root=document.getE
   U.patch(root,el,{animate:animate!==false});focusHead();return}
  /* Each figure has one home: pass/fail values in the fork, the change under pass in the fork and the list,
     the reading in the notice, the price of a branch in the ticket. */
- var head=h("div",{class:"dhead"},[h("span",{class:"badge",text:"Conditional market · Proposal #"+p.id}),h("h2",{text:p.t,tabindex:"-1"})]);
+ var head=h("div",{class:"dhead"},[h("span",{class:"badge",text:"Conditional market · Proposal #"+p.id}),mlink(p),h("h2",{text:p.t,tabindex:"-1"})]);
  var fork=U.svg("svg",{class:"fork-lines",viewBox:"0 0 200 40",preserveAspectRatio:"none","aria-hidden":"true"});
  fork.appendChild(U.svg("path",{d:"M100 0V12C100 24 50 22 50 40",stroke:"var(--pos)","vector-effect":"non-scaling-stroke"}));
  fork.appendChild(U.svg("path",{d:"M100 0V12C100 24 150 22 150 40",stroke:"var(--neg)","stroke-dasharray":"5 4","vector-effect":"non-scaling-stroke"}));
