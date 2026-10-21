@@ -30,21 +30,32 @@ U.trap=function(e,panel){if(e.key!=="Tab"||!panel)return;var f=[].filter.call(pa
 U.sheetTop=function(badge,title,onClose){var h=U.h;
  return h("div",{class:"panel-top"},[h("span",{class:"panel-grip","aria-hidden":"true"}),
   h("div",{class:"pt-in"+(badge?" has-k":"")},[badge||null,title!=null?h("h2",{class:"pt-title",text:title}):null,h("button",{class:"btn soft",type:"button",text:"Close",onclick:onClose})])])};
-/* U.sheet({open,label,badge,title,kids,onClose,instant}): one detail sheet per page, at body level (outside the query
-   containers, so position:fixed is relative to the viewport). Side sheet on tablets, bottom sheet on phones
-   (css/shell.css). It morphs in place like the page, so controls inside keep focus while values change.
-   Escape, the scrim and Close all call onClose; the page clears its selection and returns focus. */
-U.sheet=function(o){var root=document.getElementById("sheet-root"),h=U.h;
- if(!root){root=h("div",{id:"sheet-root"});document.body.appendChild(root)}
- if(U._esc){document.removeEventListener("keydown",U._esc);U._esc=null}
+/* U.sheet({open,label,badge,title,kids,onClose,instant,root,cls,focus}): one detail sheet per root, at body level
+   (outside the query containers, so position:fixed is relative to the viewport). Side sheet on tablets, bottom sheet
+   on phones (css/shell.css). It morphs in place like the page, so controls inside keep focus while values change.
+   Escape, the scrim and Close all call onClose; the page clears its selection and returns focus.
+   root (default "sheet-root") lets a second sheet stack above the first: the wallet sheet (js/wallet.js) uses
+   "wallet-root", so connecting from inside a ticket or a form leaves that sheet, and its values, where they were.
+   Only the top sheet answers Escape and keeps Tab inside it. cls adds a class to the panel (and cls+"-scrim" to its
+   scrim); focus is a selector for the control that takes focus when the sheet opens (Close by default). */
+U.sheet=function(o){var R=o.root||"sheet-root",root=document.getElementById(R),h=U.h;
+ if(!root){root=h("div",{id:R});document.body.appendChild(root)}
+ U._keys=U._keys||{};if(U._keys[R]){document.removeEventListener("keydown",U._keys[R]);U._keys[R]=null}
  var cur=root.querySelector(".panel");
  if(!o.open){if(!cur)return;
   if(window.Motion&&!o.instant&&!Motion.reduced()){/* exit plays in a detached layer so the root is free at once */
    var g=h("div",{"aria-hidden":"true"});g.inert=true;document.body.appendChild(g);while(root.firstChild)g.appendChild(root.firstChild);
-   Motion.exit([g.querySelector(".panel"),g.querySelector(".scrim")],function(){g.remove()})}else{U.clear(root);if(window.Motion&&Motion.sheetOff)Motion.sheetOff()}return}
- var f=h("div",{},[h("div",{class:"scrim","data-key":"scrim",onclick:o.onClose}),
-  h("div",{class:"panel sheet",role:"dialog","aria-modal":"true","aria-label":o.label,"data-key":"sheet"},
+   Motion.exit([g.querySelector(".panel"),g.querySelector(".scrim")],function(){g.remove()})}else{U.clear(root);if(window.Motion&&Motion.sheetOff)Motion.sheetOff()}
+  /* a sheet still open underneath keeps the page receded */
+  if(window.Motion&&U.openPanel())document.documentElement.classList.add("m-sheet");return}
+ var f=h("div",{},[h("div",{class:"scrim"+(o.cls?" "+o.cls+"-scrim":""),"data-key":"scrim",onclick:o.onClose}),
+  h("div",{class:"panel sheet"+(o.cls?" "+o.cls:""),role:"dialog","aria-modal":"true","aria-label":o.label,"data-key":"sheet"},
    [U.sheetTop(o.badge,o.title,o.onClose)].concat(o.kids))]);
  U.patch(root,f,{animate:!!cur});
- U._esc=function(e){if(e.key==="Escape"){e.preventDefault();o.onClose()}else U.trap(e,root.querySelector(".panel"))};document.addEventListener("keydown",U._esc);
- if(!cur){root.querySelector(".panel-top button").focus({preventScroll:true});if(window.Motion){Motion.scan(root);if(Motion.panelIn)Motion.panelIn(root);Motion.stagger(root.querySelectorAll(".pt-title, .panel > :not(.panel-top)"),140,40)}}};
+ var k=function(e){if(e.defaultPrevented||U.covered(R))return;if(e.key==="Escape"){e.preventDefault();o.onClose()}else U.trap(e,root.querySelector(".panel"))};
+ U._keys[R]=k;document.addEventListener("keydown",k);
+ if(!cur){var fo=o.focus&&root.querySelector(o.focus);(fo||root.querySelector(".panel-top button")).focus({preventScroll:true});
+  if(window.Motion){Motion.scan(root);if(Motion.panelIn)Motion.panelIn(root);Motion.stagger(root.querySelectorAll(".pt-title, .panel > :not(.panel-top)"),140,40)}}};
+/* the wallet sheet sits above every other sheet: while it is open, the ones below ignore Escape and Tab */
+U.covered=function(R){return R!=="wallet-root"&&!!document.querySelector("#wallet-root .panel")};
+U.openPanel=function(){return document.querySelector("#sheet-root .panel, #panel-root .panel, #wallet-root .panel")};

@@ -1,4 +1,5 @@
-/* SeerShell.mount({ product, cta }): renders the shared header into #shell,
+/* SeerShell.mount({ product, cta }): renders the shared header into #shell (the cta slot holds the wallet control
+   from js/wallet.js where it is loaded),
    and dresses the page head (.phead) with the FADES slabs and the product's glyph. */
 (function(){
   var PRODUCTS=[["app","Seer app","app.html"],["futarchy","Futarchy","futarchy.html"],["deep","Deep","deep.html"],["opportunity","Opportunity","opportunity.html"],["risk","Risk Pricing","risk.html"]];
@@ -35,8 +36,10 @@
     el.innerHTML=(document.getElementById("main")?'<a class="skip" href="#main">Skip to content</a>':'')+
       '<header class="shell-bar"><div class="shell-in"><a class="shell-brand" href="index.html" aria-label="Seer home"><img src="assets/logo.svg" alt="seer" height="24"></a>'+
       '<nav class="shell-products" aria-label="Seer products">'+links+'</nav>'+
-      '<div class="shell-end">'+(o.cta?'<button class="btn btn-pill" id="shell-cta" type="button">'+o.cta+'</button>':'')+
+      '<div class="shell-end">'+(o.cta?(window.SeerWallet?'<span class="wl-slot" id="shell-wallet"></span>':'<button class="btn btn-pill" id="shell-cta" type="button">'+o.cta+'</button>'):'')+
       '<button class="shell-icon" id="shell-theme" type="button" aria-label="Light theme" aria-pressed="false">'+SUN+'</button></div></div></header>';
+    /* one wallet control per page: js/wallet.js draws it from the session's wallet state before the first paint */
+    var ws=document.getElementById("shell-wallet");if(ws)SeerWallet.mount(ws);
     /* one toggle per page; aria-pressed always mirrors the theme in use (also after a reload) */
     var tg=document.getElementById("shell-theme"),sync=function(){var l=document.documentElement.dataset.theme==="light";tg.setAttribute("aria-pressed",String(l));tg.title=l?"Light theme on":"Light theme off"};
     tg.onclick=function(){var l=document.documentElement.dataset.theme==="light",go=function(){applyTheme(l?"dark":"light");store("seer-theme",l?"dark":"light");sync()};

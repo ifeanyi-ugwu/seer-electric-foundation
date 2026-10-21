@@ -94,3 +94,52 @@ td.mq{white-space:normal;min-width:240px;max-width:420px;font-size:var(--fs-ui)}
   .toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}
   .mcard{min-height:0}
 }
+
+/* ================================ CREATE A MARKET ================================
+   A wider sheet: the form beside a live preview (the explorer's own card) once the sheet has room, one column on
+   phones with the preview just above the action. The action and the review, sign and result steps are js/wallet.js. */
+.panel.cm-sheet{width:min(880px,100%)}
+.badge.new{background:var(--violet);color:#fff;clip-path:polygon(0 0,100% 0,100% calc(100% - 5px),calc(100% - 5px) 100%,0 100%)}
+.foot-b{display:flex;gap:var(--s-1);flex-wrap:wrap;justify-content:flex-end}
+td.mq .badge.new{margin-right:var(--s-1);vertical-align:1px}
+.cm-wrap{display:grid;align-content:start;min-width:0}
+.cm-wrap > .tx-step{width:100%;max-width:560px}
+.cm{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"s" "f" "p" "a";gap:var(--s-5);align-items:start}
+.cm-sum{grid-area:s;border-left:3px solid var(--neg);background:color-mix(in srgb,var(--neg) 10%,var(--card));border-radius:0 var(--r-card) var(--r-card) 0;padding:var(--s-3) var(--s-4)}
+.cm-sum:focus{outline:2px solid var(--violet-text);outline-offset:2px}
+.cm-sum h3{font-size:var(--fs-ui);font-weight:500;margin-bottom:var(--s-1)}
+.cm-sum ul{margin:0;padding-left:var(--s-4);display:grid}
+.cm-sum .wl-link{display:inline-flex;align-items:center;min-height:var(--tap);text-align:left;font-size:var(--fs-body);color:var(--text)}
+.cm-sum .wl-link::after{display:none}
+.cm-fields{grid-area:f;display:grid;gap:var(--s-4);min-width:0}
+.cm-fields .field{width:100%}
+.cm-fields .sel-wrap{display:grid;width:100%}
+.cm-count{color:var(--muted);font-size:var(--fs-meta);justify-self:end}
+.cm-count.over{color:var(--neg)}
+.cm-set{border:0;padding:0;margin:0;min-width:0;display:grid;gap:var(--s-2)}
+.cm-set legend{padding:0;margin-bottom:var(--s-1);color:var(--text-2);font-size:var(--fs-meta)}
+.cm-set > .note{margin-top:calc(var(--s-1) * -1)}
+.cm-orow,.cm-mrow{display:grid;gap:var(--s-2)}
+.cm-mrow{padding:var(--s-3);background:var(--card);border-radius:var(--r-card)}
+.cm-line{display:flex;gap:var(--s-2);align-items:center;min-width:0}
+.cm-line > .field{flex:1 1 auto}
+.cm-mm > .field{flex:1 1 0}
+.cm-rm{flex:none;min-height:var(--ctl)}
+.cm-rm:disabled{opacity:.45;cursor:not-allowed}
+.cm-add{flex-wrap:wrap;justify-content:space-between;gap:var(--s-2) var(--s-4)}
+.cm-add .btn{min-height:var(--ctl)}
+.cm-add .btn:disabled{opacity:.45;cursor:not-allowed}
+.cm-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s-3)}
+.cm-prev{grid-area:p;display:grid;gap:var(--s-2);min-width:0}
+.cm-prev-h{font-size:var(--fs-meta);font-weight:500;color:var(--text-2)}
+.cm-card{min-height:0;cursor:default}
+.cm-acts{grid-area:a}
+.cm-acts .btn.lg{margin:0}
+@container (min-width:700px){
+  .cm{grid-template-columns:minmax(0,1fr) 320px;grid-template-areas:"s p" "f p" "a p";column-gap:var(--s-6)}
+  .cm-prev{position:sticky;top:calc(var(--m-pt-h,64px) + var(--s-3))}
+}
+@container (max-width:340px){.cm-grid{grid-template-columns:minmax(0,1fr)}}
+@media (forced-colors:active){.badge.new{border:1px solid CanvasText}.cm-sum{border:1px solid CanvasText}}
+.cm .check{display:inline-flex;gap:var(--s-2);align-items:center;min-height:var(--tap);color:var(--text-2);cursor:pointer}
+.cm-card .foot{flex-wrap:wrap}

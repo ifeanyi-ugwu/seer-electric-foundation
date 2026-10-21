@@ -5,7 +5,17 @@ var h=U.h,P=[
  {id:15,t:"Raise protocol fee to 0.30%",dao:"Example DAO",metric:"Protocol revenue, next 30 days",unit:"$K",dec:0,pass:412,fail:388,better:"higher",vote:{f:48,a:52,end:"5 days"},vol:96e3},
  {id:16,t:"Hire a dedicated security lead",dao:"Example DAO",metric:"Critical audit findings in 6 months",unit:"",dec:1,pass:2.1,fail:3.4,better:"lower",vote:{f:81,a:19,end:"1 day"},vol:41e3},
  {id:17,t:"Diversify 20% of treasury into stables",dao:"Example DAO",metric:"Treasury value in 180 days",unit:"$M",dec:1,pass:18.2,fail:18.9,better:"higher",vote:{f:57,a:43,end:"4 days"},vol:128e3}];
-var sel=P[0],range=60,branch="pass",amt=100;
+var sel=P[0],range=60,branch="pass",amt=100,W=window.SeerWallet;
+var flow=W.flow({box:function(){return document.querySelector('[data-tx="fut"]')},onChange:function(){detail()}});
+function focusPlace(){var b=document.querySelector('[data-tx="fut"] [data-tx-place]');if(b)b.focus()}
+/* an illustrative price for the long side of a branch: where its forecast sits in a range around both forecasts */
+function bprice(p,b){var lo=Math.min(p.pass,p.fail)*.75,hi=Math.max(p.pass,p.fail)*1.25,v=b==="pass"?p.pass:p.fail;return Math.round(Math.min(.95,Math.max(.05,(v-lo)/(hi-lo)))*100)/100}
+function place(){var p=sel,b=branch,a=amt,pr=b==="pass"?p.pass:p.fail,px=bprice(p,b),sh=a/px,name="#"+p.id+" "+p.t;
+ flow.place(a,function(){return{amount:a,meta:{type:"Trade",market:name},
+  rows:[["Market",name,"tx-q"],["Branch",b==="pass"?"If it passes":"If it fails"],["Forecast",fmt(p,pr)],["Amount",W.money(a)+" USDC","tx-tot"],
+   ["Price per share","$"+px.toFixed(2)],["Shares",sh.toFixed(1)],["Payout if correct","$"+sh.toFixed(2)],["Network fee","Free in demo","tx-free"]],
+  note:"If the other branch happens, this trade is refunded.",
+  done:"You bought "+sh.toFixed(1)+" shares in the "+(b==="pass"?"pass":"fail")+" branch of proposal #"+p.id+"."}},"amt")}
 function fmt(p,v){return(p.unit==="$"?"$":"")+v.toFixed(p.dec)+(p.unit&&p.unit!=="$"?" "+p.unit.replace("$",""):"")}
 function series(p,key,n){var r=U.rng(p.id*7+(key==="pass"?1:2)),end=p[key],start=(p.pass+p.fail)/2,v=start,out=[];
  for(var i=0;i<n;i++){v+=(r()-.5)*Math.abs(end-start)*.9+(end-v)*(.05+i/n*.08);out.push(v)}out[n-1]=end;return out}
@@ -29,7 +39,7 @@ function delta(p){var d=(p.pass-p.fail)/p.fail*100,good=(p.better==="higher")===
   msg:" The market expects "+p.metric.toLowerCase()+" to be "+(d>0?"higher":"lower")+" under pass, and the DAO wants it "+p.better+"."}}
 function list(){var root=document.getElementById("list"),el=h("div");
  el.appendChild(h("div",{class:"muted list-label",text:"Active proposals · "+P.length}));
- P.forEach(function(p){var d=delta(p);el.appendChild(h("button",{class:"pick",type:"button","data-key":"p"+p.id,"aria-pressed":String(p===sel),onclick:function(){sel=p;list();detail()}},[
+ P.forEach(function(p){var d=delta(p);el.appendChild(h("button",{class:"pick",type:"button","data-key":"p"+p.id,"aria-pressed":String(p===sel),onclick:function(){if(sel!==p)flow.reset();sel=p;list();detail()}},[
   h("b",{text:"#"+p.id+" "+p.t}),h("span",{class:"muted",text:p.metric}),
   h("div",{class:"line"},[h("span",{class:"num "+(d.good?"pos":"neg"),text:d.arrow+d.text+(d.good?" · better":" · worse")}),h("span",{class:"muted num",text:"vote ends "+p.vote.end})])]))});U.patch(root,el)}
 function detail(animate){var p=sel,d=delta(p),root=document.getElementById("detail"),el=h("div");
@@ -54,18 +64,22 @@ function detail(animate){var p=sel,d=delta(p),root=document.getElementById("deta
   h("div",{class:"legend"},[h("span",{},[h("i",{class:"sw",style:"border-color:var(--pos)"}),"If it passes"]),h("span",{},[h("i",{class:"sw",style:"border-color:var(--neg);border-top-style:dashed"}),"If it fails"])])]);
  ch.appendChild(chart(p,chartW()));
  ch.appendChild(h("div",{class:"notice"},[h("b",{class:d.good?"pos":"neg",text:d.lead}),d.msg]));
- var pr=branch==="pass"?p.pass:p.fail,t=h("div",{class:"panel-c ticket fut-tk"});
+ var pr=branch==="pass"?p.pass:p.fail,t=h("div",{class:"panel-c ticket fut-tk","data-tx":"fut",style:flow.style()});
  t.appendChild(h("h2",{text:"Trade a branch"}));
- t.appendChild(h("div",{class:"seg t-a",role:"group","aria-label":"Branch"},[["pass","If it passes"],["fail","If it fails"]].map(function(b){return h("button",{type:"button","aria-pressed":String(branch===b[0]),text:b[1],onclick:function(){branch=b[0];detail()}})})));
- t.appendChild(h("div",{class:"line t-a"},[h("span",{text:"Current forecast"}),h("b",{class:"num",text:fmt(p,pr)})]));
- var inp=h("input",{class:"field",type:"number",min:"1",value:String(amt),id:"amt",oninput:function(e){amt=Math.max(0,+e.target.value||0)}});
- t.appendChild(h("div",{class:"field-grp t-b"},[h("label",{for:"amt",text:"Amount (USDC)"}),inp]));
- t.appendChild(h("button",{class:"btn lg t-b",type:"button","aria-disabled":"true","aria-describedby":"tk-hint",text:"Place trade"}));
- t.appendChild(h("p",{class:"note t-b",id:"tk-hint",text:"Connect a wallet to trade. If the other branch happens, this trade is refunded. Demo only."}));
+ /* the ticket runs its whole flow in place: form, then review, signature and result (js/wallet.js) */
+ if(flow.step!=="form")t.appendChild(flow.view());
+ else{var err=W.amountError(amt,flow.tried);
+  t.appendChild(h("div",{class:"seg t-a",role:"group","aria-label":"Branch"},[["pass","If it passes"],["fail","If it fails"]].map(function(b){return h("button",{type:"button","aria-pressed":String(branch===b[0]),text:b[1],onclick:function(){branch=b[0];detail()}})})));
+  t.appendChild(h("div",{class:"line t-a"},[h("span",{text:"Current forecast"}),h("b",{class:"num",text:fmt(p,pr)})]));
+  var inp=h("input",Object.assign({class:"field",type:"number",min:"1",value:String(amt),id:"amt",oninput:function(e){amt=Math.max(0,+e.target.value||0);W.amountLive(e.target,amt,flow)}},W.amountAttrs("amt",err)));
+  t.appendChild(h("div",{class:"field-grp t-b"},[h("label",{for:"amt",text:"Amount (USDC)"}),inp,W.amountErr("amt",err)]));
+  var pb=W.placeBtn({extra:true,onPlace:place});pb.classList.add("t-b");t.appendChild(pb);
+  t.appendChild(W.hint({extra:"If the other branch happens, this trade is refunded.",cls:"t-b",after:focusPlace}))}
  [head,two,ch,t].forEach(function(n){el.appendChild(n)});U.patch(root,el,{animate:animate!==false})}
 /* the chart is drawn at its panel's content width so labels stay 11px at every size */
 function chartW(){var r=document.getElementById("detail"),cs=getComputedStyle(document.documentElement),pad=parseFloat(cs.getPropertyValue("--pad-panel"))||16;return(r.clientWidth||600)-2*pad}
 list();detail();
+W.subscribe(function(){detail()});
 if(window.Motion){Motion.ready();Motion.reveal("#list > *",{rise:8});Motion.reveal("#detail > .dhead, #detail > .panel-c, #detail .two > .panel-c",{onIn:Motion.dataIn})}
 var lw=chartW(),rt;
 window.addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(function(){var w=chartW();if(w!==lw){lw=w;detail(false)}},150)});
