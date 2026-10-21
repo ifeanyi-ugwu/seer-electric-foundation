@@ -427,6 +427,10 @@ html.m-vt-theme main{view-transition-name:none}
 /* dark to light: the old (dark) view sits on top and shrinks into the toggle */
 html.m-vt-theme.m-vt-back::view-transition-old(root){z-index:2}
 html.m-vt-theme.m-vt-back::view-transition-new(root){z-index:1}
+/* the toggle rides above both themes as a live layer, so its icon turns in view in both directions */
+html.m-vt-theme::view-transition-group(m-theme-toggle){animation:none}
+html.m-vt-theme::view-transition-old(m-theme-toggle){display:none}
+html.m-vt-theme::view-transition-new(m-theme-toggle){animation:none;mix-blend-mode:normal}
 
 /* ---------- pause: ambient loops stop offscreen (.m-off set by an IntersectionObserver) and in hidden tabs ---------- */
 .m-off .dots .on,.m-off.dots .on,.m-off .slabs,.m-off .hero-cards,.m-off .mbar i,.m-off .status-live::before,.m-off.status-live::before,
