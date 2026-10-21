@@ -308,19 +308,19 @@ tr.m-wash{animation-duration:1100ms}
 
 /* keyboard focus: the ring grows out from the edge; a follower ring glides from the last focused control */
 @media (prefers-reduced-motion:no-preference){
-  :where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{animation:m-focus var(--dur-3) var(--spring-snappy)}
+  :where(a,button,input,select,textarea,summary,[tabindex]):focus-visible,select:focus{animation:m-focus var(--dur-3) var(--spring-snappy)}
 }
 .m-fring{position:fixed;left:0;top:0;width:0;height:0;z-index:70;pointer-events:none;border:2px solid var(--violet-text);border-radius:6px;opacity:0;box-sizing:border-box}
 /* inputs: the border warms on focus, the label follows, the placeholder steps back */
 .field{transition:background-color var(--dur-2) var(--ease-standard),color var(--dur-2) var(--ease-standard),border-color var(--dur-2) var(--ease-standard),box-shadow var(--dur-2) var(--ease-standard),background-position var(--dur-2) var(--ease-standard)}
-.field:focus-visible{border-color:color-mix(in srgb,var(--violet) 55%,var(--line))}
+.field:focus-visible,select.field:focus{border-color:color-mix(in srgb,var(--violet) 55%,var(--line))}
 .field::placeholder{transition:opacity var(--dur-2) var(--ease-standard)}
 .field:focus::placeholder{opacity:.55}
 .field-grp label,.ticket label,.sortbar label{transition:color var(--dur-2) var(--ease-standard)}
 .field-grp:focus-within label{color:var(--violet-text)}
 /* selects: the chevron dips while the control is engaged (unwrapped fallback: the background image) */
 @media (hover:hover){select.field:hover{background-position:right 16px top calc(50% + 2px)}}
-select.field:focus-visible,select.field:active{background-position:right 16px top calc(50% + 2px)}
+select.field:focus,select.field:focus-visible,select.field:active{background-position:right 16px top calc(50% + 2px)}
 /* wrapped selects (js/motion.js): the chevron turns over on a snappy spring while the menu is open (a small settle at
    the end) and turns back when it closes. :open where the browser has it, .m-open from the runtime elsewhere.
    The hover dip is 1px, on its own translate, and drops out while open so the turn stays centred. */

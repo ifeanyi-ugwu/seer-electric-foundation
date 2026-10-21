@@ -55,6 +55,8 @@ p{text-wrap:pretty}
 
 /* ---------- shared focus ring ---------- */
 :where(a,button,input,select,textarea,summary,[tabindex]):focus-visible{outline:2px solid var(--violet-text);outline-offset:2px}
+/* Firefox does not treat a mouse click on a select as focus-visible; the ring is shown for any focus on one, as Chrome, Edge and Safari do */
+select:focus{outline:2px solid var(--violet-text);outline-offset:2px}
 
 /* ---------- page head: slab band ---------- */
 .phead{position:relative;isolation:isolate;overflow:hidden;background:var(--ph-bg);border-bottom:1px solid var(--line)}

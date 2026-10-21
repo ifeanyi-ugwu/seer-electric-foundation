@@ -92,7 +92,7 @@ html.m-hidden .as-glow,.as-paused .as-glow,.as-away .as-glow,.as-open .as-glow{a
   border-radius:999px;font:inherit;font-size:var(--fs-body);line-height:var(--lh-snug);cursor:pointer;text-align:left}
 @media (hover:hover){.as-sheet .chip:hover{border-color:var(--violet);color:var(--text)}}
 .as-sheet .chip[aria-disabled=true]{opacity:.55;cursor:default}
-.as-sheet :where(a,button,input,select,summary,[tabindex]):focus-visible{outline:2px solid var(--violet-text);outline-offset:2px}
+.as-sheet :where(a,button,input,select,summary,[tabindex]):focus-visible,.as-sheet select:focus{outline:2px solid var(--violet-text);outline-offset:2px}
 .as-sheet .as-log:focus-visible{outline-offset:-2px}
 /* every target in the panel has a 44px hit area, without making the small ones look oversized */
 .as-sheet .seg button::after,.as-sheet .chip::after,.as-sheet .btn::after{content:"";position:absolute;left:0;right:0;top:50%;height:var(--tap);min-height:100%;transform:translateY(-50%)}
