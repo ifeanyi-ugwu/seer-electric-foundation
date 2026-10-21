@@ -143,4 +143,6 @@
   .field[aria-invalid=true]{border:2px solid Mark}
   .field-err::before{background:CanvasText}
   .wl-link{color:LinkText}
+  .btn.lg,.btn.soft,.btn.act{border:1px solid ButtonText}
+  .btn.lg[aria-disabled=true]{border-color:GrayText;color:GrayText}
 }

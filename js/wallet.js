@@ -184,7 +184,12 @@ Flow.prototype.sign=function(){var f=this;clearTimeout(f.tm);f.go("sign");
     if(!r){f.go("rejected");return}f.ref=r;if(f.o.onSuccess)f.o.onSuccess(f);f.go("done");announce(f.t.done+". "+f.sum.done+" Balance "+money(S.bal)+" USDC.")},1000)};
 Flow.prototype.reject=function(){clearTimeout(this.tm);this.tm=0;W.log({type:this.sum.meta.type,market:this.sum.meta.market,amount:this.sum.amount,status:"Rejected"});
   this.go("rejected");announce("Transaction rejected. Nothing was sent.")};
-Flow.prototype.finish=function(){var d=this.o.onDone;this.tried=false;if(d){d(this);return}this.go("form","[data-tx-place]")};
+Flow.prototype.finish=function(){var d=this.o.onDone;this.tried=false;if(d){d(this);return}
+  /* a ticket inside a sheet closes that sheet on Done; an inline ticket goes back to its form */
+  var bx=typeof this.o.box==="function"?this.o.box():this.o.box,dlg=bx&&bx.closest&&bx.closest("[role=dialog]"),
+      x=dlg&&[].slice.call(dlg.querySelectorAll("button")).filter(function(b){return /^close$/i.test(b.textContent.trim())})[0];
+  if(x){x.click();return}
+  this.go("form","[data-tx-place]")};
 Flow.prototype.style=function(){return this.hold&&this.step!=="form"?"min-height:"+this.hold+"px":null};
 Flow.prototype.view=function(){var f=this,s=f.step,t=f.t,sum=f.sum||{rows:[]},cls="tx-step"+(f.dir<0?" tx-rev":"");
   if(s==="review")return h("div",{class:cls,"data-key":"tx-review"},[

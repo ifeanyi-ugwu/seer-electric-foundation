@@ -208,7 +208,7 @@ function morphKids(a,b,ctx){var olds=[],news=[],c;
     else for(j=oi;j<olds.length;j++){o=olds[j];if(!used.has(o)&&keyOf(o)==null&&o.nodeName===n.nodeName){m=o;oi=j+1;break}}
     if(m){used.add(m);if(m.nodeType===1){if(m.isEqualNode(n))handlers(m,n);else morphEl(m,n,ctx)}else if(m.nodeValue!==n.nodeValue)setText(m,n.nodeValue,ctx);res.push(m)}
     else{res.push(n);ctx.added.push(n)}});
-  olds.forEach(function(o){if(!used.has(o)){if(ctx.drop)ctx.drop(o,a);else{ctx.removed.push({n:o,p:a,next:o.nextSibling});a.removeChild(o)}}});
+  olds.forEach(function(o){if(!used.has(o)){if(ctx.drop)ctx.drop(o,a);else if(o.parentNode===a){ctx.removed.push({n:o,p:a,next:o.nextSibling});try{a.removeChild(o)}catch(e){}}}});
   var tail=null;for(c=a.lastChild;c&&isKeep(c);c=c.previousSibling)tail=c;
   var cur=a.firstChild;
   res.forEach(function(n){while(cur&&cur!==tail&&isKeep(cur))cur=cur.nextSibling;if(cur===tail)cur=null;
@@ -283,7 +283,8 @@ M.patch=function(target,next,o){o=o||{};
   /* drop(node, parent): take a node out (a list item on screen in a positioned list exits in place);
      back(node): a node still exiting is wanted again, so it returns to the flow where it is */
   ctx.drop=function(n,p){var f=ctx.animate&&job&&job.first&&job.first.get(n);if(f&&f.ip&&n.nodeType===1){exitAt(n,f);return}
-    ctx.removed.push({n:n,p:p,next:n.nextSibling});p.removeChild(n)};
+    /* removing a focused node fires its blur handler at once, and that handler can re-render and move the node: tolerate it */
+    if(n.parentNode!==p)return;ctx.removed.push({n:n,p:p,next:n.nextSibling});try{p.removeChild(n)}catch(e){}};
   ctx.back=back;
   if(typeof next==="function"){
     next(ctx);ctx.removed.forEach(function(r){rest(r.n)});
