@@ -70,12 +70,13 @@ function answer(q){var s=" "+q.toLowerCase().replace(/[^a-z0-9% ]+/g," ").replac
 var dot=h("span",{class:"as-dot","aria-hidden":"true"},[h("span",{class:"as-dot-t",text:"Demo"})]);
 var ball=h("button",{class:"as-ball",type:"button",id:"as-ball","aria-haspopup":"dialog","aria-expanded":"false",onclick:function(){if(isOpen())close();else open()}},[
   h("span",{class:"as-glow","aria-hidden":"true"}),h("span",{class:"as-face","aria-hidden":"true"},[mark("as-mark")]),dot]);
+var hint=null;
 var dock=h("div",{class:"as-dock"},[ball]);doc.body.appendChild(dock);
 function label(){var on=D&&!D.isDefault();ball.setAttribute("aria-label",on?"Open Seer assistant. Demo overrides are on.":"Open Seer assistant");ball.classList.toggle("is-demo",!!on);
   ball.title=on?"Seer assistant (demo overrides on)":"Seer assistant"}
 label();
 /* out of the way while another sheet is open: never over a sheet's actions, and out of the tab order */
-function away(){var o=!!doc.querySelector("#panel-root .panel, #sheet-root .panel, #wallet-root .panel");dock.classList.toggle("as-away",o);dock.inert=o}
+function away(){var o=!!doc.querySelector("#panel-root .panel, #sheet-root .panel, #wallet-root .panel");dock.classList.toggle("as-away",o);dock.inert=o;if(hint){hint.classList.toggle("as-away",o);hint.inert=o}}
 function watch(){["panel-root","sheet-root","wallet-root"].forEach(function(id){var r=doc.getElementById(id);if(r&&!r.__asw){r.__asw=1;new MutationObserver(away).observe(r,{childList:true})}})}
 new MutationObserver(function(){watch();away()}).observe(doc.body,{childList:true});watch();away();
 doc.addEventListener("visibilitychange",function(){dock.classList.toggle("as-paused",doc.hidden)});
@@ -84,7 +85,7 @@ doc.addEventListener("visibilitychange",function(){dock.classList.toggle("as-pau
 var opened=false,busy=false,tick=0,live=null;
 function isOpen(){return!!doc.querySelector("#"+RID+" .panel")}
 function say(t){if(D&&D.announce)D.announce(t);else{if(!live){live=h("div",{class:"dm-sr",role:"status","aria-live":"polite"});doc.body.appendChild(live)}live.textContent="";setTimeout(function(){live.textContent=t},90)}}
-function open(){if(isOpen())return;opened=true;draw(true);ball.setAttribute("aria-expanded","true");dock.classList.add("as-open");
+function open(){if(isOpen())return;hideHint();opened=true;draw(true);ball.setAttribute("aria-expanded","true");dock.classList.add("as-open");
   var p=doc.querySelector("#"+RID+" .panel");if(!p)return;
   /* from 601px it is a popover above the ball: it rises from the ball, and the page does not recede behind it */
   if(!mqPhone.matches){root.classList.remove("m-sheet");if(window.Motion&&Motion.drive&&!reduced())Motion.drive(p,{x:0,y:0},"gentle",{from:{x:0,y:18},eps:.3})}
@@ -188,6 +189,25 @@ function demo(){if(!D)return h("div",{class:"as-pane",id:"as-pane"},[h("p",{clas
   return h("div",{class:"as-pane as-demo",id:"as-pane","data-key":"demo"},[h("div",{class:"as-scroll","data-key":"dscroll"},items)])}
 
 if(D&&D.subscribe)D.subscribe(function(){label();if(isOpen()&&ST.tab==="demo")draw()});
+/* ---------- the first-visit callout: an entry point to the Demo tab, nothing more ---------- */
+/* Once per tab (sessionStorage seer-as-hint), 1.5s after load. It steps away with the ball while any sheet is open (away()), and the
+   panel opening by any route retires it. The Demo pane keeps the one full description of the controls. The URL hash #demo opens the Demo tab directly. */
+var HKEY="seer-as-hint",hintSeen=false;
+function seen(){if(hintSeen)return true;try{return!!sessionStorage.getItem(HKEY)}catch(e){return false}}
+function markSeen(){hintSeen=true;try{sessionStorage.setItem(HKEY,"1")}catch(e){}}
+function hideHint(refocus){if(!hint)return;var n=hint,f=refocus&&n.contains(doc.activeElement);hint=null;n.inert=true;n.classList.remove("m-in");
+  setTimeout(function(){n.remove()},reduced()?0:240);if(f&&ball.isConnected&&!dock.inert)ball.focus({preventScroll:true})}
+function openDemo(){hideHint();if(ST.tab!=="demo"){ST.tab="demo";save()}if(isOpen()){if(doc.querySelector("#"+RID+" .as-tabs"))draw();return}open()}
+function showHint(){if(hint||seen()||isOpen())return;markSeen();
+  hint=h("aside",{class:"as-hint","aria-label":"Demo controls",onkeydown:function(e){if(e.key==="Escape"){e.stopPropagation();hideHint(true)}}},[
+    h("p",{class:"as-hint-t",text:"Demo controls: slow loads, errors, offline"}),
+    h("button",{class:"as-hint-x",type:"button","aria-label":"Close",onclick:function(){hideHint(true)}},[svg("svg",{viewBox:"0 0 16 16",width:"16",height:"16","aria-hidden":"true",focusable:"false"},[svg("path",{d:"M3.5 3.5l9 9M12.5 3.5l-9 9",fill:"none",stroke:"currentColor","stroke-width":"1.5"})])]),
+    h("button",{class:"btn soft as-hint-go",type:"button",text:"Open",onclick:openDemo})]);
+  doc.body.appendChild(hint);away();void hint.offsetWidth;hint.classList.add("m-in");say("Demo controls: slow loads, errors, offline.")}
+function startHint(){if(location.hash==="#demo"){markSeen();openDemo();return}if(!seen())setTimeout(showHint,1500)}
+if(doc.readyState==="complete")startHint();else addEventListener("load",startHint,{once:true});
+addEventListener("hashchange",function(){if(location.hash==="#demo")openDemo()});
+
 /* phone rotation or a resize across 600px: the panel changes form, so it closes rather than jump */
 mqPhone.addEventListener("change",function(){if(isOpen())close()});
 })();

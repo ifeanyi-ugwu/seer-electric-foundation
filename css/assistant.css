@@ -44,6 +44,22 @@ html.m-hidden .as-glow,.as-paused .as-glow,.as-away .as-glow,.as-open .as-glow{a
 @media (prefers-reduced-motion:no-preference){.as-ball.is-demo .as-dot{animation:as-pop var(--spring-snappy-t,.31s) var(--spring-snappy,ease) both}}
 @keyframes as-pop{from{transform:scale(.6);opacity:0}}
 
+/* the first-visit callout above the ball: a card with the line, a Close icon and Open; one column of text at every width, 44px targets */
+.as-hint{position:fixed;right:var(--as-r);bottom:calc(var(--as-b) + var(--as-size) + var(--s-3) + var(--dm-lift,0px));z-index:30;box-sizing:border-box;width:min(288px,calc(100vw - var(--as-l) - var(--as-r)));
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:var(--s-2);padding:var(--s-2) var(--s-1) var(--s-4) var(--s-4);background:var(--card);border:1px solid var(--line);border-left:2px solid var(--violet);border-radius:var(--r-card);
+  box-shadow:0 10px 18px rgba(8,6,16,.35);opacity:0;visibility:hidden;transform:translateY(8px);
+  transition:transform var(--spring-gentle-t,.58s) var(--spring-gentle,ease),opacity var(--dur-2,.2s) var(--ease-standard,ease),visibility 0s linear var(--dur-2,.2s),bottom var(--dur-3,.32s) var(--ease-standard,ease)}
+:root[data-theme=light] .as-hint{box-shadow:0 10px 16px rgba(60,30,120,.18)}
+.as-hint.m-in{opacity:1;visibility:visible;transform:none;transition-delay:0s}
+.as-hint.m-in.as-away{opacity:0;visibility:hidden;pointer-events:none;transform:translateY(8px);transition:transform var(--dur-2,.2s) var(--ease-accel,ease),opacity var(--dur-1,.12s) var(--ease-accel,ease),visibility 0s linear var(--dur-2,.2s)}
+.as-hint-t{grid-column:1;grid-row:1;margin:0;padding-top:var(--s-2);font-size:var(--fs-body);line-height:var(--lh-snug);overflow-wrap:anywhere}
+.as-hint-x{grid-column:2;grid-row:1;width:44px;height:44px;padding:0;border:0;background:none;color:var(--muted);cursor:pointer;display:grid;place-items:center;border-radius:50%}
+@media (hover:hover){.as-hint-x:hover{color:var(--text)}}
+.as-hint-x:focus-visible{outline:2px solid var(--violet-text);outline-offset:-4px}
+.as-hint-go{grid-column:1 / -1;grid-row:2;justify-self:start}
+@media (prefers-reduced-motion:reduce){.as-hint,.as-hint.m-in.as-away{transition:none!important}}
+@media (forced-colors:active){.as-hint{border-color:CanvasText}}
+
 /* the landing ends with room for the ball, so the last footer link is never under it */
 .home .foot{padding-bottom:max(calc(var(--s-6) + 64px),env(safe-area-inset-bottom))}
 
