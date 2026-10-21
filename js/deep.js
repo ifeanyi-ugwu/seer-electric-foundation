@@ -62,10 +62,22 @@ function side(narrow){var inline=st.sel&&!narrow;return h("div",{class:"stack"},
 function notice(){return h("div",{class:"notice"},["Evaluators still score every proposal. The market forecasts their scores; it does not choose winners. ",h("a",{class:"wl-link",href:"app.html?m=19",text:"Open in the Seer app"})])}
 /* the round's one date: when the evaluators score (a day counted from today, as on the explorer) */
 function meta(){return h("p",{class:"muted"},["Evaluators score by "+U.dayIn(52)])}
+/* the round switch: this round is live; the archive of ended rounds is outside the concept */
+function rounds(){return h("div",{class:"seg",role:"group","aria-label":"Round","data-key":"round"},[h("button",{type:"button","aria-pressed":"true",text:"Round 3 \u00b7 Live"}),
+ h("button",{type:"button","aria-pressed":"false",text:"Archive",onclick:function(e){U.concept("Not part of this concept. In the product this lists ended rounds with their final scores.",e.currentTarget)}})])}
+/* the 100 forecasts as a CSV the person can open in a spreadsheet: a header line and one line per proposal, plain hyphens for negatives */
+function csv(){var q=function(v){v=String(v);return/[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v},
+ l=[["id","name","forecast score","90% range low","90% range high","agent volume","human volume","7-day change"]];
+ D.forEach(function(d){l.push([d.id,d.name,d.s.toFixed(1),d.lo.toFixed(1),d.hi.toFixed(1),d.av,d.hv,d.ch.toFixed(1)])});
+ return l.map(function(r){return r.map(q).join(",")}).join("\n")+"\n"}
+function exportCsv(){var u=URL.createObjectURL(new Blob([csv()],{type:"text/csv;charset=utf-8"})),a=h("a",{href:u,download:"seer-deep-forecasts.csv",hidden:""});
+ document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(u)},4000);if(DM&&DM.announce)DM.announce("Forecasts exported as seer-deep-forecasts.csv.")}
 function head(l){return h("div",{class:"head"},[
  h("div",{class:"ctrls"},[h("input",{class:"field",type:"search",placeholder:"Search proposals",value:st.q,"aria-label":"Search proposals","aria-keyshortcuts":"/",oninput:function(e){st.q=e.target.value;st.n=25;moreReset();render()}}),
   h("div",{class:"tt-row"},[h("div",{class:"seg",role:"group","aria-label":"Participation"},[["all","All"],["agent","Agent-led"],["human","Human-led"]].map(function(f){return h("button",{type:"button","aria-pressed":String(st.f===f[0]),text:f[1],onclick:function(){st.f=f[0];st.n=25;moreReset();render()}})})),
-   U.tip(U.GLOSS.agents,"What Agent-led and Human-led mean")])]),
+   U.tip(U.GLOSS.agents,"What Agent-led and Human-led mean")]),
+  h("button",{class:"btn soft",type:"button",text:"Export forecasts (CSV)",onclick:exportCsv}),
+  h("button",{class:"btn soft",type:"button",text:"Upload predictions",onclick:function(e){U.concept("Not part of this concept. In the product this compares your forecasts with the market's.",e.currentTarget)}})]),
  h("span",{class:"muted",role:"status",text:"Showing "+Math.min(st.n,l.length)+" of "+l.length})])}
 var COLS=[["id","#"],["name","Proposal"],["s","Forecast score","r"],["lo","90% range","r"],["ag","Agent vs human volume"],["av","Agent vol.","r"],["hv","Human vol.","r"],["ch","7d change","r"]];
 /* the "90% range" toggletip: one node, in the column head from 1101px and in the first card's range line below it (the head is hidden there) */
@@ -115,7 +127,7 @@ function frame(){var target=document.getElementById("root"),root=h("div"),l=view
  /* the filter bar belongs to the list, so it sits closer to the table than to the field above */
  var sec=h("section",{class:"stack list-sec","aria-label":"Proposals"},[head(l),meta(),sortbar(),tbl]);
  if(l.length>st.n)sec.appendChild(ui.more);
- root.appendChild(top);root.appendChild(sec);
+ root.appendChild(rounds());root.appendChild(top);root.appendChild(sec);
  U.patch(target,root,{flip:"tbody tr"});
  U.sheet({open:false,onClose:close});
  ui.side=top.lastChild;ui.sec=sec;ui.head=sec.firstChild;ui.sortbar=sec.children[2];ui.tbody=body;shown=st.sel;sideK=st.sel&&!narrow?st.sel.id+":"+det.state:0}
@@ -133,7 +145,7 @@ function render(){U.tipClose();var l=view(),narrow=U.narrow.matches,want=l.slice
   title:st.sel?st.sel.name:"",kids:st.sel?[readout(st.sel,true)].concat(tradable(st.sel)?[ticketNode()]:[]):[],onClose:close,instant:!narrow});
  var ss=document.getElementById("deep-sort");if(ss&&ss.value!==st.sort)ss.value=st.sort}
 function reveal(){if(!window.Motion)return;
- Motion.reveal(".cols2 > .panel-c, .kpi.top > div, .cols2 .stack > .notice, .cols2 .stack > .panel-c, .list-sec > .head",{onIn:Motion.dataIn});
+ Motion.reveal("#root > .seg, .cols2 > .panel-c, .kpi.top > div, .cols2 .stack > .notice, .cols2 .stack > .panel-c, .list-sec > .head",{onIn:Motion.dataIn});
  /* table rows: only the ones visible in the scroll box stagger in; the rest are simply there */
  Motion.reveal([].slice.call(ui.tbody.children,0,14),{rise:8,onIn:Motion.dataIn})}
 
@@ -187,11 +199,11 @@ var rootEl=document.getElementById("root"),pageEl=rootEl.parentNode,pageBox=h("d
 function modal(){return[].some.call(document.querySelectorAll('[aria-modal="true"]'),function(n){return!n.closest("[inert]")})}
 function skPage(){var S=DM.sk,B=DM.skBlock,narrow=U.narrow.matches,rows=[];for(var i=0;i<10;i++)rows.push(skRow(i));
  var hr=h("tr",{},COLS.map(function(c){return h("th",{scope:"col",class:c[2]||"",text:c[1]})}));
- return[h("div",{class:"cols2"},[h("div",{class:"panel-c"},[h("h2",{text:"Grant round · 100 proposals"}),B("sk-box","aspect-ratio:1"),h("p",{class:"note",text:"Bigger, brighter dot = higher forecast score."})]),
+ return[rounds(),h("div",{class:"cols2"},[h("div",{class:"panel-c"},[h("h2",{text:"Grant round · 100 proposals"}),B("sk-box","aspect-ratio:1"),h("p",{class:"note",text:"Bigger, brighter dot = higher forecast score."})]),
    h("div",{class:"stack"},[h("div",{class:"kpi top"},["Agent volume","Human volume","Top forecast"].map(function(l){return h("div",{},[h("small",{text:l}),h("b",{class:"num"},[S("5ch")])])})),
     notice(),
     h("div",{class:"panel-c"},[h("h2",{text:"Select a proposal"}),h("p",{class:"note",text:"Pick a dot in the field or a proposal below to see its forecast score, 90% range and who is trading it."})])])]),
-  h("section",{class:"stack list-sec"},[h("div",{class:"head"},[h("div",{class:"ctrls"},[B("sk-box","height:var(--ctl);width:240px;max-width:100%;border-radius:999px"),B("sk-box","height:var(--ctl);width:260px;max-width:100%;border-radius:999px")]),h("span",{class:"muted"},[S("14ch")])]),meta(),
+  h("section",{class:"stack list-sec"},[h("div",{class:"head"},[h("div",{class:"ctrls"},[B("sk-box","height:var(--ctl);width:240px;max-width:100%;border-radius:999px"),B("sk-box","height:var(--ctl);width:260px;max-width:100%;border-radius:999px"),B("sk-box","height:var(--ctl);width:180px;max-width:100%;border-radius:var(--r-chip)"),B("sk-box","height:var(--ctl);width:170px;max-width:100%;border-radius:var(--r-chip)")]),h("span",{class:"muted"},[S("14ch")])]),meta(),
    narrow?h("div",{class:"sortbar narrow-only"},[h("label",{text:"Sort by"}),B("sk-box","height:var(--ctl);flex:1 1 auto;max-width:320px;border-radius:999px"),B("sk-box","height:var(--ctl);width:120px;border-radius:var(--r-chip)")]):null,
    h("div",{class:"tbl tall rtbl deep-tbl"},[h("table",{},[h("thead",{},[hr]),h("tbody",{},rows)])])])]}
 function load(o){o=o||{};selSlot.cancel();moreSlot.cancel();moreErr=null;

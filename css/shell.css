@@ -163,6 +163,7 @@ input[type=checkbox]{width:18px;height:18px;margin:0;flex:none}
 /* ---------- KPI tiles: diagonal-cut corner + short violet tick ---------- */
 .kpi{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap-panel)}
 .kpi.k4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.kpi.k1{grid-template-columns:minmax(0,420px)}
 .kpi > div{--kp:var(--s-4);position:relative;min-width:0;background:var(--row);border-radius:var(--r-card);padding:var(--kp);
   clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%)}
 .kpi > div::before{content:"";position:absolute;left:0;top:var(--kp);width:2px;height:16px;background:var(--violet)}/* level with the label */
