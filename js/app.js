@@ -143,8 +143,9 @@
 
   /* explicit table roles: on phones the table is laid out as cards, which drops the native semantics (see shell.css) */
   function roles(t){t.setAttribute("role","table");Array.prototype.forEach.call(t.querySelectorAll("thead,tbody,tr,th,td"),function(n){n.setAttribute("role",{THEAD:"rowgroup",TBODY:"rowgroup",TR:"row",TH:"columnheader",TD:"cell"}[n.tagName])});return t}
+  function estText(m){return m.scalar.per?U.num(m.scalar.est,2,0)+" "+m.scalar.per:sfmt(m.scalar.est,m.scalar.unit)}
   function leadText(m){if(m.outs&&!m.outs.length)return"No outcomes yet";var l=lead(m);if(l)return l[0]+" · "+pc(l[1]);
-    if(m.scalar)return"Estimate "+(m.scalar.per?U.num(m.scalar.est,2,0)+" "+m.scalar.per:sfmt(m.scalar.est,m.scalar.unit));
+    if(m.scalar)return"Estimate "+estText(m);
     return m.cond.a==null?"No trades yet":"Pass "+U.num(m.cond.a,2,0)+" / fail "+U.num(m.cond.b,2,0)}
   function table(list){var w=h("div",{class:"tbl-wrap rtbl app-tbl"}),t=h("table"),hd=h("tr"),f=document.createDocumentFragment();
     f.appendChild(w);
@@ -186,21 +187,33 @@
   function esc(e){if(e.defaultPrevented||U.covered("panel-root"))return;if(e.key==="Escape"){closePanel();return}if(e.key!=="Tab")return;var p=document.querySelector("#panel-root .panel");if(!p)return;
     var f=[].filter.call(p.querySelectorAll("button,input,select,[tabindex]:not([tabindex='-1'])"),function(n){return!n.disabled&&n.getClientRects().length});if(!f.length)return;
     var a=f[0],z=f[f.length-1];if(e.shiftKey&&(document.activeElement===a||!p.contains(document.activeElement))){e.preventDefault();z.focus()}else if(!e.shiftKey&&(document.activeElement===z||!p.contains(document.activeElement))){e.preventDefault();a.focus()}}
-  function spark(seed,end,name,won){var pts=[],v=Math.max(.05,end-.18),n=24,i;for(i=0;i<n;i++){seed=(seed*9301+49297)%233280;v+= (seed/233280-.5)*.06+(end-v)*.08;pts.push(Math.min(.97,Math.max(.03,v)))}
-    pts[n-1]=end;var lo=Math.min.apply(null,pts),hi=Math.max.apply(null,pts),pad=Math.max(.02,(hi-lo)*.12);lo-=pad;hi+=pad;
-    var Y=function(p){return((hi-p)/(hi-lo)*64).toFixed(1)},d=pts.map(function(p,i){return(i?"L":"M")+(i/(n-1)*300).toFixed(1)+" "+Y(p)}).join(" ");
+  /* a made-up walk that ends on end (0 to 1); the same seed gives the same history */
+  function walk(seed,end){var pts=[],v=Math.max(.05,end-.18),n=24,i;for(i=0;i<n;i++){seed=(seed*9301+49297)%233280;v+= (seed/233280-.5)*.06+(end-v)*.08;pts.push(Math.min(.97,Math.max(.03,v)))}
+    pts[n-1]=end;return pts}
+  /* One line (outcome markets, scalar markets) or several (o.lines: end, colour, dash) on one scale. o: title, label (the chart's text alternative), right (the head's second text). */
+  function spark(seed,end,name,won,o){o=o||{};var L=o.lines||[{end:end,col:"var(--violet)"}],P=L.map(function(l,k){return walk(seed+k*101,l.end)}),all=[].concat.apply([],P),n=P[0].length;
+    var lo=Math.min.apply(null,all),hi=Math.max.apply(null,all),pad=Math.max(.02,(hi-lo)*.12);lo-=pad;hi+=pad;
+    var Y=function(p){return((hi-p)/(hi-lo)*64).toFixed(1)},D=P.map(function(pts){return pts.map(function(p,i){return(i?"L":"M")+(i/(n-1)*300).toFixed(1)+" "+Y(p)}).join(" ")});
     var NS="http://www.w3.org/2000/svg",s=document.createElementNS(NS,"svg");s.setAttribute("viewBox","0 0 300 64");s.setAttribute("preserveAspectRatio","none");s.setAttribute("class","spark");s.setAttribute("role","img");
-    s.setAttribute("aria-label","Price history of "+name+", ending at "+pc(end));
-    var a=document.createElementNS(NS,"path");a.setAttribute("class","m-area");a.setAttribute("d",d+" L300 64 L0 64 Z");a.setAttribute("fill","var(--violet)");a.setAttribute("fill-opacity",".12");s.appendChild(a);
-    var p=document.createElementNS(NS,"path");p.setAttribute("class","m-line");p.setAttribute("d",d);p.setAttribute("fill","none");p.setAttribute("stroke","var(--violet)");p.setAttribute("stroke-width","2");p.setAttribute("vector-effect","non-scaling-stroke");s.appendChild(p);
-    var box=h("div",{class:"spark-box"},[h("div",{class:"spark-head"},[h("span",{text:"Price history"}),h("span",{text:(won?"Winner: ":"Leading: ")+name})]),s]);return box}
+    s.setAttribute("aria-label",o.label||"Price history of "+name+", ending at "+pc(end));
+    if(L.length===1){var a=document.createElementNS(NS,"path");a.setAttribute("class","m-area");a.setAttribute("d",D[0]+" L300 64 L0 64 Z");a.setAttribute("fill","var(--violet)");a.setAttribute("fill-opacity",".12");s.appendChild(a)}
+    L.forEach(function(l,k){var p=document.createElementNS(NS,"path");p.setAttribute("class","m-line");p.setAttribute("d",D[k]);p.setAttribute("fill","none");p.setAttribute("stroke",l.col);p.setAttribute("stroke-width","2");p.setAttribute("vector-effect","non-scaling-stroke");if(l.dash)p.setAttribute("stroke-dasharray",l.dash);s.appendChild(p)});
+    var key=o.lines?h("div",{class:"legend"},o.lines.map(function(l){return h("span",{},[h("i",{class:"sw",style:"border-color:"+l.col+(l.dash?";border-top-style:dashed":"")}),l.name])})):null;
+    return h("div",{class:"spark-box"},[h("div",{class:"spark-head"},[h("span",{text:o.title||"Price history"}),o.lines?null:h("span",{text:o.right||(won?"Winner: ":"Leading: ")+name})]),key,s])}
+  /* the history of a scalar or conditional market: a scalar's estimate across its range, or both branches of a conditional (as in the Futarchy chart) */
+  function history(m){
+    if(m.scalar){var s=m.scalar,sp=Math.max(.03,Math.min(.97,(s.est-s.lo)/((s.hi-s.lo)||1)));
+      return spark(m.id*37,sp,m.q,false,{title:"Estimate history",right:"Estimate "+estText(m),label:"Estimate history of "+m.q+", ending at "+estText(m)})}
+    var c=m.cond;if(!c||c.a==null||c.b==null)return null;var mx=Math.max(c.a,c.b)||1,f=function(v){return sfmt(v,c.unit==="$"?"$":"")},ya="If "+c.if.toLowerCase();
+    return spark(m.id*37,0,m.q,false,{title:"Estimate history",label:"Estimate history of "+m.q+": "+ya.toLowerCase()+", ending at "+f(c.a)+"; if not, ending at "+f(c.b),
+      lines:[{end:.2+.6*c.a/mx,col:"var(--pos)",name:ya},{end:.2+.6*c.b/mx,col:"var(--neg)",dash:"7 5",name:"If not"}]})}
   /* the sheet's body while its details load: the real tiles' labels, outcome rows, the price chart and the ticket, as placeholders */
   function skDetail(m){var S=DM.sk,n=m.outs?Math.min(m.outs.length,4):0,k=[];
     k.push(h("div",{class:"kv"},["Volume","Liquidity","Closes","Status"].map(function(l){return h("div",{},[h("small",{text:l}),h("b",{},[S("56%")])])})));
     k.push(h("div",{class:"panel-c rules"},[S("18ch")]));
     if(n){k.push(h("div",{class:"olist"},m.outs.slice(0,n).map(function(o,i){return h("div",{class:"orow"},[h("span",{},[S([62,48,56,40][i]+"%")]),S("3ch")])})))}
     else k.push(h("div",{class:"mcard static"},[DM.skBlock("sk-box","height:64px")]));
-    if(m.outs)k.push(h("div",{class:"spark-box"},[h("div",{class:"spark-head"},[S("9ch"),S("12ch")]),DM.skBlock("sk-box","height:64px;margin-top:8px;border-radius:4px")]));
+    if(m.outs||m.scalar||(m.cond&&m.cond.a!=null&&m.cond.b!=null))k.push(h("div",{class:"spark-box"},[h("div",{class:"spark-head"},[S("9ch"),S("12ch")]),DM.skBlock("sk-box","height:64px;margin-top:8px;border-radius:4px")]));
     k.push(h("div",{class:"ticket"},[DM.skBlock("sk-box","height:var(--ctl);width:200px;max-width:100%;border-radius:999px"),h("div",{class:"field-grp"},[h("label",{},[S("10ch")]),DM.skBlock("sk-box","height:var(--ctl);border-radius:999px")]),
       h("div",{class:"line"},[S("12ch"),S("5ch")]),h("div",{class:"line"},[S("6ch"),S("5ch")]),DM.skBlock("sk-box","height:var(--tap)")]));
     return h("div",{class:"dm-skel"},k)}
@@ -283,12 +296,12 @@
       list=h("div",{class:"olist"},m.outs.map(function(o,i){return h("div",{class:"orow","data-key":"o"+i},[h("span",{text:o[0]}),h("span",{class:"pct"},[h("span",{class:"num",text:pc(o[1])}),o[0]===resOf(m).answer?h("span",{class:"won",text:"Won"}):null])])}))}
     else if(m.outs){list=h("div",{class:"olist"},[]);var draw=function(){var f=h("div");m.outs.forEach(function(o,i){f.appendChild(h("button",{type:"button",class:"orow sel","data-key":"o"+i,"aria-pressed":String(pick===i),onclick:function(){pick=i;if(fl.step!=="form")fl.reset();draw();drawTicket()}},[h("span",{text:o[0]}),h("span",{class:"num",text:pc(o[1])})]))});patch(list,f)};draw()}
     else{list=h("div",{class:"mcard static"},cardBody(m).slice(1,-1))}
-    var ld=lead(m),cl=closeOf(m);
+    var ld=lead(m),cl=closeOf(m),hist=ld?spark(m.id*37,ld[1],ld[0],m.status==="Resolved"):history(m);
     [h("div",{class:"kv"},[h("div",{},[h("small",{text:"Volume"}),h("b",{class:"num",text:money(m.vol)})]),h("div",{},[h("small",{text:m.status==="Resolved"?"Result":"Liquidity"}),h("b",{class:m.status==="Resolved"?null:"num",text:m.status==="Resolved"?(resOf(m).answer||"Not set"):money(m.liq)})]),h("div",{},[h("small",{text:cl&&cl.past?"Closed":"Closes"}),h("b",{text:cl?cl.full:"Not set"}),cl&&cl.rel?h("span",{class:"rel",text:cl.rel}):null]),h("div",{},[h("small",{text:"Status"}),h("b",{text:m.status})])]),
-      rulesBox(m,cl),list,ld?spark(m.id*37,ld[1],ld[0],m.status==="Resolved"):null,tk].forEach(function(n){if(n)body.appendChild(n)});
+      rulesBox(m,cl),list,hist,tk].forEach(function(n){if(n)body.appendChild(n)});
     drawTicket();
     /* the same entrance whether the details were at hand or had to load; a load after a skeleton starts at once */
-    if(window.Motion){Motion.scan(p);var late=info&&info.shown;Motion.stagger(p.querySelectorAll((late?"":".pt-title, ")+".kv > div, .rules, .sel, .olist > .orow:not(.sel), .mcard.static, .spark-box, .ticket"),late?0:140,35);if(ld)Motion.draw(p.querySelector(".spark"),{delay:late?180:320})}}}
+    if(window.Motion){Motion.scan(p);var late=info&&info.shown;Motion.stagger(p.querySelectorAll((late?"":".pt-title, ")+".kv > div, .rules, .sel, .olist > .orow:not(.sel), .mcard.static, .spark-box, .ticket"),late?0:140,35);if(hist)Motion.draw(p.querySelector(".spark"),{delay:late?180:320})}}}
 
   /* ======================= create a market =======================
      A sheet with the real form, a live preview drawn by the explorer's own card, and the wallet pattern on its action:

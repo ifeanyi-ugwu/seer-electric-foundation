@@ -14,3 +14,7 @@ body{background:var(--bg);color:var(--text);font:500 13px/1.4 var(--font)}
 nav.shell{display:flex;align-items:center;gap:24px;padding:20px 40px}
 nav.shell a{color:var(--text-2);text-decoration:none}nav.shell a[aria-current]{color:var(--text)}
 @media(max-width:640px){nav.shell{padding:16px;flex-wrap:wrap;gap:12px}}
+/* a chart key: line style swatches with their names */
+.legend{display:flex;gap:var(--s-4);flex-wrap:wrap;margin:var(--s-3) 0 var(--s-2)}
+.legend span{display:flex;align-items:center;gap:var(--s-2);font-size:var(--fs-meta);color:var(--text-2);min-width:0;overflow-wrap:anywhere}
+.sw{width:24px;height:0;border-top:3px solid}

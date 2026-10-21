@@ -18,9 +18,6 @@
 .pick b,.pick .muted,.opp .c-n b,.opp .c-n .note,.heat .c-p,.heat .c-p b,.heat .c-p .muted,#detail .dhead h2{overflow-wrap:anywhere;min-width:0}
 .pick .line{margin-top:var(--s-2)}
 .mini{display:inline-block;height:8px;border-radius:2px;vertical-align:middle}
-.legend{display:flex;gap:var(--s-4);flex-wrap:wrap;margin:var(--s-3) 0 var(--s-2)}
-.legend span{display:flex;align-items:center;gap:var(--s-2);font-size:var(--fs-meta);color:var(--text-2);min-width:0;overflow-wrap:anywhere}
-.sw{width:24px;height:0;border-top:3px solid}
 .chart{display:block;width:100%;overflow:visible}
 
 /* ---------- Futarchy: the pass / fail fork ---------- */

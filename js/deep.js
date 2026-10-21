@@ -42,7 +42,7 @@ function row(d){var tr=rowEls.get(d.id);if(tr)return tr;
  tr=h("tr",{tabindex:"0","data-key":"d"+d.id,role:"row",onclick:function(){choose(d,"row")},onkeydown:function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();choose(d,"row")}}},[
   h("td",{class:"num muted c-id",role:"cell",text:String(d.id)}),h("td",{class:"c-n",role:"cell",text:d.name}),h("td",{class:"r num c-s",role:"cell","data-label":"Forecast",text:d.s.toFixed(1)}),h("td",{class:"r num muted c-r",role:"cell","data-label":"90% range",text:d.lo+" to "+d.hi}),h("td",{class:"c-ag",role:"cell"},[split(d)]),
   h("td",{class:"r num c-av",role:"cell","data-label":"Agent vol.",text:U.money(d.av)}),h("td",{class:"r num c-hv",role:"cell","data-label":"Human vol.",text:U.money(d.hv)}),
-  h("td",{class:"r num c-ch "+(d.ch>0?"pos":d.ch<0?"neg":"muted"),role:"cell","data-label":"7d",text:d.ch===0?"0.0":(d.ch>0?"▲ +":"▼ ")+d.ch.toFixed(1)})]);
+  h("td",{class:"r num c-ch "+(d.ch>0?"pos":d.ch<0?"neg":"muted"),role:"cell","data-label":"7d",text:d.ch===0?"0.0":(d.ch>0?"▲ +":"▼ ")+U.num(d.ch,1)})]);
  if(st.sel===d)rowOn(tr,true);rowEls.set(d.id,tr);return tr}
 /* the selected proposal's readout. It repeats the row's score and range on purpose: a dot-field pick may sit in a
    row that is filtered out or not yet loaded, and the readout adds who is trading it. */
