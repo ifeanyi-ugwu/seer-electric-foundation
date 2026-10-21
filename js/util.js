@@ -44,7 +44,7 @@ U.sheet=function(o){var R=o.root||"sheet-root",root=document.getElementById(R),h
  var cur=root.querySelector(".panel");
  if(!o.open){if(!cur)return;
   if(window.Motion&&!o.instant&&!Motion.reduced()){/* exit plays in a detached layer so the root is free at once */
-   var g=h("div",{"aria-hidden":"true"});g.inert=true;document.body.appendChild(g);while(root.firstChild)g.appendChild(root.firstChild);
+   var g=h("div",{"aria-hidden":"true",class:"m-ghost"});g.inert=true;document.body.appendChild(g);while(root.firstChild)g.appendChild(root.firstChild);
    Motion.exit([g.querySelector(".panel"),g.querySelector(".scrim")],function(){g.remove()})}else{U.clear(root);if(window.Motion&&Motion.sheetOff)Motion.sheetOff()}
   /* a sheet still open underneath keeps the page receded */
   if(window.Motion&&U.openPanel())document.documentElement.classList.add("m-sheet");return}

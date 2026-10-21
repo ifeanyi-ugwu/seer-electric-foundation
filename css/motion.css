@@ -471,3 +471,7 @@ html.m-hidden .dots .on,html.m-hidden .slabs,html.m-hidden .hero-cards,html.m-hi
   main{transform:none!important}
   .m-cross{opacity:1}
 }
+
+/* A sheet that is leaving is moved into its own layer so it can animate out, and moving a node restarts its CSS animations (a step's
+   entrance, a chat message's rise). Nothing inside the leaving layer may replay: only the exit itself, which runs through the Web Animations API. */
+.m-ghost, .m-ghost *, .m-ghost *::before, .m-ghost *::after{animation:none!important}
