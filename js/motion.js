@@ -446,7 +446,7 @@ function navInd(){var nav=doc.querySelector(".shell-products");if(!nav||nav.__in
 
 /* ---------- page header: pinned, condensing like the sheet bar, the secondary row tucked while scrolling down ----------
    The same states and thresholds as sheetHead: .m-scrolled as soon as the page moves, .m-cond past 24px (back below
-   12px). Headers with a second row (the product nav on phones, the landing's Documents and Blog row) add .m-tuck:
+   12px). Headers with a second row (the product nav on phones, the landing's Documentation and Blog row) add .m-tuck:
    16px of scrolling down, once past the header's own height, tucks that row under the core row; 12px back up, the
    top of the page, or focus inside the row brings it back, and it never tucks while it holds focus. The scroll
    position is clamped to the scrollable range, so a rubber-band bounce reads as no movement. Everything the CSS

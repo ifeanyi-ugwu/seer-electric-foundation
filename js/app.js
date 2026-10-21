@@ -36,9 +36,9 @@
     var d=h("details",{class:"panel-c rules","data-key":"rules",open:U.narrow.matches?null:""},[h("summary",{text:"Rules and resolution"}),
       h("dl",{class:"tx-sum"},[row("Resolves by",rs.state==="disputed"?(rs.source||"Reality.eth")+", now in Kleros arbitration":(rs.source||"Reality.eth")+", with Kleros arbitration if disputed","tx-q"),
         row("Answer",a,"tx-q"),
-        row("Collateral","USDC","tx-q"),
+        row("Collateral",U.COLL,"tx-q"),
         row("Market address",[h("span",{class:"num",text:W.short(addr)}),W.copyBtn(addr,"market address")],"rules-addr")]),
-      h("p",{class:"note",text:rs.rules+" If the question cannot be answered, it resolves Invalid and holders are refunded pro rata."})]);return d}
+      h("p",{class:"note",text:rs.rules+" If the question cannot be answered, it resolves Invalid, and only \u201cInvalid result\u201d shares redeem for the collateral."})]);return d}
   /* a scalar value with its unit: "$" leads, a word follows after a space, a symbol follows directly */
   function sfmt(v,u){var n=U.num(v,2,0),neg=n.charAt(0)==="\u2212";if(neg)n=n.slice(1);
     return(neg?"\u2212":"")+(u==="$"?"$"+n:u&&/^[A-Za-z]/.test(u)?n+" "+u:n+(u||""))}
@@ -257,7 +257,7 @@
     function focusPlace(){var b=tk.querySelector("[data-tx-place]");if(b)b.focus()}
     function place(){var p=Math.min(.99,Math.max(.01,price())),a=amt,s=a/p,o=m.outs?m.outs[pick][0]:null,sd=sideName();
       fl.place(a,function(){return{amount:a,meta:{type:"Trade",market:m.q,mid:m.id,product:"app",outcome:o,side:bin?"":sd,shares:s,price:p,status:m.status},
-        rows:[["Market",m.q,"tx-q"]].concat(o?[["Outcome",o,"tx-q"]]:[],bin?[]:[["Side",sd]],[["Amount",W.money(a)+" USDC","tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(s)],["Max slippage","1%"],["Minimum shares",U.shares(s*.99)],[m.scalar?"Maximum payout":"Payout if correct","$"+U.num(s,2)],["Network fee","Free in demo","tx-free"]]),
+        rows:[["Market",m.q,"tx-q"]].concat(o?[["Outcome",o,"tx-q"]]:[],bin?[]:[["Side",sd]],[["Amount",W.money(a)+" "+U.COLL,"tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(s)],["Max slippage","1%"],["Minimum shares",U.shares(s*.99)],[m.scalar?"Maximum payout":"Payout if correct","$"+U.num(s,2)],["Network fee","Free in demo","tx-free"]]),
         done:"You bought "+U.shares(s)+" "+(o?(bin?"shares on "+o:side+" shares on "+o):m.scalar?sd.toLowerCase()+" shares":"shares on the branch \u201c"+sd.toLowerCase()+"\u201d")+"."}},"amt")}
     var drawTicket=function(){var p=Math.min(.99,Math.max(.01,price())),f=h("div");
       tk.style.minHeight=fl.style()?fl.hold+"px":"";
@@ -271,12 +271,12 @@
       var labs=m.scalar?["Long","Short"]:m.cond?["If "+m.cond.if.toLowerCase(),"If not"]:["Buy Yes","Buy No"];
       if(!bin)tk.appendChild(h("div",{class:"seg",role:"group","aria-label":m.cond?"Branch":"Side"},["Yes","No"].map(function(s,i){return h("button",{type:"button","aria-pressed":String(side===s),text:labs[i],onclick:function(){side=s;drawTicket()}})})));
       if(m.scalar)tk.appendChild(h("p",{class:"note",text:"Long gains as the value resolves higher; short gains as it resolves lower."}));
-      if(m.cond)tk.appendChild(h("p",{class:"note",text:"If the other branch happens, this trade is refunded."}));
+      if(m.cond)tk.appendChild(h("p",{class:"note",text:"If the condition does not happen, this branch's shares are worth nothing."}));
       W.holdLines(m.id,"app").forEach(function(n){tk.appendChild(n)});
       var err=W.amountError(amt,fl.tried),at=W.amountAttrs("amt",err);
-      var inp=h("input",{class:"field",type:"number",min:"1",value:String(amt),id:"amt","aria-label":"Amount in USDC","aria-invalid":at["aria-invalid"],"aria-describedby":at["aria-describedby"],
+      var inp=h("input",{class:"field",type:"number",min:"1",value:String(amt),id:"amt","aria-label":"Amount in "+U.COLL,"aria-invalid":at["aria-invalid"],"aria-describedby":at["aria-describedby"],
         oninput:function(e){amt=Number(e.target.value)||0;upd(true);W.amountLive(e.target,amt,fl)}});
-      tk.appendChild(h("div",{class:"field-grp"},[W.amountLabel("amt","Amount (USDC)"),inp,W.amountErr("amt",err)]));
+      tk.appendChild(h("div",{class:"field-grp"},[W.amountLabel("amt","Amount ("+U.COLL+")"),inp,W.amountErr("amt",err)]));
       var l1=h("span",{class:"num","data-k":"price"}),l2=h("span",{class:"num","data-k":"shares"}),l3=m.scalar?null:h("span",{class:"num","data-k":"payout"});
       tk.appendChild(h("div",{class:"line"},[h("span",{text:"Price per share"}),l1]));tk.appendChild(h("div",{class:"line"},[h("span",{text:"Shares"}),l2]));
       if(m.scalar){var hiT=sfmt(m.scalar.hi,m.scalar.unit),loT=sfmt(m.scalar.lo,m.scalar.unit),up=side==="Yes";
@@ -308,8 +308,8 @@
      disconnected it connects (the wallet sheet opens above and the form keeps its values); connected it validates,
      then review, signature and result run inside the same sheet. A created market joins MARKETS and every render path. */
   var TYPE_NOTE={"Categorical":"One outcome wins. Each outcome trades Yes and No.","Multi-categorical":"Any number of outcomes can come true. Each trades on its own.",
-    "Scalar":"Trades a number inside a range: long gains as it resolves higher.","Multi-scalar":"Trades which range a number lands in, one outcome per range.",
-    "Conditional":"Trades a metric if a condition happens. Trades are refunded if it does not."};
+    "Scalar":"Trades a number inside a range: long gains as it resolves higher.","Multi-scalar":"Trades several numbers, each with its own range. Each outcome pays its answer's share of all the answers together.",
+    "Conditional":"Trades a metric if a condition happens. If it does not happen, the shares are worth nothing."};
   var uid=0,cm=null,pending=[],cmFocus=null;
   function orow(v){return{id:++uid,v:v||""}}
   function mrow(l,a,b){return{id:++uid,l:l||"",min:a||"",max:b||""}}
@@ -332,7 +332,7 @@
       if(a==null||b==null)e["cm-r-"+r.id+"-min"]="Enter a minimum and a maximum.";else if(b<=a)e["cm-r-"+r.id+"-min"]="The maximum must be more than the minimum."})}
     else{if(c.cond.if.trim().length<5)e["cm-if"]="Describe the condition in at least 5 characters.";if(c.cond.metric.trim().length<3)e["cm-metric"]="Name the metric in at least 3 characters."}
     if(!c.date)e["cm-date"]="Pick a close date.";else if(c.date<tomorrow())e["cm-date"]="Pick a date after today.";
-    var l=num(c.liq);if(l==null||l<50)e["cm-liq"]="Add at least 50 USDC of liquidity.";else if(bal.connected&&l>bal.balance+1e-9)e["cm-liq"]="More than your balance of "+W.money(bal.balance)+" USDC.";
+    var l=num(c.liq);if(l==null||l<50)e["cm-liq"]="Add at least 50 "+U.COLL+" of liquidity.";else if(bal.connected&&l>bal.balance+1e-9)e["cm-liq"]="More than your balance of "+W.money(bal.balance)+" "+U.COLL+".";
     return e}
   var LABEL={"cm-q":"Question","cm-cat":"Category","cm-cat-new":"Category name","cm-min":"Minimum","cm-max":"Maximum","cm-est":"Initial estimate","cm-if":"Condition","cm-metric":"Metric","cm-date":"Close date","cm-liq":"Initial liquidity"};
   function labelOf(id){if(LABEL[id])return LABEL[id];var k,i;
@@ -374,8 +374,8 @@
       [h("p",{class:"note",id:"cm-type-n",text:TYPE_NOTE[c.type]})]));
     f.push(typeFields());
     f.push(grp("cm-date","Close date",ctl("input","cm-date",{type:"date",value:c.date,min:tomorrow()},function(v){c.date=v})));
-    f.push(grp("cm-liq","Initial liquidity (USDC)",ctl("input","cm-liq",{type:"number",min:"50",step:"1",inputmode:"decimal",value:c.liq,desc:"cm-liq-n"},function(v){c.liq=v}),
-      [h("p",{class:"note",id:"cm-liq-n",text:"Locked in the market as its starting liquidity. At least 50 USDC."})]));
+    f.push(grp("cm-liq","Initial liquidity ("+U.COLL+")",ctl("input","cm-liq",{type:"number",min:"50",step:"1",inputmode:"decimal",value:c.liq,desc:"cm-liq-n"},function(v){c.liq=v}),
+      [h("p",{class:"note",id:"cm-liq-n",text:"Locked in the market as its starting liquidity. At least 50 "+U.COLL+"."})]));
     kids.push(h("div",{class:"cm-fields","data-key":"cm-fields"},f));
     var pv=toMarket(c),card=h("div",{class:"mcard static cm-card"},cardBody(pv));
     kids.push(h("section",{class:"cm-prev","aria-labelledby":"cm-prev-h","data-key":"cm-prev"},[h("h3",{class:"cm-prev-h",id:"cm-prev-h",text:"Preview"}),card,h("p",{class:"note",text:"This is how the market appears in the explorer."})]));
@@ -416,7 +416,7 @@
     var m=toMarket(cm),liq=num(cm.liq),detail=m.outs?m.outs.map(function(o){return o[0]}).join(", "):m.scalar?m.scalar.lo+" to "+m.scalar.hi+(m.scalar.unit?" "+m.scalar.unit:"")+", estimate "+m.scalar.est:m.cond.if+"; "+m.cond.metric+(m.cond.unit?" ("+m.cond.unit+")":"");
     cflow.review({amount:liq,meta:{type:"Create market",market:m.q},
       rows:[["Question",m.q,"tx-q"],["Category",m.cat],["Type",m.type],[m.outs?(m.type==="Multi-scalar"?"Ranges":"Outcomes"):m.scalar?"Range":"Condition",detail,"tx-q"],["Closes",(closeOf(m)||{full:"Not set"}).full],
-        ["Liquidity locked",W.money(liq)+" USDC","tx-tot"],["Network fee","Free in demo","tx-free"]],
+        ["Liquidity locked",W.money(liq)+" "+U.COLL,"tx-tot"],["Network fee","Free in demo","tx-free"]],
       note:"The liquidity stays locked in the market until it resolves.",
       done:"“"+m.q+"” is open for trading. Its liquidity is locked in the market."})}
   function cmDraw(first){if(!cm)return;var body=cflow.step==="form"?cmForm():cflow.view();

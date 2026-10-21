@@ -61,7 +61,7 @@
       <svg class="brand-m" width="24" height="24" aria-hidden="true" focusable="false"><use href="#mark"/></svg>
     </a>
     <ul class="nav-links">
-      <li><a href="https://seer-3.gitbook.io/seer-documentation" target="_blank" rel="noopener">Documents</a></li>
+      <li><a href="https://seer-3.gitbook.io/seer-documentation" target="_blank" rel="noopener">Documentation</a></li>
       <li><a href="https://seer-pm.medium.com/" target="_blank" rel="noopener">Blog</a></li>
     </ul>
     <div class="nav-end">
@@ -158,7 +158,7 @@
             <p class="base-desc">Markets, outcome tokens and oracle resolution. The base layer every app shares.</p>
           </div>
         </div>
-        <a class="base-go" href="#types">Five market types<svg width="16" height="16" aria-hidden="true"><use href="#arrow"/></svg></a>
+        <a class="base-go" href="#types">Market types<svg width="16" height="16" aria-hidden="true"><use href="#arrow"/></svg></a>
       </div>
     </div>
   </section>
@@ -181,7 +181,7 @@
         <li><svg viewBox="0 0 40 24" aria-hidden="true"><path d="M2 12h36" class="g-line"/><rect x="24" y="5" width="3" height="14" class="g-on"/></svg><div><h3>Scalar</h3><p>Forecast a number within a range.</p></div></li>
         <li><svg viewBox="0 0 40 24" aria-hidden="true"><rect x="2" y="2" width="10" height="20" class="g-on"/><rect x="15" y="6" width="10" height="16" class="g-on"/><rect x="28" y="14" width="10" height="8" class="g-dim"/></svg><div><h3>Multi-categorical</h3><p>Several outcomes can be true at once.</p></div></li>
         <li><svg viewBox="0 0 40 24" aria-hidden="true"><path d="M2 6h36M2 18h36" class="g-line"/><rect x="12" y="2" width="3" height="8" class="g-on"/><rect x="29" y="14" width="3" height="8" class="g-on"/></svg><div><h3>Multi-scalar</h3><p>Several numbers forecast side by side.</p></div></li>
-        <li><svg viewBox="0 0 40 24" aria-hidden="true"><path d="M2 12h12l10-8h14M14 12l10 8h14" class="g-line"/><circle cx="14" cy="12" r="3" class="g-on"/></svg><div><h3>Conditional</h3><p>Counts only if another outcome happens.</p></div></li>
+        <li><svg viewBox="0 0 40 24" aria-hidden="true"><path d="M2 12h12l10-8h14M14 12l10 8h14" class="g-line"/><circle cx="14" cy="12" r="3" class="g-on"/></svg><div><h3>Conditional, any type</h3><p>Any market can depend on an outcome of another market.</p></div></li>
       </ul>
     </div>
   </section>
@@ -194,7 +194,7 @@
       <div class="feat-copy">
         <p class="kicker"><span class="tag num">01</span>Seer app</p>
         <h2 id="f1-h">The explorer for every market on Seer.</h2>
-        <p>Think of it as Seer&rsquo;s Etherscan. Whatever app a market was made in, it shows up here: categorical, scalar, multi-categorical, multi-scalar and conditional, with its prices, liquidity and resolution status in one place.</p>
+        <p>Think of it as Seer&rsquo;s Etherscan. Whatever app a market was made in, it shows up here: categorical, scalar, multi-categorical and multi-scalar markets, and conditional markets built on them, with its prices, liquidity and resolution status in one place.</p>
         <a class="go" href="./app.html">Open the Seer app<svg width="16" height="16" aria-hidden="true"><use href="#arrow"/></svg></a>
       </div>
       <figure class="viz card">
@@ -204,7 +204,7 @@
           <li class="row"><span class="xq">Which team will win the 2030 World Cup?</span><span class="xt">Categorical</span><span class="xv num">Argentina 84.1%</span></li>
           <li class="row"><span class="xq">ETH/USD on 31 Dec 2026</span><span class="xt">Scalar</span><span class="xv num">3,950</span></li>
           <li class="row"><span class="xq">Which features ship in v3?</span><span class="xt">Multi-categorical</span><span class="xv num">3 of 7 likely</span></li>
-          <li class="row"><span class="xq">Monthly rainfall in four cities</span><span class="xt">Multi-scalar</span><span class="xv num">4 ranges</span></li>
+          <li class="row"><span class="xq">Monthly rainfall in four cities</span><span class="xt">Multi-scalar</span><span class="xv num">4 values</span></li>
           <li class="row"><span class="xq">Token price if Proposal 14 passes</span><span class="xt">Conditional</span><span class="xv num">$1.24</span></li>
         </ul>
       </figure>

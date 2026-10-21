@@ -80,20 +80,20 @@ W.holdText=holdText;
 W.holdLines=function(mid,product){return W.positions(mid,product).map(function(p,i){return h("div",{class:"line","data-key":"hold"+i},[h("span",{text:"You hold "+holdText(p)})])})};
 /* Redeem, for a resolved market (the explorer) or a decided submission (Opportunity). o: {flow, market, mid, product, win(position), after, quiet}.
    Disconnected: a note whose Connect wallet button checks for winnings once connected. Connected with winning shares: what is held and a
-   "Redeem N USDC" button that runs review, signature and result in the ticket. Otherwise the note that nothing is held (nothing at all if quiet). */
+   "Redeem N sDAI" button that runs review, signature and result in the ticket. Otherwise the note that nothing is held (nothing at all if quiet). */
 W.redeem=function(o){var done="This market has resolved.",wins;
   if(!S.on)return o.quiet?[]:[h("p",{class:"note"},[done+" ",link("Connect wallet",function(e){W.openConnect({from:e.currentTarget,after:o.after})})," to check for winnings."])];
   wins=W.positions(o.mid,o.product).filter(o.win);
   if(!wins.length)return o.quiet?[]:[h("p",{class:"note",text:done+" You hold no winning shares."})];
   var sh=wins.reduce(function(a,p){return a+p.shares},0),amt=Math.round(sh*100)/100,outs=wins.map(function(p){return p.outcome||p.side}).join(", ");
   return wins.map(function(p,i){return h("div",{class:"line","data-key":"hold"+i},[h("span",{text:"You hold "+holdText(p)})])}).concat([
-    h("button",{class:"btn lg",type:"button","data-tx-place":"",text:"Redeem "+money(amt)+" USDC",onclick:function(){
+    h("button",{class:"btn lg",type:"button","data-tx-place":"",text:"Redeem "+money(amt)+" "+U.COLL,onclick:function(){
       o.flow.review({amount:amt,credit:true,t:{review:"Review redemption",done:"Winnings redeemed",doneBtn:"Done"},meta:{type:"Redeem",market:o.market,redeem:wins.map(pkey)},
-        rows:[["Market",o.market,"tx-q"],["Outcome",outs,"tx-q"],["Shares",sh2(sh)],["You receive",money(amt)+" USDC","tx-tot"]],
-        done:"You redeemed "+sh2(sh)+" winning shares for "+money(amt)+" USDC."})}})])};
+        rows:[["Market",o.market,"tx-q"],["Outcome",outs,"tx-q"],["Shares",sh2(sh)],["You receive",money(amt)+" "+U.COLL,"tx-tot"]],
+        done:"You redeemed "+sh2(sh)+" winning shares for "+money(amt)+" "+U.COLL+"."})}})])};
 /* ticket amounts: an empty or zero amount is flagged once the person has tried to place; more than the balance at once */
 W.amountError=function(a,tried){if(a<0)return"Enter an amount more than 0.";if(!(a>0))return tried?"Enter an amount more than 0.":"";
-  if(S.on&&a>S.bal+1e-9)return"Amount is more than your balance of "+money(S.bal)+" USDC.";return""};
+  if(S.on&&a>S.bal+1e-9)return"Amount is more than your balance of "+money(S.bal)+" "+U.COLL+".";return""};
 
 /* ---------- live region: one per page, present before anything is announced ---------- */
 var live=null;
@@ -134,7 +134,7 @@ function paint(fresh){var b=hdr;if(!b)return;U.clear(b);
   b.className="btn btn-pill wl-pill";
   var bal=h("span",{class:"num","data-wl-bal":"",text:money(S.bal)});
   b.appendChild(h("span",{class:"wl-dot","aria-hidden":"true"}));
-  b.appendChild(h("span",{class:"wl-txt"},[h("span",{class:"wl-sr",text:"Wallet "}),h("span",{class:"wl-addr num",text:short(S.addr)})," ",h("span",{class:"wl-bal"},[bal,h("span",{class:"wl-unit",text:" USDC"})])]));
+  b.appendChild(h("span",{class:"wl-txt"},[h("span",{class:"wl-sr",text:"Wallet "}),h("span",{class:"wl-addr num",text:short(S.addr)})," ",h("span",{class:"wl-bal"},[bal,h("span",{class:"wl-unit",text:" "+U.COLL})])]));
   /* a fresh connection: the pill settles in and the balance counts up */
   if(fresh&&window.Motion){Motion.pop(b);Motion.countUp(bal,{dur:Motion.D.xl})}}
 function paintBal(anim){var n=hdr&&hdr.querySelector("[data-wl-bal]");if(!n)return;if(anim&&window.Motion)Motion.num(n,money(S.bal),{dur:Motion.D.l+200});else n.textContent=money(S.bal)}
@@ -187,7 +187,7 @@ function start(k){clearTimeout(ws.t);ws.kind=k;ws.err=null;step("wait");var w=pl
   ws.t=setTimeout(function(){if(!ws||ws.step!=="wait")return;var e=w.check();
     if(e){ws.err=e;step("fail");announce((CONN_ERR[e.offline?"offline":e.kind]||CONN_ERR.server)[0]+". No wallet was connected.");return}
     S.on=true;S.kind=k;seed();paint(true);step("done");emit();
-    announce("Wallet connected. Balance "+money(S.bal)+" USDC.");
+    announce("Wallet connected. Balance "+money(S.bal)+" "+U.COLL+".");
     ws.ct=setTimeout(close,950)},w.ms)}
 function cancel(){clearTimeout(ws.t);ws.err=null;step("fail");announce("Connection cancelled. No wallet was connected.")}
 W.openConnect=function(o){o=o||{};if(S.on){if(o.after)o.after();return}
@@ -199,7 +199,7 @@ function posSection(){var l=W.positions(),n=l.length,all=ws.allPos&&n>4,rows=all
     n?h("ol",{class:"wl-act"},rows.map(function(p){var res=p.status==="Resolved",lost=res&&!(p.price>0);
       return h("li",{"data-key":"p"+pkey(p)},[
         h("span",{class:"wl-act-t"},[h("b",{class:"num",text:posTitle(p)}),h("span",{class:"wl-st "+(lost?"no":"ok"),text:p.status})]),
-        h("span",{class:"num wl-act-a",text:money(p.shares*p.price)+" USDC"}),
+        h("span",{class:"num wl-act-a",text:money(p.shares*p.price)+" "+U.COLL}),
         h("span",{class:"wl-act-m"},[h("span",{class:"muted",text:(PRODUCT[p.product]||"Seer")+" \u00b7 "}),p.market])])}))
       :h("p",{class:"note",text:"No positions yet. Trades you place show here."}),
     n>4?h("div",{class:"wl-more","data-key":"wl-more"},[link(all?"Show fewer":"Show all ("+n+")",function(){ws.allPos=!all;sheet()},{"aria-expanded":String(all)})]):null])}
@@ -209,7 +209,7 @@ function accountBody(){var a=S.act.slice(0,3);
       h("div",{class:"wl-addr-row"},[h("code",{class:"num wl-full",text:S.addr}),
         h("button",{class:"btn soft wl-copy",type:"button","data-wl-focus":"","aria-label":ws.copied==="ok"?"Copied":"Copy address",onclick:copy},[ws.copied==="ok"?"Copied":"Copy"])]),
       ws.copied==="fail"?h("p",{class:"note",text:"Copying is blocked here. Select the address and copy it by hand."}):null]),
-    h("div",{class:"wl-bal-tile"},[h("small",{text:"Balance"}),h("b",{class:"num",text:money(S.bal)+" USDC"})]),
+    h("div",{class:"wl-bal-tile"},[h("small",{text:"Balance"}),h("b",{class:"num",text:money(S.bal)+" "+U.COLL})]),
     posSection(),
     /* Rewards exist in the live product and are outside this concept: the control names that instead of leading nowhere */
     h("div",{class:"wl-rew","data-key":"wl-rew"},[h("b",{text:"Rewards"}),
@@ -218,7 +218,7 @@ function accountBody(){var a=S.act.slice(0,3);
       a.length?h("ol",{class:"wl-act"},a.map(function(x,i){var ok=x.status==="Confirmed";return h("li",{"data-key":"a"+(S.act.length-i)},[
         h("span",{class:"wl-act-t"},[h("b",{text:x.type}),h("span",{class:"wl-st "+(ok?"ok":"no"),text:x.status})]),
         h("span",{class:"wl-act-m",text:x.market}),
-        h("span",{class:"num wl-act-a",text:(ok?x.plus?"+":"−":"")+money(x.amount)+" USDC"})])}))
+        h("span",{class:"num wl-act-a",text:(ok?x.plus?"+":"−":"")+money(x.amount)+" "+U.COLL})])}))
        :h("p",{class:"note",text:"No activity in this session yet. Trades and new markets will show here."})]),
     h("button",{class:"btn soft wl-wide",type:"button",text:"Disconnect",onclick:function(){ws.from=hdr;W.disconnect();close()}})])}
 /* copyText: the clipboard API, then a hidden textarea where it is blocked; cb(true|false). Used by the wallet sheet and by W.copyBtn. */
@@ -266,7 +266,7 @@ Flow.prototype.sign=function(){var f=this,w=plan(1000);clearTimeout(f.tm);f.err=
     if(e){f.err=e;W.log({type:f.sum.meta.type,market:f.sum.meta.market,amount:f.sum.amount,status:"Failed"});f.go("failed");
       announce("Transaction failed. "+txReason(e));return}
     var r=f.sum.credit?W.credit(f.sum.amount,f.sum.meta):W.spend(f.sum.amount,f.sum.meta);
-    if(!r){f.go("rejected");return}f.ref=r;if(f.o.onSuccess)f.o.onSuccess(f);f.go("done");announce(f.copy().done+". "+f.sum.done+" Balance "+money(S.bal)+" USDC.")},w.ms)};
+    if(!r){f.go("rejected");return}f.ref=r;if(f.o.onSuccess)f.o.onSuccess(f);f.go("done");announce(f.copy().done+". "+f.sum.done+" Balance "+money(S.bal)+" "+U.COLL+".")},w.ms)};
 /* the step copy: a summary may bring its own (a redemption in a ticket that otherwise trades) */
 Flow.prototype.copy=function(){return Object.assign({},this.t,(this.sum&&this.sum.t)||{})};
 function txReason(e){return({offline:"You are offline, so nothing was sent. Your balance is unchanged.",network:"The network could not be reached, so nothing was sent. Your balance is unchanged.",
