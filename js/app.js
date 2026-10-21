@@ -112,12 +112,12 @@
     else{var c=card(m);list=h("div",{class:"mcard static"});while(c.firstChild)list.appendChild(c.firstChild)}
     var ld=lead(m);
     var p=h("div",{class:"panel",role:"dialog","aria-modal":"true","aria-label":m.q},[
-      h("div",{class:"panel-top"},[h("span",{class:"badge",text:m.type}),h("button",{class:"btn soft",type:"button",text:"Close",onclick:closePanel})]),h("h2",{text:m.q}),
+      U.sheetTop(h("span",{class:"badge",text:m.type}),m.q,closePanel),
       h("div",{class:"kv"},[h("div",{},[h("small",{text:"Volume"}),h("b",{class:"num",text:money(m.vol)})]),h("div",{},[h("small",{text:"Liquidity"}),h("b",{class:"num",text:money(m.liq)})]),h("div",{},[h("small",{text:"Closes"}),h("b",{text:m.close})]),h("div",{},[h("small",{text:"Status"}),h("b",{text:m.status})])]),
       list,ld?spark(m.id*37,ld[1],ld[0]):null,tk]);
     drawTicket();
     root.appendChild(h("div",{class:"scrim",onclick:closePanel}));root.appendChild(p);document.addEventListener("keydown",esc);p.querySelector(".panel-top button").focus();
-    if(window.Motion){Motion.scan(p);if(Motion.panelIn)Motion.panelIn(root);Motion.stagger(p.querySelectorAll("h2, .kv > div, .sel, .mcard.static, .spark-box, .ticket"),140,35);if(ld)Motion.draw(p.querySelector(".spark"),{delay:320})}}
+    if(window.Motion){Motion.scan(p);if(Motion.panelIn)Motion.panelIn(root);Motion.stagger(p.querySelectorAll(".pt-title, .kv > div, .sel, .mcard.static, .spark-box, .ticket"),140,35);if(ld)Motion.draw(p.querySelector(".spark"),{delay:320})}}
 
   document.getElementById("q").oninput=function(e){st.q=e.target.value;render()};
   document.getElementById("cat-m").onchange=function(e){st.cat=e.target.value;cats();render()};

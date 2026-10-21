@@ -46,7 +46,7 @@ function draw(){var target=document.getElementById("root"),root=h("div"),narrow=
   else{side.appendChild(h("h2",{text:"Select a submission"}));side.appendChild(h("p",{class:"note",text:"See its market signal and, while reviewers are still deciding, forecast the outcome."}))}
   root.appendChild(h("div",{class:"cols rev"},[main,side]))}
  U.patch(target,root,{flip:"tbody tr"});
- U.sheet({open:!!(st.sel&&narrow),label:st.sel?st.sel.n:"",kids:st.sel?[h("h2",{text:st.sel.n}),h("div",{class:"panel-c ticket"},sideKids(st.sel))]:[],onClose:close,instant:!narrow})}
+ U.sheet({open:!!(st.sel&&narrow),label:st.sel?st.sel.n:"",title:st.sel?st.sel.n:"",kids:st.sel?[h("div",{class:"panel-c ticket"},sideKids(st.sel))]:[],onClose:close,instant:!narrow})}
 draw();
 U.narrow.addEventListener("change",function(){draw()});
 if(window.Motion){Motion.ready();Motion.reveal("#root > .kpi > div, .list-sec > .head, .opp-side",{onIn:Motion.dataIn});Motion.reveal(".opp tbody tr",{rise:8,onIn:Motion.dataIn})}

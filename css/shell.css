@@ -116,11 +116,19 @@ p{text-wrap:pretty}
   padding:0 var(--s-4);font:inherit;font-size:var(--fs-body);min-width:0}
 .field::placeholder{color:var(--muted)}
 @media (hover:hover){.field:hover{border-color:color-mix(in srgb,var(--text) 26%,transparent)}}
-/* selects: native control, custom chevron. 16px inset from the right edge, text stops 12px before it. */
+/* selects: native control, custom chevron. 16px inset from the right edge, text stops 16px before it.
+   js/motion.js wraps each one in .sel-wrap, whose ::after draws the chevron so it can turn while the menu is open
+   (motion.css); without the runtime the chevron is the background image below and simply stays. */
 select.field{-webkit-appearance:none;appearance:none;cursor:pointer;padding-right:44px;text-overflow:ellipsis;
   background:var(--chev) right 16px center/12px 12px no-repeat var(--card)}
 select.field::-ms-expand{display:none}
-@media (forced-colors:active){select.field{appearance:auto;-webkit-appearance:auto;background-image:none;padding-right:var(--s-3)}}
+select.field:disabled{cursor:not-allowed;color:var(--muted);border-style:dashed}
+.sel-wrap{display:inline-grid;grid-template-columns:minmax(0,1fr);align-items:center;vertical-align:middle;min-width:0;max-width:100%;color:var(--text-2)}
+.sel-wrap > select.field{grid-area:1/1;width:100%;background-image:none}
+.sel-wrap::after{content:"";grid-area:1/1;justify-self:end;width:12px;height:12px;margin-right:16px;pointer-events:none;background:currentColor;
+  -webkit-mask:var(--chev) center/12px 12px no-repeat;mask:var(--chev) center/12px 12px no-repeat}
+.sel-wrap:has(> select:disabled){color:var(--muted)}
+@media (forced-colors:active){select.field{appearance:auto;-webkit-appearance:auto;background-image:none;padding-right:var(--s-3)}.sel-wrap::after{display:none}}
 input[type=checkbox]{width:18px;height:18px;margin:0;flex:none}
 
 /* segmented control: the active pill is inset 4px, so buttons are --ctl-sm inside a --ctl track */
@@ -193,18 +201,40 @@ tr.is-sel td:first-child{box-shadow:inset 3px 0 0 var(--violet)}
 /* sort control that stands in for the hidden column headers of a reflowed table */
 .sortbar{align-items:center;gap:var(--s-2);margin:0 0 var(--s-3)}
 .sortbar label{color:var(--text-2);font-size:var(--fs-meta);flex:none}
-.sortbar select.field{flex:1 1 auto;max-width:320px}
+.sortbar select.field,.sortbar .sel-wrap{flex:1 1 auto;max-width:320px}
 .sortbar .btn{flex:none;min-height:var(--ctl)}
 
 /* ---------- detail sheet: side sheet on tablet and desktop, bottom sheet on phones ---------- */
 .scrim{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:40}
-.panel{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--bg);border-left:1px solid var(--line);z-index:41;overflow-y:auto;
-  display:grid;align-content:start;gap:var(--s-4);padding:var(--pad-panel) max(var(--pad-panel),env(safe-area-inset-right)) max(var(--pad-panel),env(safe-area-inset-bottom)) var(--pad-panel)}
-.panel::before{content:"";position:absolute;left:0;top:0;width:3px;height:40px;background:var(--violet)}
+/* the sheet is the scroll box; its insets live in --pp-* so the pinned top bar can reach the edges and clear notches */
+.panel{--pp-t:max(var(--pad-panel),env(safe-area-inset-top));--pp-r:max(var(--pad-panel),env(safe-area-inset-right));
+  --pp-b:max(var(--pad-panel),env(safe-area-inset-bottom));--pp-l:var(--pad-panel);
+  position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--bg);border-left:1px solid var(--line);z-index:41;overflow-y:auto;overscroll-behavior:contain;
+  display:grid;align-content:start;gap:var(--s-4);padding:0 var(--pp-r) var(--pp-b) var(--pp-l)}
 /* panel enter/exit motion: motion.css + js/motion.js */
-.panel-top{display:flex;justify-content:space-between;align-items:center;gap:var(--s-3)}
 .panel h2{font-size:var(--fs-h2);line-height:var(--lh-snug);font-weight:500;letter-spacing:-.01em}
 .panel .panel-c{padding:var(--s-4)}
+/* Pinned top bar: sticks while the body scrolls, edge to edge on an opaque token ground (no blur needed). The hairline
+   and shadow (::after) appear once the body has scrolled; the condense is a transform (motion.css), so the bar's
+   layout never changes height. The box lets touches through except where the bar is painted (::before) or a
+   control sits, so the strip a condensed bar frees up belongs to the body again. */
+.panel-top{position:sticky;top:0;z-index:3;margin:0 calc(var(--pp-r) * -1) calc(var(--s-1) * -1) calc(var(--pp-l) * -1);
+  padding:var(--pp-t) var(--pp-r) var(--s-3) var(--pp-l);pointer-events:none}
+.panel-top::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--bg);pointer-events:auto}
+.panel-top::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;z-index:-1;pointer-events:none;opacity:0;
+  background:color-mix(in srgb,var(--text) 14%,transparent);box-shadow:0 8px 18px -6px rgba(0,0,0,.55)}
+:root[data-theme=light] .panel-top::after{box-shadow:0 8px 18px -8px rgba(23,23,28,.18)}
+html:not(.m-js) .panel-top::after{opacity:1}/* without the motion runtime the hairline simply stays */
+.panel-top > *{pointer-events:auto}
+/* side sheet: the short violet tick on the left edge. Phone: the same violet slab, centred, is the grab handle */
+.panel-grip{position:absolute;left:0;top:0;width:3px;height:40px;background:var(--violet);pointer-events:none}
+/* badge or kicker, title and Close. Close keeps its column, so a long title wraps instead of pushing it out */
+.pt-in{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"t x";align-items:center;gap:var(--s-2) var(--s-3)}
+.pt-in.has-k{grid-template-areas:"k x" "t t"}
+.pt-in > .badge{grid-area:k;justify-self:start}
+.pt-in > .btn{grid-area:x;align-self:start}
+.pt-in > .pt-title{grid-area:t;min-width:0;overflow-wrap:anywhere}
+.pt-in:not(.has-k) > .pt-title{align-self:center}
 
 /* ---------- motion: tokens, transitions, entrances, reveals and physics live in motion.css ---------- */
 @media (prefers-reduced-motion:reduce){
@@ -251,8 +281,9 @@ tr.is-sel td:first-child{box-shadow:inset 3px 0 0 var(--violet)}
   .shell-products{order:3;width:100%;flex-wrap:wrap;justify-content:space-between;gap:0;overflow:visible;padding-bottom:var(--s-1)}
   .shell-products a{min-height:44px;flex:1 1 auto;justify-content:center;padding:8px 6px}
 }
-/* short landscape phones: the header scrolls away instead of holding a third of the screen */
-@media (max-height:500px) and (orientation:landscape){#shell{position:relative}}
+/* short landscape phones: the header scrolls away instead of holding a third of the screen, and the sheet's pinned
+   title steps down a size so the bar holds less of it */
+@media (max-height:500px) and (orientation:landscape){#shell{position:relative}.panel .pt-title{font-size:var(--fs-h3)}}
 
 /* ---------- tablet page head: copy left, mark right, no wrap ---------- */
 @media (max-width:1100px){
@@ -272,11 +303,12 @@ tr.is-sel td:first-child{box-shadow:inset 3px 0 0 var(--violet)}
   .rtbl tbody{grid-template-columns:minmax(0,1fr);gap:var(--s-2)}
   .seg{display:flex;width:100%}
   .seg button{flex:1 1 auto;padding:0 var(--s-2)}
-  .sortbar select.field{max-width:none}
-  /* bottom sheet */
-  .panel{top:auto;left:0;width:100%;max-height:calc(100dvh - 48px);border-left:0;border-top:1px solid var(--line);border-radius:12px 12px 0 0;
-    padding-left:max(var(--pad-panel),env(safe-area-inset-left))}
-  .panel::before{left:var(--s-4);width:40px;height:3px}
+  .sortbar select.field,.sortbar .sel-wrap{max-width:none}
+  /* bottom sheet: clears the status bar and notch above it, and the home indicator below */
+  .panel{--pp-t:24px;--pp-l:max(var(--pad-panel),env(safe-area-inset-left));
+    top:auto;left:0;width:100%;max-height:calc(100dvh - max(48px,env(safe-area-inset-top) + 16px));border-left:0;border-top:1px solid var(--line);border-radius:12px 12px 0 0}
+  .panel-top{touch-action:none}/* a drag that starts on the bar always moves the sheet (js/motion.js), never the body */
+  .panel-grip{left:50%;top:10px;width:40px;height:4px;margin-left:-20px;border-radius:2px}
 }
 /* a 280px folded cover screen: the logo shows its mark only, the product row takes two lines,
    and the header scrolls away instead of holding a quarter of the screen */

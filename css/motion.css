@@ -290,9 +290,20 @@ tr.m-wash{animation-duration:1100ms}
 .field:focus::placeholder{opacity:.55}
 .field-grp label,.ticket label,.sortbar label{transition:color var(--dur-2) var(--ease-standard)}
 .field-grp:focus-within label{color:var(--violet-text)}
-/* selects: the chevron dips while the control is engaged */
+/* selects: the chevron dips while the control is engaged (unwrapped fallback: the background image) */
 @media (hover:hover){select.field:hover{background-position:right 16px top calc(50% + 2px)}}
 select.field:focus-visible,select.field:active{background-position:right 16px top calc(50% + 2px)}
+/* wrapped selects (js/motion.js): the chevron turns over on a snappy spring while the menu is open (a small settle at
+   the end) and turns back when it closes. :open where the browser has it, .m-open from the runtime elsewhere.
+   The hover dip is 1px, on its own translate, and drops out while open so the turn stays centred. */
+.sel-wrap{transition:color var(--dur-2) var(--ease-standard)}
+.sel-wrap::after{transition:rotate var(--spring-snappy-t) var(--spring-snappy),translate var(--dur-2) var(--ease-standard)}
+@media (hover:hover){.sel-wrap:hover{color:var(--text)}.sel-wrap:hover::after{translate:0 1px}}
+.sel-wrap:focus-within{color:var(--text)}
+.sel-wrap:has(> select:disabled),.sel-wrap:has(> select:disabled):hover{color:var(--muted)}
+.sel-wrap:has(> select:disabled)::after{translate:none;opacity:.6}
+.sel-wrap.m-open::after{rotate:180deg;translate:none}
+@supports selector(select:open){.sel-wrap:has(> select:open)::after{rotate:180deg;translate:none}}
 /* checkbox: drawn here so the mark can pop in with a spring; stays a native checkbox for keyboard and AT */
 input[type=checkbox]{-webkit-appearance:none;appearance:none;width:18px;height:18px;margin:0;flex:none;cursor:pointer;border:1.5px solid color-mix(in srgb,var(--text) 38%,transparent);border-radius:4px;
   background:var(--m-check) center/0 0 no-repeat var(--card);transition:background-color var(--dur-2) var(--ease-standard),border-color var(--dur-2) var(--ease-standard),background-size var(--spring-snappy-t) var(--spring-snappy)}
@@ -351,6 +362,19 @@ input[type=checkbox]:checked{background-color:var(--violet);border-color:var(--v
    ================================================================================================= */
 .panel{transform:translate(var(--m-x,0px),var(--m-y,0px))}
 .panel.m-drag{transition:none;overscroll-behavior:contain}
+/* the pinned top bar: once the body scrolls, a hairline and a soft shadow fade in (opacity only); after 24px it
+   condenses: the ground and the hairline rise by --m-pt-cut, the content by 4px and the title settles to .85 of its
+   size, all transforms on the settle spring, so the bar's layout box (and so the body) never moves.
+   js/motion.js measures --m-pt-cut from the title. */
+.panel-top::before,.panel-top::after,.pt-in{transition:transform var(--spring-settle-t) var(--spring-settle)}
+.panel-top::after{transition:transform var(--spring-settle-t) var(--spring-settle),opacity var(--dur-2) var(--ease-standard)}
+.pt-title{transform-origin:0 0;transition:transform var(--spring-settle-t) var(--spring-settle)}
+.panel-top.m-scrolled::after{opacity:1}
+.panel-top.m-cond::before,.panel-top.m-cond::after{transform:translateY(calc(var(--m-pt-cut,8px) * -1))}
+.panel-top.m-cond .pt-in{transform:translateY(-4px)}
+.panel-top.m-cond .pt-title{transform:scale(.85)}
+/* keyboard focus moving into the body stops below the bar, not under it */
+.panel{scroll-padding-top:var(--m-pt-h,0px)}
 main{transform-origin:50% 0}
 @media (prefers-reduced-motion:no-preference){
   main{transition:transform var(--spring-gentle-t) var(--spring-gentle)}

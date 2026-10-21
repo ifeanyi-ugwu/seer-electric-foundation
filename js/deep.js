@@ -105,7 +105,7 @@ function render(){var l=view(),narrow=U.narrow.matches,want=l.slice(0,st.n).map(
  ui.th.forEach(function(th,k){var c=COLS[k],b=th.firstChild,t=thText(c);if(th.getAttribute("aria-sort")!==thSort(c))th.setAttribute("aria-sort",thSort(c));if(b.textContent!==t)b.textContent=t});
  U.patch(ui.sortbar,sortbar());
  U.sheet({open:!!(st.sel&&narrow),label:st.sel?"#"+st.sel.id+" "+st.sel.name:"",badge:h("span",{class:"badge",text:"Proposal #"+(st.sel?st.sel.id:"")}),
-  kids:st.sel?[h("h2",{text:st.sel.name}),readout(st.sel)]:[],onClose:close,instant:!narrow});
+  title:st.sel?st.sel.name:"",kids:st.sel?[readout(st.sel)]:[],onClose:close,instant:!narrow});
  var ss=document.getElementById("deep-sort");if(ss&&ss.value!==st.sort)ss.value=st.sort}
 frame();
 U.narrow.addEventListener("change",function(){render()});

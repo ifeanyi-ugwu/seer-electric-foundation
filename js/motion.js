@@ -290,7 +290,7 @@ M.patch=function(target,next,o){o=o||{};
     /* o.lazy: a new row starts as an empty box of its usual size (css .m-wait); settle fills the ones that fade in
        a few per frame, just ahead of their staggered entrance, so no single frame lays out a screenful of rows */
     if(o.lazy&&ctx.animate&&sel)ctx.added.forEach(function(n){if(n.nodeType===1&&n.matches(sel))n.classList.add("m-wait")})}
-  else morphKids(target,next,ctx);
+  else{wrapSel(next);morphKids(target,next,ctx)}
   if(ae&&ae!==doc.body&&ae!==doc.activeElement&&ae.isConnected){try{ae.focus({preventScroll:true});if(ss!=null)ae.setSelectionRange(ss,se)}catch(e){}}
   if(ctx.animate){
     if(!job){job=target.__mjob={first:null,sel:null,added:[],removed:[]}}
@@ -376,7 +376,43 @@ function chartHover(svg){if(svg.__ch||!svg.getAttribute("data-y"))return;svg.__c
   svg.addEventListener("pointerdown",function(e){ev=e;move(e)},{passive:true});
   svg.addEventListener("pointerleave",function(){on=false;if(g)g.classList.remove("m-on")},{passive:true})}
 
-function scan(r){r=r||doc;if(r.matches&&r.matches(".seg,.tabs"))indicator(r);each(r.querySelectorAll(".seg,.tabs"),indicator);
+/* ---------- selects: a wrapper that carries the chevron, so it can turn while the menu is open ---------- */
+/* Every select.field gets a <span class="sel-wrap"> (not "m-": the wrapper is structure, not state). Freshly built DOM
+   is wrapped before it is morphed in (patch), so old and new trees match node for node and the live select, with its
+   focus, value and handlers, is kept. A select already on the page is moved with moveBefore where it exists (it
+   keeps focus), otherwise refocused. Idempotent. */
+function wrapSel(r){if(!r||!r.querySelectorAll)return;var l=r.querySelectorAll("select.field"),i,s,p,w,f;
+  for(i=0;i<l.length;i++){s=l[i];p=s.parentNode;if(!p||p.classList&&p.classList.contains("sel-wrap"))continue;
+    w=doc.createElement("span");w.className="sel-wrap";f=doc.activeElement===s;p.insertBefore(w,s);
+    if(w.moveBefore&&s.isConnected){try{w.moveBefore(s,null)}catch(e){w.appendChild(s)}}else w.appendChild(s);
+    if(f&&doc.activeElement!==s){try{s.focus({preventScroll:true})}catch(e){}}}
+  selOpen()}
+M.selects=wrapSel;
+/* Open state: CSS reads select:open where it exists (Chromium 135+). Elsewhere one set of delegated listeners keeps
+   .m-open on the wrapper, best effort: a press toggles it; change, blur, Escape, Tab, Enter on an open menu and the
+   window losing focus close it; Space, F4 and Alt+Up/Down (plus the arrows and Enter on macOS) open it from the
+   keyboard. A native menu holds the pointer while it is open, so the page seeing the pointer travel again (after a
+   moment, by more than a few pixels) means it has closed. When unsure it errs toward closed. */
+var HAS_OPEN=(function(){try{return CSS.supports("selector(select:open)")}catch(e){return false}})();
+function selOf(t){return t&&t.tagName==="SELECT"&&t.parentNode&&t.parentNode.classList&&t.parentNode.classList.contains("sel-wrap")?t:null}
+var selAt=null;
+function selSet(s,on){var w=s&&s.parentNode;selAt=null;if(w&&w.classList.contains("m-open")!==on)w.classList.toggle("m-open",on)}
+function selIs(s){return s.parentNode.classList.contains("m-open")}
+function selOpen(){if(selOpen.on||HAS_OPEN)return;selOpen.on=1;var mac=/Mac|iP(hone|ad|od)/.test(navigator.platform||""),tp="";
+  doc.addEventListener("pointerdown",function(e){var s=selOf(e.target);tp=e.pointerType;if(!s||e.button>0||s.disabled||tp==="touch")return;
+    var o=!selIs(s);selSet(s,o);if(o)selAt={s:s,x:e.clientX,y:e.clientY,t:e.timeStamp}},true);
+  doc.addEventListener("pointermove",function(e){var a=selAt;if(a&&e.pointerType!=="touch"&&e.timeStamp-a.t>250&&Math.abs(e.clientX-a.x)+Math.abs(e.clientY-a.y)>6)selSet(a.s,false)},{passive:true});
+  /* touch opens the picker on the tap itself */
+  doc.addEventListener("click",function(e){var s=selOf(e.target);if(s&&tp==="touch"&&!s.disabled)selSet(s,true)},true);
+  doc.addEventListener("change",function(e){var s=selOf(e.target);if(s)selSet(s,false)},true);
+  doc.addEventListener("focusout",function(e){var s=selOf(e.target);if(s)selSet(s,false)},true);
+  doc.addEventListener("keydown",function(e){var s=selOf(e.target);if(!s||s.disabled)return;var k=e.key,o=selIs(s);
+    if(k==="Escape"||k==="Tab"||(k==="Enter"&&o))selSet(s,false);
+    else if(k==="F4"||(e.altKey&&(k==="ArrowDown"||k==="ArrowUp")))selSet(s,!o);
+    else if(k===" "||(mac&&(k==="ArrowDown"||k==="ArrowUp"||k==="Enter")))selSet(s,true)},true);
+  addEventListener("blur",function(){each(doc.querySelectorAll(".sel-wrap.m-open"),function(w){w.classList.remove("m-open")})})}
+
+function scan(r){r=r||doc;wrapSel(r);if(r.matches&&r.matches(".seg,.tabs"))indicator(r);each(r.querySelectorAll(".seg,.tabs"),indicator);
   each(r.querySelectorAll("svg.chart[data-y]"),chartHover);
   if(pauseIO)each(r.querySelectorAll(".status-live,.c-st[data-status=Live]"),function(el){if(!el.__po){el.__po=1;pauseIO.observe(el)}})}
 M.scan=scan;
@@ -467,17 +503,38 @@ M.ripple=function(c){if(reduced()||!c||!c.ownerSVGElement)return;var s=c.ownerSV
 
 /* ---------- sheets and panels: spring in, page recedes, drag to dismiss on phones, accelerated exit ---------- */
 M.panelIn=function(host){var p=host.querySelector(".panel"),s=host.querySelector(".scrim");if(!p)return;
-  root.classList.add("m-sheet");if(reduced()||!SP)return;
+  root.classList.add("m-sheet");sheetHead(p);if(reduced()||!SP)return;
   var bottom=mqPhone.matches;
   if(s)anim(s,[{opacity:0},{opacity:1}],{duration:D.m,easing:E.standard,fill:"backwards"});
   if(bottom){drive(p,{y:0},"gentle",{from:{y:p.offsetHeight||innerHeight},eps:.3});dragSheet(p)}
   else{drive(p,{x:0},"gentle",{from:{x:48},eps:.3});anim(p,[{opacity:0},{opacity:1}],{duration:D.s,easing:E.standard,fill:"backwards"})}};
 M.sheetOff=function(){root.classList.remove("m-sheet")};
-function dragSheet(p){if(p.__drag)return;p.__drag=1;var y0=0,on=false,off=false,hist=[];
+/* The pinned top bar (css/shell.css): .m-scrolled fades in its hairline and shadow as soon as the body scrolls,
+   .m-cond condenses it after 24px (back below 12px, so it never flickers at the threshold). One passive scroll
+   listener, read once per frame; classes change only when a threshold is crossed. The m- classes and --m-
+   variables survive the sheet's morphs. --m-pt-cut (how far the ground rises) is measured from the bar's own
+   content, --m-pt-h (the condensed bar's height) keeps focused controls from landing under it. */
+var PT_S=.85,PT_D=4;
+function sheetHead(p){var top=p.querySelector(".panel-top");if(!top||p.__ph===top)return;p.__ph=top;var sc=null,cd=null,q=0;
+  function measure(){var inn=top.querySelector(".pt-in");if(!inn||!top.isConnected)return;var b0=0,b1=0;
+    [].forEach.call(inn.children,function(c){var b=c.offsetTop+c.offsetHeight;b0=Math.max(b0,b);b1=Math.max(b1,c.classList.contains("pt-title")?c.offsetTop+c.offsetHeight*PT_S:b)});
+    var cut=Math.max(0,Math.round(PT_D*2+b0-b1));top.style.setProperty("--m-pt-cut",cut+"px");p.style.setProperty("--m-pt-h",Math.round(top.offsetHeight-cut-PT_D)+"px")}
+  function upd(){q=0;var y=p.scrollTop,a=y>0,c=cd?y>12:y>24;
+    if(a!==sc){sc=a;top.classList.toggle("m-scrolled",a)}if(c!==cd){cd=c;top.classList.toggle("m-cond",c)}}
+  p.addEventListener("scroll",function(){if(!q)q=requestAnimationFrame(upd)},{passive:true});
+  measure();upd();if(window.ResizeObserver)new ResizeObserver(measure).observe(top)}
+M.sheetHead=sheetHead;
+/* Drag to dismiss (phones). A drag that starts on the pinned bar always moves the sheet (the bar is touch-action:none);
+   one that starts in the body moves it only when pulling down from the very top, or when there is nothing to scroll,
+   so scrolling the body never turns into a drag. */
+function dragSheet(p){if(p.__drag)return;p.__drag=1;var y0=0,on=false,off=false,hist=[],head=false;
   function rub(d){return d<0?-(64*(1-Math.exp(d/140))):d}
-  p.addEventListener("touchstart",function(e){if(e.touches.length!==1){off=true;return}y0=e.touches[0].clientY;on=false;off=false;hist=[]},{passive:true});
+  p.addEventListener("touchstart",function(e){if(e.touches.length!==1){off=true;return}y0=e.touches[0].clientY;on=false;off=false;hist=[];
+    head=!!(e.target&&e.target.closest&&e.target.closest(".panel-top"))},{passive:true});
   p.addEventListener("touchmove",function(e){if(off||e.touches.length!==1)return;var y=e.touches[0].clientY,d=y-y0;
-    if(!on){if(Math.abs(d)<4)return;if(p.scrollTop>0||!e.cancelable){off=true;return}on=true;p.classList.add("m-drag","m-live");SP.stop(p)}
+    if(!on){if(Math.abs(d)<4)return;
+      if(!e.cancelable||(!head&&(p.scrollTop>0||(d<0&&p.scrollHeight>p.clientHeight+1)))){off=true;return}
+      on=true;p.classList.add("m-drag","m-live");SP.stop(p)}
     if(e.cancelable)e.preventDefault();var v=rub(d);applyVars({y:v},p);hist.push([e.timeStamp,y]);if(hist.length>6)hist.shift()},{passive:false});
   function end(){if(!on)return;on=false;p.classList.remove("m-drag");var cur=p.__mv?+p.__mv.y||0:0,v=0;
     if(hist.length>1){var a=hist[0],b=hist[hist.length-1];v=(b[1]-a[1])/Math.max(1,b[0]-a[0])*1000}

@@ -11,11 +11,11 @@
 .tab[aria-pressed=true]{background:var(--violet);color:#fff}
 .toolbar{display:flex;gap:var(--s-2);align-items:center}
 .toolbar .search{flex:1 1 auto}
-.toolbar select.field{flex:none}
-.cat-m{display:none}
+.toolbar select.field,.toolbar .sel-wrap{flex:none}
+.cat-m,.sel-wrap:has(> .cat-m){display:none}
 .chips{display:flex;gap:var(--s-2);flex-wrap:wrap}
 /* the 14 category tabs need about 1092px on one row; below that they become the select instead of wrapping an orphan */
-@container (max-width:1099px){.tabs{display:none}.cat-m{display:block}}
+@container (max-width:1099px){.tabs{display:none}.cat-m{display:block}.sel-wrap:has(> .cat-m){display:inline-grid}}
 
 /* market cards */
 .mgrid{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:var(--gap-panel)}/* positioned: a card that leaves fades out in place (js/motion.js) */
@@ -71,9 +71,10 @@ td.mq{white-space:normal;min-width:240px;max-width:420px;font-size:var(--fs-ui)}
   /* the 14 category tabs become a select; the toolbar is search over one row of four equal controls */
   .tabs{display:none}
   .cat-m{display:block}
+  .sel-wrap:has(> .cat-m){display:inline-grid}
   .toolbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
   .toolbar .search{grid-column:1/-1}
-  .toolbar select.field{width:100%}
+  .toolbar select.field,.toolbar .sel-wrap{width:100%}
   .toolbar .seg button{flex:1}
   /* table view: one card per market, two columns where they fit (shared card rules in shell.css) */
   .app-tbl tr{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"ty ty st" "q q q" "lo lo lo" "vo li cl"}

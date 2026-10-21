@@ -24,7 +24,13 @@ U.trap=function(e,panel){if(e.key!=="Tab"||!panel)return;var f=[].filter.call(pa
  if(!f.length)return;var a=f[0],z=f[f.length-1];
  if(e.shiftKey&&(document.activeElement===a||!panel.contains(document.activeElement))){e.preventDefault();z.focus()}
  else if(!e.shiftKey&&(document.activeElement===z||!panel.contains(document.activeElement))){e.preventDefault();a.focus()}};
-/* U.sheet({open,label,badge,kids,onClose,instant}): one detail sheet per page, at body level (outside the query
+/* The pinned top bar of every detail sheet: grab handle (phones), badge or kicker, title and Close. It sticks to the
+   top of the sheet while the body scrolls (css/shell.css); js/motion.js adds the hairline and the condense.
+   Without a badge the title sits beside Close; with one, the badge does and the title takes the full width below. */
+U.sheetTop=function(badge,title,onClose){var h=U.h;
+ return h("div",{class:"panel-top"},[h("span",{class:"panel-grip","aria-hidden":"true"}),
+  h("div",{class:"pt-in"+(badge?" has-k":"")},[badge||null,title!=null?h("h2",{class:"pt-title",text:title}):null,h("button",{class:"btn soft",type:"button",text:"Close",onclick:onClose})])])};
+/* U.sheet({open,label,badge,title,kids,onClose,instant}): one detail sheet per page, at body level (outside the query
    containers, so position:fixed is relative to the viewport). Side sheet on tablets, bottom sheet on phones
    (css/shell.css). It morphs in place like the page, so controls inside keep focus while values change.
    Escape, the scrim and Close all call onClose; the page clears its selection and returns focus. */
@@ -38,7 +44,7 @@ U.sheet=function(o){var root=document.getElementById("sheet-root"),h=U.h;
    Motion.exit([g.querySelector(".panel"),g.querySelector(".scrim")],function(){g.remove()})}else{U.clear(root);if(window.Motion&&Motion.sheetOff)Motion.sheetOff()}return}
  var f=h("div",{},[h("div",{class:"scrim","data-key":"scrim",onclick:o.onClose}),
   h("div",{class:"panel sheet",role:"dialog","aria-modal":"true","aria-label":o.label,"data-key":"sheet"},
-   [h("div",{class:"panel-top"},[o.badge||h("span"),h("button",{class:"btn soft",type:"button",text:"Close",onclick:o.onClose})])].concat(o.kids))]);
+   [U.sheetTop(o.badge,o.title,o.onClose)].concat(o.kids))]);
  U.patch(root,f,{animate:!!cur});
  U._esc=function(e){if(e.key==="Escape"){e.preventDefault();o.onClose()}else U.trap(e,root.querySelector(".panel"))};document.addEventListener("keydown",U._esc);
- if(!cur){root.querySelector(".panel-top button").focus({preventScroll:true});if(window.Motion){Motion.scan(root);if(Motion.panelIn)Motion.panelIn(root);Motion.stagger(root.querySelectorAll(".panel > :not(.panel-top)"),140,40)}}};
+ if(!cur){root.querySelector(".panel-top button").focus({preventScroll:true});if(window.Motion){Motion.scan(root);if(Motion.panelIn)Motion.panelIn(root);Motion.stagger(root.querySelectorAll(".pt-title, .panel > :not(.panel-top)"),140,40)}}};
