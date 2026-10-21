@@ -122,7 +122,7 @@ M.dataIn=function(el,d){d=(d||0)+100;
   each(el.querySelectorAll("svg.chart"),function(s){if(s.querySelector(".m-line"))M.draw(s,{delay:d});
     else{M.grow(s.querySelectorAll("rect[data-key]"),{y:1,delay:d,step:35});
       each(s.querySelectorAll("text[data-key]"),function(t){anim(t,[{opacity:0},{opacity:1}],{duration:D.m,delay:d+D.l,fill:"backwards"})})}});
-  var i=0;each(el.querySelectorAll("td.h"),function(td){var g=td.style.getPropertyValue("--g");if(g)anim(td,[{"--g":"0"},{"--g":g}],{duration:SE.gentle.duration,easing:SE.gentle.easing,delay:d+(i++)*25,fill:"backwards"})});
+  var i=0;each(el.querySelectorAll("td.h"),function(td){var g=td.style.getPropertyValue("--g");if(g)anim(td,[{transform:"scaleX(0)"},{transform:"scaleX("+g+")"}],{duration:SE.gentle.duration,easing:SE.gentle.easing,delay:d+(i++)*25,fill:"backwards",pseudoElement:"::after"})});
   var dots=el.querySelectorAll(".dotfield circle");
   each(dots,function(c,k){anim(c,[{opacity:0,transform:"scale(0)"},{opacity:1,transform:"none"}],{duration:SE.snappy.duration,easing:SE.snappy.easing,delay:d+((k%10)+Math.floor(k/10))*22,fill:"backwards"})});
   M.pop(el.querySelectorAll(".flag,.won,.badge:not(.ghost)"),d+160,30);
@@ -208,11 +208,13 @@ function morphKids(a,b,ctx){var olds=[],news=[],c;
     else for(j=oi;j<olds.length;j++){o=olds[j];if(!used.has(o)&&keyOf(o)==null&&o.nodeName===n.nodeName){m=o;oi=j+1;break}}
     if(m){used.add(m);if(m.nodeType===1){if(m.isEqualNode(n))handlers(m,n);else morphEl(m,n,ctx)}else if(m.nodeValue!==n.nodeValue)setText(m,n.nodeValue,ctx);res.push(m)}
     else{res.push(n);ctx.added.push(n)}});
-  olds.forEach(function(o){if(!used.has(o)){ctx.removed.push({n:o,p:a,next:o.nextSibling});a.removeChild(o)}});
+  olds.forEach(function(o){if(!used.has(o)){if(ctx.drop)ctx.drop(o,a);else{ctx.removed.push({n:o,p:a,next:o.nextSibling});a.removeChild(o)}}});
   var tail=null;for(c=a.lastChild;c&&isKeep(c);c=c.previousSibling)tail=c;
   var cur=a.firstChild;
   res.forEach(function(n){while(cur&&cur!==tail&&isKeep(cur))cur=cur.nextSibling;if(cur===tail)cur=null;
-    if(n===cur)cur=cur.nextSibling;else a.insertBefore(n,cur||tail)})}
+    /* a node that is already here moves with moveBefore where it exists: it keeps its computed style, focus and
+       running animations, so only its layout is redone */
+    if(n===cur)cur=cur.nextSibling;else if(a.moveBefore&&n.parentNode===a)a.moveBefore(n,cur||tail);else a.insertBefore(n,cur||tail)})}
 
 /* ---------- FLIP on springs, enters, ghosts ---------- */
 function clipOf(el,cache){var sc=el.closest&&el.closest(".tbl,.tbl-wrap,.panel"),r=cache&&cache.get(sc||doc);if(r)return r;
@@ -278,12 +280,12 @@ M.patch=function(target,next,o){o=o||{};
   /* next is either freshly built DOM to morph into target, or a function that updates target's live DOM itself
      (a page that keeps its nodes) and reports what it added and removed in ctx, so moves, entrances and exits
      animate exactly as they do for a morph */
+  /* drop(node, parent): take a node out (a list item on screen in a positioned list exits in place);
+     back(node): a node still exiting is wanted again, so it returns to the flow where it is */
+  ctx.drop=function(n,p){var f=ctx.animate&&job&&job.first&&job.first.get(n);if(f&&f.ip&&n.nodeType===1){exitAt(n,f);return}
+    ctx.removed.push({n:n,p:p,next:n.nextSibling});p.removeChild(n)};
+  ctx.back=back;
   if(typeof next==="function"){
-    /* drop(node, parent): take a node out of the list (on screen and in a positioned list, it exits in place);
-       back(node): a node still exiting is wanted again, so it returns to the flow where it is */
-    ctx.drop=function(n,p){var f=ctx.animate&&job&&job.first&&job.first.get(n);if(f&&f.ip&&n.nodeType===1){exitAt(n,f);return}
-      ctx.removed.push({n:n,p:p,next:n.nextSibling});p.removeChild(n)};
-    ctx.back=back;
     next(ctx);ctx.removed.forEach(function(r){rest(r.n)});
     /* o.lazy: a new row starts as an empty box of its usual size (css .m-wait); settle fills the ones that fade in
        a few per frame, just ahead of their staggered entrance, so no single frame lays out a screenful of rows */

@@ -218,10 +218,8 @@ html{scroll-padding-top:var(--m-hdr,88px)}
 @keyframes hc-fan{to{--hc-fan:1}}
 @keyframes hc-show{to{opacity:1}}
 @media (prefers-reduced-motion:no-preference){
-  /* first visit: the stack waits for js/home.js to start its entrance; if the script never runs it appears anyway */
-  :root.hc-js:not(.m-hero-seen):not(.hc-ready) .hc-stage{opacity:0;animation:hc-show 1ms 2.5s forwards}
-  /* return visits: the cards are there at once; only the figures wait for their brief climb */
-  :root.hc-js.m-hero-seen:not(.hc-ready) .hc-stage :is(.mpct,.mbar i){opacity:0;animation:hc-show 1ms 2.5s forwards}
+  /* every load: the stack waits for js/home.js to start its entrance; if the script never runs it appears anyway */
+  :root.hc-js:not(.hc-ready) .hc-stage{opacity:0;animation:hc-show 1ms 2.5s forwards}
 }
 .hc-next{transition:opacity var(--dur-2) var(--ease-standard)}
 .hc-next.hc-off{opacity:0}
@@ -322,7 +320,10 @@ input[type=checkbox]:checked{background-color:var(--violet);border-color:var(--v
   tr.is-sel > td:nth-child(2){transition-delay:25ms}tr.is-sel > td:nth-child(3){transition-delay:50ms}
   tr.is-sel > td:nth-child(4){transition-delay:75ms}tr.is-sel > td:nth-child(5){transition-delay:100ms}
   tr.is-sel > td:nth-child(6){transition-delay:125ms}tr.is-sel > td:nth-child(n+7){transition-delay:150ms}
-  .heat td.h{transition:background-color var(--dur-4) var(--ease-standard),--g var(--dur-4) var(--ease-decel)}
+  /* the bar's scale transitions on the bar itself (a transform, which the compositor can run), not through --g on
+     the cell, which would restyle every cell on every frame */
+  .heat td.h{transition:background-color var(--dur-4) var(--ease-standard)}
+  .heat td.h::after{transition:transform var(--dur-4) var(--ease-decel)}
 }
 /* heat bars scale from the right edge (transform, not width) so value changes stay on the compositor */
 .heat td.h::after{width:calc(100% - 32px);transform:scaleX(var(--g));transform-origin:100% 50%}

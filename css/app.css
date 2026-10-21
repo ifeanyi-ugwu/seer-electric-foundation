@@ -18,7 +18,7 @@
 @container (max-width:1099px){.tabs{display:none}.cat-m{display:block}}
 
 /* market cards */
-.mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:var(--gap-panel)}
+.mgrid{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:var(--gap-panel)}/* positioned: a card that leaves fades out in place (js/motion.js) */
 .mcard{background:var(--card);border-radius:var(--r-card);padding:var(--s-4);text-align:left;border:0;color:inherit;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:var(--s-2);min-height:216px;box-shadow:0 0 0 1px transparent}
 /* hover lift, press and tilt are springs in js/motion.js; the ring and shadow stay here */
 @media (hover:hover){.mcard:hover{box-shadow:0 0 0 1px var(--violet),0 12px 28px -18px color-mix(in srgb,var(--violet) 70%,transparent)}}

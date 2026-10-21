@@ -225,7 +225,7 @@ tr.is-sel td:first-child{box-shadow:inset 3px 0 0 var(--violet)}
   .tbl.rtbl,.tbl-wrap.rtbl,.tbl.tall.rtbl{overflow:visible;max-height:none;background:none;border-radius:0}
   .rtbl table,.rtbl tbody{display:block;min-width:0;width:100%}
   .rtbl thead{display:none}
-  .rtbl tbody{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gap-panel)}
+  .rtbl tbody{position:relative;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gap-panel)}/* positioned: a card that leaves fades out in place (js/motion.js) */
   .rtbl tr{position:relative;isolation:isolate;display:grid;gap:var(--s-2) var(--s-3);align-content:start;padding:var(--s-4);
     background:var(--card);border-radius:var(--r-card);clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%)}
   .rtbl tr[tabindex]{min-height:44px;outline-offset:-2px}

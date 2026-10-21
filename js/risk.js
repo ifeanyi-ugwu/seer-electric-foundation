@@ -32,7 +32,10 @@ function draw(animate){var target=document.getElementById("root"),root=h("div"),
  U.patch(target,root,{flip:".heat tbody tr",animate:animate!==false});
  var ss=document.getElementById("risk-sort");if(ss&&ss.value!==String(st.sort))ss.value=String(st.sort)}
 /* the chart is drawn at its panel's content width (no viewBox scaling) so every label stays 11px */
-function chartW(){var pad=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--pad-panel"))||16;return document.getElementById("root").clientWidth-2*pad}
+/* the panel padding token is read once per width range (reading a computed style forces a style recalc) */
+var padK=null,pad=16;
+function chartW(){var w=document.getElementById("root").clientWidth,k=U.narrow.matches+":"+phone.matches;
+ if(k!==padK){padK=k;pad=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--pad-panel"))||16}return w-2*pad}
 draw();
 phone.addEventListener("change",function(){draw(false)});
 if(window.Motion){Motion.ready();Motion.reveal("#root .head, #root > .panel-c",{onIn:Motion.dataIn});Motion.reveal(".heat tbody tr",{rise:8,onIn:Motion.dataIn})}

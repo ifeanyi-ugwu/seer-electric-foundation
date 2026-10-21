@@ -51,7 +51,6 @@
   var HAND = 170;                   /* a swap hands the button and the reading order over after this long */
   var LIFT = -4;                    /* hover lift of the card behind, design px */
   var SWAPPED = 'seer-hero-swapped';
-  var seen = root.classList.contains('m-hero-seen');
   var G = null, front = 0, pending = 0, emergeT = 0, chipT = 0, raf = 0, last = 0, btn = null, chip = null;
 
   function reduced() { return mqR.matches; }
@@ -252,15 +251,8 @@
       root.classList.add('hc-ready');
       return;
     }
-    if (seen) {
-      /* return visit: cards present, a brief climb */
-      target(f, 'front', { jump: true }); target(b, 'back', { jump: true });
-      cards.forEach(render); roles(true);
-      root.classList.add('hc-ready');
-      play(f, 0, 120, BRIEF, false); play(b, 0, 120, BRIEF, false);
-      return;
-    }
-    /* first visit: both cards wait unseen, the front one plays, then the back one comes out from behind it */
+    /* every load plays the full entrance, whether or not the page was seen earlier in the session */
+    /* both cards wait unseen, the front one plays, then the back one comes out from behind it */
     var g = G.front;
     target(f, 'front', { from: { x: g.x, y: g.y + 22, s: 0.96, d: 0, o: 0, b: 0 } });
     f.p.x.t = g.x; f.p.y.t = g.y + 22; f.p.s.t = 0.96; f.p.o.t = 0;
