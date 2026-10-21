@@ -85,6 +85,30 @@ td.mq{white-space:normal;min-width:240px;max-width:420px;font-size:var(--fs-ui)}
 .spark{width:100%;height:64px;display:block;margin-top:var(--s-2);overflow:visible}
 .mcard.static{cursor:default;min-height:0;box-shadow:none}
 
+/* ================================ LEADERBOARD ================================
+   The switch sits in the page head beside Create market. The table is the shared .tbl.tall.rtbl: a table from 1101px with its header
+   stuck under the page header, cut-corner cards below it (shell.css), with the column sort moved to the "Sort by" bar. */
+.pv-act{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s-3) var(--s-4)}
+.lb-ctl{display:grid;gap:var(--s-3);margin-bottom:var(--gap-block)}
+.lb-ctl .sortbar{margin:0}
+.lb-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--s-2) var(--s-4)}
+.lb-head .results-line{margin:0}
+#lb-count:focus{outline:none}
+.lb-tbl td.c-tr .badge{margin-right:var(--s-1);vertical-align:1px}
+.lb-tbl th.r button{text-align:right}
+#lb-hint:not(:empty){margin-top:var(--s-4)}
+@media (min-width:1101px){.lb-tbl th:first-child,.lb-tbl td:first-child{width:96px}}
+/* up to 1100px: rank, trader and profit on the first line, then volume, markets and win rate with their labels above */
+@media (max-width:1100px){
+  .lb-tbl tr{grid-template-columns:auto minmax(0,1fr) minmax(0,1fr) auto;grid-template-areas:"rk tr tr pf" "vo vo mk wr";align-items:start}
+  .lb-tbl td[data-label]::before{display:block;margin:0 0 2px}
+  .lb-tbl .c-rk{grid-area:rk;line-height:20px}.lb-tbl .c-rk::before{content:"#"}
+  .lb-tbl .c-tr{grid-area:tr;line-height:20px;overflow-wrap:anywhere}
+  .lb-tbl .c-pf{grid-area:pf;text-align:right;white-space:nowrap;line-height:20px;font-size:var(--fs-ui);font-weight:500}
+  .lb-tbl .c-vo{grid-area:vo;text-align:left}.lb-tbl .c-mk{grid-area:mk;text-align:left}.lb-tbl .c-wr{grid-area:wr;text-align:right}
+  .lb-tbl .c-wr::before{text-align:right}
+}
+
 /* ================================ TABLET (601 to 1100px) ================================ */
 @media (max-width:1100px){
   /* the 14 category tabs become a select; the toolbar is search over one row of four equal controls */

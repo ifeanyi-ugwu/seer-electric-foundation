@@ -375,7 +375,7 @@
     U.sheet({open:true,cls:"cm-sheet",label:"Create a market",title:"Create a market",kids:[h("div",{class:"cm-wrap","data-tx":"cm","data-key":"cm-wrap",style:cflow.style()},[body])],onClose:function(){cmClose(false)}})}
   function cmOpen(){cmFocus=document.activeElement;if(!cm)cm=fresh();cflow.reset();cmDraw(true)}
   /* closing: a market created in the sheet joins the explorer; "View in explorer" also takes you to it */
-  function cmClose(view){cflow.reset();U.sheet({open:false,onClose:function(){}});
+  function cmClose(view){cflow.reset();U.sheet({open:false,onClose:function(){}});if(view&&tab!=="markets")go("markets");
     if(!pending.length){if(cmFocus&&cmFocus.isConnected)cmFocus.focus();return}
     var add=pending.splice(0),first=add[0];add.slice().reverse().forEach(function(m){M.unshift(m);if(M!==ALL)ALL.unshift(m)});
     /* the first market of an empty explorer brings the explorer back */
@@ -407,7 +407,7 @@
      The page's markets load once (skeleton, error or empty state in place of the list), then a category, status,
      type or sort change is a new query for the list alone: what is on screen dims under a sweep until the answer
      arrives, and a newer query always wins. Search filters the loaded markets at once. */
-  var wrap=document.querySelector("#main > .wrap"),statsEl=document.getElementById("stats"),filtersEl=wrap.querySelector(".filters"),toolbarEl=wrap.querySelector(".toolbar"),
+  var wrap=document.getElementById("explorer"),statsEl=document.getElementById("stats"),filtersEl=wrap.querySelector(".filters"),toolbarEl=wrap.querySelector(".toolbar"),
       countEl=document.getElementById("count"),outEl=document.getElementById("out"),catsEl=document.getElementById("cats"),typesEl=document.getElementById("types");
   var pageBox=h("div",{class:"dm-pagebox",hidden:""});wrap.insertBefore(pageBox,wrap.firstChild);
   function sections(on){[statsEl,filtersEl,countEl,outEl].forEach(function(n){n.hidden=!on});pageBox.hidden=on;if(on)U.clear(pageBox)}
@@ -467,9 +467,113 @@
       show:function(){outEl.classList.add("dm-dim")},
       apply:function(res){outEl.classList.remove("dm-dim");qs=q;listErr=null;listEmpty=!!res.empty;render()},
       fail:function(e){outEl.classList.remove("dm-dim");qs=q;listErr=e;listEmpty=false;render();if(e.kind==="network")DM.onOnline(refilter)}})}
-  if(!DM){stats();cats();types();render();openFromUrl()}
-  else{DM.page({name:"app",replay:function(o){if(document.querySelector("#panel-root .panel"))closePanel();if(document.querySelector("#sheet-root .cm-sheet"))cmClose(false);load({initial:true,force:o.force})}});
-    load({initial:true})}
-  if(window.Motion){Motion.ready();
-    if(!DM){Motion.reveal("#stats > div",{onIn:Motion.dataIn});Motion.reveal("#cats, .toolbar, #types, #count",{rise:8});Motion.reveal("#out .mcell, #out tbody tr")}}
+  /* ======================= two views: Markets and Leaderboard =======================
+     One page, two views, chosen by the bare hash: #leaderboard shows the leaderboard, #markets or no hash the explorer (any other hash,
+     such as #demo, leaves the view as it is). The switch in the page head pushes the hash without scrolling, so Back, Forward and a reload
+     keep the view. A view loads when it is first shown. */
+  var tab="markets",started=false,pvM=document.getElementById("pv-m"),pvL=document.getElementById("pv-l");
+  function hashView(){var x=location.hash;return x==="#leaderboard"?"leaderboard":x===""||x==="#markets"?"markets":null}
+  function startExplorer(){if(started)return;started=true;
+    if(!DM){stats();cats();types();render();openFromUrl();if(window.Motion){Motion.reveal("#stats > div",{onIn:Motion.dataIn});Motion.reveal("#cats, .toolbar, #types, #count",{rise:8});Motion.reveal("#out .mcell, #out tbody tr")}}
+    else load({initial:true})}
+  function showView(v){tab=v;var l=v==="leaderboard";wrap.hidden=l;lbEl.hidden=!l;
+    pvM.setAttribute("aria-pressed",String(!l));pvL.setAttribute("aria-pressed",String(l));
+    document.title=l?"Seer app | Leaderboard":"Seer app | Market explorer";
+    if(l){if(lbState==="idle")lbLoad({initial:true});else if(lbState==="ok")lbRender()}else startExplorer()}
+  function go(v){if(v===tab)return;try{history.pushState(null,"",v==="leaderboard"?"#leaderboard":location.pathname+location.search)}catch(e){}
+    showView(v);if(DM)DM.announce(v==="leaderboard"?"Showing the leaderboard.":"Showing the markets.")}
+  function syncView(){var v=hashView();if(v&&v!==tab)showView(v)}
+  pvM.onclick=function(){go("markets")};pvL.onclick=function(){go("leaderboard")};
+  addEventListener("popstate",syncView);addEventListener("hashchange",syncView);
+
+  /* ======================= leaderboard =======================
+     25 illustrative traders in three fixed sets (js/leaders.js), ranked by profit, in a table from 1101px and cut-corner cards below it (the
+     shared reflow rules). A wallet that is connected adds a "You" row, worked out from its positions and activity (see youRow). It loads through
+     js/demo.js like the explorer: a skeleton, an error with Try again, offline; changing the period is a new query for the list alone. */
+  var lbEl=document.getElementById("lb"),lbBox=document.getElementById("lb-box"),lbMain=document.getElementById("lb-main"),lbCtl=document.getElementById("lb-ctl"),lbOut=document.getElementById("lb-out"),
+      lbCount=document.getElementById("lb-count"),lbSortEl=document.getElementById("lb-sortbar"),lbHint=document.getElementById("lb-hint"),lbPer=document.getElementById("lb-per");
+  var LB=window.LEADERS||{week:[],month:[],all:[]},PNAME={week:"Week",month:"Month",all:"All time"};
+  var lb={period:"week",sort:"pf",dir:-1},lbState="idle",lbErr=null,lbEmpty=false,lbSlot=slot(),lbListSlot=slot();
+  var LBCOLS=[["rk","Rank",""],["tr","Trader",""],["pf","Profit","r",1],["vo","Volume","r",1],["mk","Markets","r",1],["wr","Win rate","r",1]];
+  var LBSORTS=[["pf","Profit"],["vo","Volume"],["mk","Markets"],["wr","Win rate"]];
+  /* The "You" row. Profit: the value of the positions held at the price stored with them, minus what they cost, plus every redemption credited
+     (the cost of a position that was redeemed is not kept, so its credit counts in full). Volume: the cost of the positions held plus the
+     confirmed trades that no held position covers. Markets: the different markets among held positions and confirmed trades and redemptions.
+     Win rate: resolved positions held that pay out, plus redemptions, over all of those and the resolved positions that pay nothing; "-" when
+     there are none. */
+  function youRow(){var s=W.state;if(!s.connected)return null;
+    var val=0,cost=0,vol=0,red=0,wins=0,losses=0,mk={},held={};
+    s.positions.forEach(function(p){val+=p.shares*p.price;cost+=p.cost;vol+=p.cost;mk[p.market]=1;held[p.market]=1;if(p.status==="Resolved"){if(p.price>0)wins++;else losses++}});
+    s.activity.forEach(function(a){if(a.status!=="Confirmed")return;
+      if(a.type==="Trade"){mk[a.market]=1;if(!held[a.market])vol+=a.amount}
+      else if(a.type==="Redeem"){mk[a.market]=1;red+=a.amount;wins++}});
+    return{key:"you",you:true,addr:s.short,pf:Math.round((val-cost+red)*100)/100,vo:Math.round(vol*100)/100,mk:Object.keys(mk).length,wr:wins+losses?Math.round(wins/(wins+losses)*100):null}}
+  /* every row with its rank by profit (a tie keeps the traders ahead of You), then in the order the sort asks for; a missing win rate goes last */
+  function lbRows(){var r=(LB[lb.period]||[]).map(function(t){return{key:"t"+t[0],addr:W.short(U.addr(t[0])),pf:t[1],vo:t[2],mk:t[3],wr:t[4]}}),y=youRow();if(y)r.push(y);
+    r.sort(function(a,b){return b.pf-a.pf});r.forEach(function(x,i){x.rank=i+1});
+    var k=lb.sort,d=lb.dir;r.sort(function(a,b){var x=a[k],z=b[k];if(x==null&&z==null)return a.rank-b.rank;if(x==null)return 1;if(z==null)return-1;return(x-z)*d||a.rank-b.rank});return r}
+  function lbTh(c){var on=lb.sort===c[0],txt=c[1]+(on?(lb.dir>0?" \u2191":" \u2193"):"");
+    if(!c[3])return h("th",{scope:"col",class:c[2],text:c[1]});
+    return h("th",{scope:"col",class:c[2],"aria-sort":on?(lb.dir>0?"ascending":"descending"):"none"},[h("button",{type:"button",text:txt,onclick:function(){if(lb.sort===c[0])lb.dir*=-1;else{lb.sort=c[0];lb.dir=-1}lbRender()}})])}
+  function lbTr(r){var up=r.pf>0,dn=r.pf<0;
+    return h("tr",{"data-key":r.key,class:r.you?"is-sel":null},[
+      h("td",{class:"num muted c-rk",text:String(r.rank)}),
+      h("td",{class:"c-tr"},[r.you?h("span",{class:"badge new",text:"You"}):null,r.you?" ":null,h("span",{class:"num",text:r.addr})]),
+      h("td",{class:"r num c-pf "+(up?"pos":dn?"neg":"")},[up||dn?h("span",{"aria-hidden":"true",text:up?"\u25b2 ":"\u25bc "}):null,(up?"+":"")+U.money(r.pf)]),
+      h("td",{class:"r num c-vo","data-label":"Volume",text:U.money(r.vo)}),
+      h("td",{class:"r num c-mk","data-label":"Markets",text:String(r.mk)}),
+      h("td",{class:"r num c-wr","data-label":"Win rate",text:r.wr==null?"-":r.wr+"%"})])}
+  function lbTable(rows){var tb=h("tbody");rows.forEach(function(r){tb.appendChild(lbTr(r))});
+    return h("div",{class:"tbl tall rtbl lb-tbl","data-key":"lbt"},[U.roles(h("table",{},[h("thead",{},[h("tr",{},LBCOLS.map(lbTh))]),tb]))])}
+  /* below 1101px the column headers are hidden, so the same sort state gets a select and an order toggle, as Deep does */
+  function lbSortbar(){var ord=lb.dir>0?"Lowest first":"Highest first";
+    return h("div",{class:"sortbar narrow-only"},[h("label",{for:"lb-sort",text:"Sort by"}),
+      h("select",{class:"field",id:"lb-sort",onchange:function(e){lb.sort=e.target.value;lb.dir=-1;lbRender()}},LBSORTS.map(function(o){return h("option",{value:o[0],text:o[1],selected:lb.sort===o[0]?"selected":null})})),
+      h("button",{class:"btn soft",type:"button",onclick:function(){lb.dir*=-1;lbRender()}},[h("span",{"aria-hidden":"true",text:lb.dir>0?"\u2191 ":"\u2193 "}),ord])])}
+  function lbRender(){if(lbState!=="ok")return;var f=h("div"),n;
+    if(lbErr||lbEmpty){lbCount.textContent="";U.clear(lbHint);
+      f.appendChild(lbErr?DM.errorView(lbErr,{level:"panel",hl:"h2",subject:"the traders",retry:function(){DM.holdFocus(lbOut);lbRefresh()}})
+        :DM.emptyView({level:"panel",hl:"h2",title:"No traders yet",text:"Nobody has traded in this period yet. Check again in a moment.",action:{text:"Check again",onclick:function(){DM.holdFocus(lbOut);lbRefresh()}}}));
+      patch(lbOut,f);return}
+    var rows=lbRows();lbCount.textContent=rows.length+" traders";
+    f.appendChild(lbTable(rows));patch(lbOut,f,{flip:"tbody tr"});
+    patch(lbSortEl,lbSortbar());var ss=document.getElementById("lb-sort");if(ss&&ss.value!==lb.sort)ss.value=lb.sort;
+    /* a wallet that is not connected is asked to connect, with the shared hint */
+    n=W.hint({hint:"lb-hint-t",tail:" to see where you rank.",after:function(){lbCount.setAttribute("tabindex","-1");lbCount.focus({preventScroll:true});
+      var r=lbRows().filter(function(x){return x.you})[0];if(r&&DM)DM.announce("You rank "+r.rank+" of "+lbRows().length+" by profit.")}});
+    var hf=h("div");if(n)hf.appendChild(n);patch(lbHint,hf)}
+  function lbSections(on){lbMain.hidden=!on;lbBox.hidden=on;if(on)U.clear(lbBox)}
+  function lbSkRow(i){var S=DM.sk;return h("tr",{class:"dm-skr","aria-hidden":"true",style:"--i:"+i},[h("td",{class:"num muted c-rk"},[S("2ch")]),h("td",{class:"c-tr"},[S("14ch")]),h("td",{class:"r num c-pf"},[S("5ch")]),
+    h("td",{class:"r num c-vo"},[S("5ch")]),h("td",{class:"r num c-mk"},[S("3ch")]),h("td",{class:"r num c-wr"},[S("4ch")])])}
+  function lbSkeleton(){lbSections(true);var S=DM.sk,tb=h("tbody");for(var i=0;i<10;i++)tb.appendChild(lbSkRow(i));
+    lbCtl.classList.add("dm-skz");lbCtl.inert=true;lbCount.textContent="";lbCount.appendChild(S("9ch"));U.clear(lbHint);
+    U.clear(lbOut);lbOut.appendChild(h("div",{class:"dm-skel"},[h("div",{class:"tbl tall rtbl lb-tbl","aria-hidden":"true"},[h("table",{},[h("thead",{},[h("tr",{},LBCOLS.map(function(c){return h("th",{scope:"col",class:c[2],text:c[1]})}))]),tb])])]))}
+  function lbUnskel(){lbCtl.classList.remove("dm-skz");lbCtl.inert=false}
+  function lbLoad(o){o=o||{};lbListSlot.cancel();lbOut.classList.remove("dm-dim");var p=lb.period;
+    lbSlot.run({key:"app:leaderboard?p="+p,cacheLabel:"Leaderboard, "+PNAME[p],producer:function(){return LB[p]},scope:"page",force:o.force,initial:true,busy:lbEl,label:"Loading the leaderboard",
+      empty:function(){return[]},show:lbSkeleton,
+      apply:function(res,info){lbUnskel();lbErr=null;lbEmpty=false;
+        if(res.empty||!res.data.length){lbState="empty";lbSections(false);
+          DM.renderEmpty(lbBox,{level:"page",kind:"Nothing here yet",title:"No traders yet",text:"Nobody has traded in this period yet. Check again in a moment.",action:{text:"Check again",onclick:function(){DM.holdFocus(lbEl);lbLoad({initial:true,retried:true})}},focus:o.retried&&!modal()});return}
+        lbState="ok";lbSections(true);if(!info.shown){U.clear(lbOut)}
+        lbRender();if(o.retried&&!modal())DM.focusFirst(lbMain);openFromUrl();
+        if(window.Motion){Motion.scan(lbEl);Motion.reveal("#lb .lb-head, #lb .sortbar",{rise:8});Motion.reveal("#lb tbody tr")}},
+      fail:function(e){lbUnskel();lbState="error";lbSections(false);
+        DM.renderError(lbBox,e,{level:"page",subject:"the traders",retry:function(){DM.holdFocus(lbEl);lbLoad({initial:true,retried:true})},back:{text:"Back to home",href:"index.html"},focus:!modal()});
+        if(e.kind==="network")DM.onOnline(function(){if(lbState==="error")lbLoad({initial:true})})}})}
+  /* a new period is a new query for the table alone: it dims under a sweep, and its answer or failure replaces it */
+  function lbRefresh(){if(lbState!=="ok")return;var p=lb.period;
+    lbListSlot.run({key:"app:leaderboard?p="+p,cacheLabel:"Leaderboard, "+PNAME[p],producer:function(){return LB[p]},scope:"page",busy:lbOut,label:"Loading the leaderboard",empty:function(){return[]},
+      show:function(){lbOut.classList.add("dm-dim")},
+      apply:function(res){lbOut.classList.remove("dm-dim");lbErr=null;lbEmpty=!!res.empty;lbRender()},
+      fail:function(e){lbOut.classList.remove("dm-dim");lbErr=e;lbEmpty=false;lbRender();if(e.kind==="network")DM.onOnline(lbRefresh)}})}
+  [].forEach.call(lbPer.querySelectorAll("button"),function(b){b.onclick=function(){var p=b.getAttribute("data-p");if(p===lb.period)return;lb.period=p;
+    [].forEach.call(lbPer.querySelectorAll("button"),function(x){x.setAttribute("aria-pressed",String(x===b))});lbRefresh()}});
+  /* a wallet that connects or disconnects adds or removes the You row */
+  W.subscribe(function(){if(tab==="leaderboard"&&lbState==="ok")lbRender()});
+
+  if(DM)DM.page({name:"app",replay:function(o){if(document.querySelector("#panel-root .panel"))closePanel();if(document.querySelector("#sheet-root .cm-sheet"))cmClose(false);
+    if(tab==="leaderboard"){lbLoad({initial:true,force:o.force});return}load({initial:true,force:o.force})}});
+  showView(hashView()||"markets");
+  if(window.Motion)Motion.ready();
 })();
