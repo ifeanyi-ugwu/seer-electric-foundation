@@ -100,8 +100,11 @@ function close(){if(!ws)return;var w=ws;ws=null;clearTimeout(w.t);clearTimeout(w
   U.sheet({root:"wallet-root",open:false});
   /* focus returns to where the person was, or to what the connection unlocked */
   if(S.on&&w.after){w.after();return}
-  /* preventScroll: returning focus to a control in the pinned header must never move the page (some browsers scroll to reveal it) */
-  if(w.from&&w.from.isConnected&&w.from.getClientRects().length)w.from.focus({preventScroll:true});else if(hdr)hdr.focus({preventScroll:true})}
+  /* focus returns once the sheet has finished leaving: doing it at the start of the exit made the browser restyle the pinned header
+     (focus ring, backdrop blur) in the middle of the slide and stalled it for a frame. preventScroll: returning focus to a control in
+     the pinned header must never move the page (some browsers scroll to reveal it). */
+  var back=function(){if(w.from&&w.from.isConnected&&w.from.getClientRects().length)w.from.focus({preventScroll:true});else if(hdr)hdr.focus({preventScroll:true})};
+  if(window.Motion&&!Motion.reduced())setTimeout(back,300);else back()}
 function focusIn(sel){var r=doc.getElementById("wallet-root"),n=r&&r.querySelector(sel||"[data-wl-focus]");if(n)n.focus({preventScroll:false})}
 function sheet(first){if(!ws)return;var kids,title,label,badge=null;
   if(ws.mode==="connect"){title=label="Connect a wallet";kids=[connectStep()]}

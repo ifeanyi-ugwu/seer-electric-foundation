@@ -102,7 +102,8 @@
   function closePanel(){var r=document.getElementById("panel-root"),p=r.querySelector(".panel"),s=r.querySelector(".scrim");document.removeEventListener("keydown",esc);
     detSlot.cancel();if(flow)flow.reset();flow=null;redrawTicket=null;
     var clear=function(){if(!p||p.isConnected)r.textContent=""};
-    if(window.Motion&&p)Motion.exit([p,s],clear);else{clear();if(window.Motion&&Motion.sheetOff)Motion.sheetOff()}if(lastFocus)lastFocus.focus({preventScroll:true})}
+    if(window.Motion&&p)Motion.exit([p,s],clear);else{clear();if(window.Motion&&Motion.sheetOff)Motion.sheetOff()}/* focus returns after the exit has finished, so the restyle it causes never lands in the middle of the slide */
+    if(lastFocus){var lf=lastFocus,back=function(){if(lf.isConnected)lf.focus({preventScroll:true})};if(window.Motion&&!Motion.reduced())setTimeout(back,300);else back()}}
   /* Escape closes; Tab and Shift+Tab stay inside the open panel. While the wallet sheet is open above it, it waits. */
   function esc(e){if(e.defaultPrevented||U.covered("panel-root"))return;if(e.key==="Escape"){closePanel();return}if(e.key!=="Tab")return;var p=document.querySelector("#panel-root .panel");if(!p)return;
     var f=[].filter.call(p.querySelectorAll("button,input,select,[tabindex]:not([tabindex='-1'])"),function(n){return!n.disabled&&n.getClientRects().length});if(!f.length)return;
