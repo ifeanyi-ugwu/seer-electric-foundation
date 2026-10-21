@@ -20,6 +20,19 @@
 .mini{display:inline-block;height:8px;border-radius:2px;vertical-align:middle}
 .chart{display:block;width:100%;overflow:visible}
 
+/* ---------- toggletips (U.tip in js/util.js): a 24px "?" with a 44px hit area, and one popover at body level ---------- */
+.tt-row{display:inline-flex;align-items:center;gap:var(--s-2);max-width:100%;min-width:0}
+.tt-b{position:relative;flex:none;display:inline-grid;place-items:center;width:24px;height:24px;margin-left:var(--s-2);padding:0;border:0;border-radius:50%;background:var(--violet-soft);color:var(--violet-text);font:inherit;font-size:var(--fs-meta);line-height:1;cursor:pointer;vertical-align:middle}
+.tt-row > .tt-b{margin-left:0}
+.tt-b::after{content:"";position:absolute;left:50%;top:50%;width:var(--tap);height:var(--tap);transform:translate(-50%,-50%)}
+.tt-b:focus-visible{outline:2px solid var(--violet-text);outline-offset:2px}
+.tt-b[aria-expanded=true]{background:var(--violet);color:#fff}
+.tt-pop{position:fixed;z-index:30;box-sizing:border-box;width:max-content;max-width:min(280px,calc(100vw - 2 * var(--s-2)));padding:var(--s-3);background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:var(--r-card);box-shadow:0 10px 24px -14px rgba(0,0,0,.6);font-size:var(--fs-meta);font-weight:400;line-height:var(--lh-body);text-align:left;white-space:normal}
+:root[data-theme=light] .tt-pop{box-shadow:0 10px 24px -14px rgba(23,23,28,.35)}
+.tt-pop[hidden]{display:none}
+/* the column head is a right-aligned cell: the tip sits beside the sort button */
+.deep-tbl th .tt-b{margin-left:var(--s-1)}
+
 /* ---------- Futarchy: the pass / fail fork ---------- */
 .dhead{display:grid;gap:var(--s-2);justify-items:start;padding:var(--s-1) 0}
 .dhead h2{font-size:var(--fs-h2);line-height:var(--lh-snug);font-weight:500;letter-spacing:-.01em}

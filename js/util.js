@@ -131,3 +131,36 @@ U.concept=function(text,opener){var h=U.h,doc=document,root=doc.documentElement;
  if(U.openPanel()&&matchMedia("(max-width:760px)").matches){root.classList.add("cn-on");root.style.setProperty("--cn-h",Math.ceil(innerHeight-n.offsetTop+8)+"px")}
  var D=window.SeerDemo,W=window.SeerWallet;(D&&D.announce||W&&W.announce||function(){})(text);
  t=setTimeout(function(){end()},5000)};
+
+/* The sentences that explain a term, once: the assistant (js/assistant.js) answers with them and the toggletips (U.tip) open with them. */
+U.GLOSS={
+ range:"The 90% range is where the market expects the evaluators' score to land nine times out of ten. A narrow range means traders agree; a wide one means they do not.",
+ agents:"AI agents trade beside people. Each row in Deep shows how much of the volume comes from agents and how much from people, so you can see where the forecast comes from.",
+ differs:"Differs from the market marks a submission where the reviewers' decision went against the signal: selected with less than a 30% chance, or not selected with 50% or more. It flags only the exceptions, so most rows show nothing.",
+ change:"Change under pass is how much higher or lower the forecast is if the proposal passes than if it fails, as a percentage of the forecast if it fails."};
+/* U.tip(text, label): a toggletip. A 24px "?" button (44px hit area) that opens a small popover with one sentence. The popover is one polite live region
+   on the page (role status) that is empty while closed, so the sentence is announced once, when it opens; the button is aria-expanded and
+   aria-describedby that region. Escape and a press outside close it (Escape returns focus to the button); so do leaving the button, a resize and
+   the button leaving the page. It is placed with fixed coordinates below the button (above when there is no room) and kept 8px inside the
+   viewport, at body level so a table cell or a contained row cannot clip it. Press and key events stop at the button, so a tip inside a
+   selectable row does not select the row. U.tipClose() closes the open one (before a re-render). */
+(function(){var pop=null,cur=null,doc=document,GAP=8;
+ function place(){var r=cur.getBoundingClientRect(),w=document.documentElement.clientWidth;pop.style.left="0px";pop.style.top="0px";var p=pop.getBoundingClientRect(),
+   left=Math.min(Math.max(GAP,r.left+r.width/2-p.width/2),w-GAP-p.width),top=r.bottom+GAP;
+  if(top+p.height>innerHeight-GAP&&r.top-GAP-p.height>GAP)top=r.top-GAP-p.height;pop.style.left=Math.round(left)+"px";pop.style.top=Math.round(top)+"px"}
+ function out(e){if(cur&&e.target!==cur&&!cur.contains(e.target)&&!pop.contains(e.target))close(false)}
+ function key(e){if(cur&&e.key==="Escape"){e.preventDefault();e.stopImmediatePropagation();close(true)}}
+ function move(){if(!cur)return;if(!cur.isConnected)close(false);else place()}
+ function close(back){var b=cur;if(!b)return;cur=null;b.setAttribute("aria-expanded","false");pop.hidden=true;pop.textContent="";
+  doc.removeEventListener("pointerdown",out,true);doc.removeEventListener("keydown",key,true);doc.removeEventListener("scroll",move,true);removeEventListener("resize",rs);
+  if(back&&b.isConnected)b.focus({preventScroll:true})}
+ function rs(){close(false)}
+ U.tipClose=function(){close(false)};
+ U.tip=function(text,label){
+  if(!pop){pop=U.h("div",{class:"tt-pop",id:"tt-pop",role:"status","aria-live":"polite",hidden:""});doc.body.appendChild(pop);pop.onpointerdown=function(e){e.preventDefault()}}
+  var b=U.h("button",{class:"tt-b",type:"button","aria-label":label,"aria-expanded":"false","aria-describedby":"tt-pop",text:"?",
+   onkeydown:function(e){e.stopPropagation()},
+   onblur:function(){if(cur===b)close(false)},
+   onclick:function(e){e.stopPropagation();if(cur===b){close(true);return}close(false);cur=b;b.setAttribute("aria-expanded","true");pop.hidden=false;pop.textContent=text;place();
+    doc.addEventListener("pointerdown",out,true);doc.addEventListener("keydown",key,true);doc.addEventListener("scroll",move,true);addEventListener("resize",rs)}});
+  return b}})();

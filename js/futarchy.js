@@ -84,7 +84,7 @@ var headFocus=false;
 function toDetail(){if(!U.narrow.matches)return;var d=document.querySelector("#detail .dhead");if(!d)return;
  var y=d.getBoundingClientRect().top+scrollY-(parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)||0);y=Math.max(0,Math.min(y,document.documentElement.scrollHeight-innerHeight));
  if(window.Motion&&!Motion.reduced())Motion.scrollTo(y);else scrollTo(0,y)}
-function detail(animate){var p=view.p,d=delta(p),root=document.getElementById("detail"),el=h("div");
+function detail(animate){U.tipClose();var p=view.p,d=delta(p),root=document.getElementById("detail"),el=h("div");
  /* a proposal that failed to load: its title (known from the list) and the error, in place of the panels */
  if(det.state==="error"){
   el.appendChild(h("div",{class:"dhead"},[h("span",{class:"badge",text:"Conditional market · Proposal #"+sel.id}),h("h2",{text:sel.t,tabindex:"-1"})]));
@@ -102,7 +102,7 @@ function detail(animate){var p=view.p,d=delta(p),root=document.getElementById("d
    h("div",{class:"fork-metric",text:p.metric}),fork,
    h("div",{class:"fork-legs"},[h("div",{class:"leg"},[h("small",{},[h("i",{class:"mk pass"}),"If it passes"]),h("b",{class:"num",text:fmt(p,p.pass)})]),
      h("div",{class:"leg"},[h("small",{},[h("i",{class:"mk fail"}),"If it fails"]),h("b",{class:"num",text:fmt(p,p.fail)})])]),
-   h("div",{class:"fork-meta"},[h("div",{},[h("span",{text:"Change under pass"}),h("span",{class:"num "+(d.good?"pos":"neg"),text:d.arrow+(d.pct>0?"+":"")+d.pct.toFixed(1)+"%"})]),h("div",{},[h("span",{text:"Market volume"}),h("span",{class:"num",text:U.money(p.vol)})])].concat(p.result?[h("div",{class:"res"},[h("span",{text:"Result"}),h("span",{class:"num",text:resultText(p)})])]:[]))]);
+   h("div",{class:"fork-meta"},[h("div",{},[h("span",{class:"tt-row"},[h("span",{text:"Change under pass"}),U.tip(U.GLOSS.change,"What change under pass means")]),h("span",{class:"num "+(d.good?"pos":"neg"),text:d.arrow+(d.pct>0?"+":"")+d.pct.toFixed(1)+"%"})]),h("div",{},[h("span",{text:"Market volume"}),h("span",{class:"num",text:U.money(p.vol)})])].concat(p.result?[h("div",{class:"res"},[h("span",{text:"Result"}),h("span",{class:"num",text:resultText(p)})])]:[]))]);
  var dao=h("div",{class:"panel-c"},[h("h2",{text:"The DAO's decision"}),h("div",{class:"line"},[h("span",{text:p.result?"Voting closed":"Voting open"}),h("span",{class:"muted num",text:p.result?(p.result.passed?"Passed":"Failed"):"ends in "+p.vote.end})]),
    h("div",{class:"votes"},[["For",p.vote.f],["Against",p.vote.a]].map(function(v){return h("div",{},[h("div",{class:"line"},[h("span",{text:v[0]}),h("span",{class:"num",text:v[1]+"%"})]),h("div",{class:"vote-bar"},[h("i",{"data-tween":"bar",style:"width:"+v[1]+"%"})])])})),
    h("p",{class:"note",text:"Token holders decide. The vote is binding; the forecast is not."})]);

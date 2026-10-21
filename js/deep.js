@@ -62,9 +62,13 @@ function side(narrow){var inline=st.sel&&!narrow;return h("div",{class:"stack"},
 function meta(){return h("p",{class:"muted"},["Evaluators score by "+U.dayIn(52)])}
 function head(l){return h("div",{class:"head"},[
  h("div",{class:"ctrls"},[h("input",{class:"field",type:"search",placeholder:"Search proposals",value:st.q,"aria-label":"Search proposals","aria-keyshortcuts":"/",oninput:function(e){st.q=e.target.value;st.n=25;moreReset();render()}}),
-  h("div",{class:"seg",role:"group","aria-label":"Participation"},[["all","All"],["agent","Agent-led"],["human","Human-led"]].map(function(f){return h("button",{type:"button","aria-pressed":String(st.f===f[0]),text:f[1],onclick:function(){st.f=f[0];st.n=25;moreReset();render()}})}))]),
+  h("div",{class:"tt-row"},[h("div",{class:"seg",role:"group","aria-label":"Participation"},[["all","All"],["agent","Agent-led"],["human","Human-led"]].map(function(f){return h("button",{type:"button","aria-pressed":String(st.f===f[0]),text:f[1],onclick:function(){st.f=f[0];st.n=25;moreReset();render()}})})),
+   U.tip(U.GLOSS.agents,"What Agent-led and Human-led mean")])]),
  h("span",{class:"muted",role:"status",text:"Showing "+Math.min(st.n,l.length)+" of "+l.length})])}
 var COLS=[["id","#"],["name","Proposal"],["s","Forecast score","r"],["lo","90% range","r"],["ag","Agent vs human volume"],["av","Agent vol.","r"],["hv","Human vol.","r"],["ch","7d change","r"]];
+/* the "90% range" toggletip: one node, in the column head from 1101px and in the first card's range line below it (the head is hidden there) */
+var rangeTip=U.tip(U.GLOSS.range,"What the 90% range means");
+function placeRange(narrow,first){var host=narrow&&first?first.querySelector(".c-r"):ui.th[3];if(host&&rangeTip.parentNode!==host)host.appendChild(rangeTip)}
 function thText(c){return c[1]+(st.sort===c[0]?(st.dir>0?" ↑":" ↓"):"")}
 function thSort(c){return st.sort===c[0]?(st.dir>0?"ascending":"descending"):"none"}
 /* phones: the column headers are hidden with the card layout, so the same sort state gets a select and an order toggle */
@@ -103,7 +107,7 @@ function step(){tq=0;var tb=ui.tbody,want=ui.want,pos=new Map(),seq=[],at=[],i=0
 function frame(){var target=document.getElementById("root"),root=h("div"),l=view(),narrow=U.narrow.matches;
  var top=h("div",{class:"cols2"},[h("div",{class:"panel-c"},[h("h2",{text:"Grant round · 100 proposals"}),dots(),h("p",{class:"note",text:"Bigger, brighter dot = higher forecast score."})]),side(narrow)]);
  var tr=h("tr");ui.th=COLS.map(function(c){var th=h("th",{scope:"col",class:c[2]||"","aria-sort":thSort(c)},[h("button",{type:"button",text:thText(c),onclick:function(){if(st.sort===c[0])st.dir*=-1;else{st.sort=c[0];st.dir=c[0]==="name"||c[0]==="id"?1:-1}render()}})]);tr.appendChild(th);return th});
- var body=h("tbody");l.slice(0,st.n).forEach(function(d){body.appendChild(row(d))});
+ var body=h("tbody");l.slice(0,st.n).forEach(function(d){body.appendChild(row(d))});placeRange(narrow,body.firstChild);
  var tbl=h("div",{class:"tbl tall rtbl deep-tbl","data-key":"tbl"},[U.roles(h("table",{},[h("thead",{},[tr]),body]))]);
  ui.more=h("button",{class:"btn lg",type:"button",text:"Show 25 more",onclick:more});
  /* the filter bar belongs to the list, so it sits closer to the table than to the field above */
@@ -113,14 +117,14 @@ function frame(){var target=document.getElementById("root"),root=h("div"),l=view
  U.patch(target,root,{flip:"tbody tr"});
  U.sheet({open:false,onClose:close});
  ui.side=top.lastChild;ui.sec=sec;ui.head=sec.firstChild;ui.sortbar=sec.children[2];ui.tbody=body;shown=st.sel;sideK=st.sel&&!narrow?st.sel.id+":"+det.state:0}
-function render(){var l=view(),narrow=U.narrow.matches,want=l.slice(0,st.n).map(row),more=l.length>st.n&&!moreErr,sk=st.sel&&!narrow?st.sel.id+":"+det.state:0;
+function render(){U.tipClose();var l=view(),narrow=U.narrow.matches,want=l.slice(0,st.n).map(row),more=l.length>st.n&&!moreErr,sk=st.sel&&!narrow?st.sel.id+":"+det.state:0;
  /* the list first: its rows are measured before anything above them can change height, so every shift glides */
  U.patch(ui.sec,function(ctx){rows(ctx,want);var m=ui.more;
   if(more&&!m.isConnected){ui.sec.appendChild(m);ctx.added.push(m)}else if(!more&&m.isConnected)ctx.drop(m,ui.sec)},{flip:"tbody tr",lazy:!narrow});
  if(shown!==st.sel){if(shown){dotOn(dotEls[shown.id-1],false);if(rowEls.has(shown.id))rowOn(rowEls.get(shown.id),false)}
   if(st.sel){dotOn(dotEls[st.sel.id-1],true);if(rowEls.has(st.sel.id))rowOn(rowEls.get(st.sel.id),true)}shown=st.sel}
  if(sk!==sideK){sideK=sk;U.patch(ui.side,side(narrow))}
- U.patch(ui.head,head(l));
+ placeRange(narrow,want[0]);U.patch(ui.head,head(l));
  ui.th.forEach(function(th,k){var c=COLS[k],b=th.firstChild,t=thText(c);if(th.getAttribute("aria-sort")!==thSort(c))th.setAttribute("aria-sort",thSort(c));if(b.textContent!==t)b.textContent=t});
  U.patch(ui.sortbar,sortbar());
  U.sheet({open:!!(st.sel&&narrow),label:st.sel?"#"+st.sel.id+" "+st.sel.name:"",badge:h("span",{class:"badge",text:"Proposal #"+(st.sel?st.sel.id:"")}),
