@@ -1,7 +1,7 @@
 (function(){
   SeerShell.mount({product:"app",cta:"Connect wallet"});
   var ALL=window.MARKETS,M=ALL,TYPES=["Categorical","Multi-categorical","Scalar","Multi-scalar","Conditional"],W=window.SeerWallet;
-  var st={cat:"All",type:"",status:"",q:"",sort:"vol",view:"grid"};
+  var st={cat:"All",type:"",status:"",q:"",sort:"vol",view:"grid",saved:false};
   /* the filters the list was last loaded with (category, status, type, sort are a server query; search is local) */
   var qs={cat:"All",type:"",status:"",sort:"vol"};
   function snap(){return{cat:st.cat,type:st.type,status:st.status,sort:st.sort}}
@@ -45,6 +45,7 @@
   function lead(m){if(!m.outs)return null;return m.outs.slice().sort(function(a,b){return b[1]-a[1]})[0]}
   function matches(m){
     if(qs.cat!=="All"&&m.cat!==qs.cat)return false;if(qs.type&&m.type!==qs.type)return false;if(qs.status&&m.status!==qs.status)return false;
+    if(st.saved&&!isSaved(m.id))return false;
     if(st.q){var s=(m.q+" "+m.cat+" "+m.type+" "+(m.outs||[]).map(function(o){return o[0]}).join(" ")).toLowerCase();if(s.indexOf(st.q.toLowerCase())<0)return false}return true}
   /* Re-renders morph into the existing DOM (js/motion.js) so focus, caret and scroll never reset. */
   function patch(el,next,o){if(window.Motion)return Motion.patch(el,next,o);el.textContent="";while(next.firstChild)el.appendChild(next.firstChild)}
@@ -57,6 +58,23 @@
   function stored(){try{var v=JSON.parse(sessionStorage.getItem(NEWKEY)||"[]");return Array.isArray(v)?v:[]}catch(e){return[]}}
   function store(l){try{sessionStorage.setItem(NEWKEY,JSON.stringify(l))}catch(e){}}
   stored().slice().reverse().forEach(function(m){if(m&&m.id&&!ALL.some(function(x){return x.id===m.id}))ALL.unshift(m)});
+
+  /* Saved markets: the ids of the markets starred in this tab (sessionStorage, so they follow a reload). Without storage they last for the page. */
+  var SAVEKEY="seer-saved";
+  var saved=(function(){try{var v=JSON.parse(sessionStorage.getItem(SAVEKEY)||"[]");return Array.isArray(v)?v:[]}catch(e){return[]}})();
+  function isSaved(id){return saved.indexOf(id)>=0}
+  function savedCount(){return M.filter(function(m){return isSaved(m.id)}).length}
+  var STAR="M10 2.4l2.3 4.8 5.2.7-3.8 3.6.9 5.2L10 14.2l-4.6 2.5.9-5.2L2.5 7.9l5.2-.7z";
+  /* the star: a toggle on a card and in a table row. It is a sibling of the card button, not inside it, so a press on it never opens the market */
+  function star(m){var on=isSaved(m.id),ic=U.svg("svg",{viewBox:"0 0 20 20",width:"20",height:"20","aria-hidden":"true",focusable:"false","stroke-width":"1.6","stroke-linejoin":"round"});ic.appendChild(U.svg("path",{d:STAR}));
+    var b=h("button",{class:"star",type:"button","aria-pressed":String(on),"aria-label":on?"Remove from saved: "+m.q:"Save market","data-key":"s"+m.id,onclick:function(e){e.stopPropagation();toggleSave(m,e.currentTarget)}});b.appendChild(ic);return b}
+  function toggleSave(m,b){var i=saved.indexOf(m.id),on=i<0;if(on)saved.push(m.id);else saved.splice(i,1);
+    try{sessionStorage.setItem(SAVEKEY,JSON.stringify(saved))}catch(e){}
+    b.setAttribute("aria-pressed",String(on));b.setAttribute("aria-label",on?"Remove from saved: "+m.q:"Save market");
+    if(on&&window.Motion)Motion.pop(b.firstChild,0);
+    types();
+    /* with Saved on, an unsaved market leaves the list; focus moves to the results line, which says how many remain */
+    if(st.saved&&!on&&pageState==="ok"){render();countEl.setAttribute("tabindex","-1");countEl.focus({preventScroll:true})}}
 
   function stats(){var open=M.filter(function(m){return m.status==="Open"||m.status==="Live"}).length;
     var vol=M.reduce(function(a,m){return a+m.vol},0);var liq=M.reduce(function(a,m){return a+m.liq},0);
@@ -72,7 +90,9 @@
     if(sel){if(sel.options.length!==all.length){U.clear(sel);all.forEach(function(c){sel.appendChild(h("option",{value:c,text:c==="All"?"All categories":c}))})}if(sel.value!==st.cat)sel.value=st.cat}}
   function types(){var el=document.getElementById("types"),f=h("div");
     [""].concat(TYPES).forEach(function(t){var n=M.filter(function(m){return!t||m.type===t}).length;
-      f.appendChild(h("button",{class:"chip",type:"button","data-key":t||"all","aria-pressed":String(st.type===t),text:t?t+" · "+n:"All types",onclick:function(){st.type=t;types();refilter()}}))});patch(el,f)}
+      f.appendChild(h("button",{class:"chip",type:"button","data-key":t||"all","aria-pressed":String(st.type===t),text:t?t+" · "+n:"All types",onclick:function(){st.type=t;types();refilter()}}))});
+    /* Saved is one more chip after the types, and combines with every other filter. It filters the loaded markets at once, as search does. */
+    f.appendChild(h("button",{class:"chip",type:"button","data-key":"saved","aria-pressed":String(st.saved),text:"Saved · "+savedCount(),onclick:function(){st.saved=!st.saved;types();if(pageState==="ok"&&!pageSlot.pending)render()}}));patch(el,f)}
 
   function cardBody(m){
     var body=[];
@@ -95,7 +115,7 @@
     return[h("div",{class:"q"},[h("div",{class:"pfp",text:m.q.charAt(0)}),h("span",{text:m.q})])].concat(body,[
       h("div",{class:"foot"},[h("div",{class:"meta"},[h("span",{class:"num",text:money(m.vol)+" Vol."}),h("i"),h("span",{text:live?"LIVE":m.status==="Open"?(closeOf(m)?"Closes "+closeOf(m).label:"No close date"):m.status,class:live?"status-live":""})]),
         m.isNew?h("span",{class:"foot-b"},[h("span",{class:"badge new",text:"New"}),tb]):tb])])}
-  function card(m){return h("button",{class:"mcard",type:"button","data-key":"m"+m.id,onclick:function(e){var o=e.target.closest("[data-o]"),s=e.target.closest("[data-side]");openPanel(m,{pick:o?+o.dataset.o:0,side:s?s.dataset.side:"Yes"})},"aria-label":m.q+", "+m.type+(m.isNew?", new":"")},cardBody(m))}
+  function card(m){return h("div",{class:"mcell","data-key":"m"+m.id},[h("button",{class:"mcard",type:"button",onclick:function(e){var o=e.target.closest("[data-o]"),s=e.target.closest("[data-side]");openPanel(m,{pick:o?+o.dataset.o:0,side:s?s.dataset.side:"Yes"})},"aria-label":m.q+", "+m.type+(m.isNew?", new":"")},cardBody(m)),star(m)])}
 
   /* explicit table roles: on phones the table is laid out as cards, which drops the native semantics (see shell.css) */
   function roles(t){t.setAttribute("role","table");Array.prototype.forEach.call(t.querySelectorAll("thead,tbody,tr,th,td"),function(n){n.setAttribute("role",{THEAD:"rowgroup",TBODY:"rowgroup",TR:"row",TH:"columnheader",TD:"cell"}[n.tagName])});return t}
@@ -104,12 +124,12 @@
     return m.cond.a==null?"No trades yet":"Pass "+U.num(m.cond.a,2,0)+" / fail "+U.num(m.cond.b,2,0)}
   function table(list){var w=h("div",{class:"tbl-wrap rtbl app-tbl"}),t=h("table"),hd=h("tr"),f=document.createDocumentFragment();
     f.appendChild(w);
-    [["Market",""],["Type",""],["Leading outcome",""],["Volume","r"],["Liquidity","r"],["Closes",""],["Status",""]].forEach(function(c){hd.appendChild(h("th",{class:c[1],scope:"col",text:c[0]}))});
+    [["Market",""],["Type",""],["Leading outcome",""],["Volume","r"],["Liquidity","r"],["Closes",""],["Status",""],["Saved","r c-sv"]].forEach(function(c){hd.appendChild(h("th",{class:c[1],scope:"col",text:c[0]}))});
     t.appendChild(h("thead",{},[hd]));var tb=h("tbody");
     list.forEach(function(m){
-      var r=h("tr",{tabindex:"0","data-key":"r"+m.id,onclick:function(){openPanel(m)},onkeydown:function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();openPanel(m)}}},[
+      var r=h("tr",{tabindex:"0","data-key":"r"+m.id,onclick:function(){openPanel(m)},onkeydown:function(e){if(e.target===e.currentTarget&&(e.key==="Enter"||e.key===" ")){e.preventDefault();openPanel(m)}}},[
         h("td",{class:"mq c-q"},m.isNew?[h("span",{class:"badge new",text:"New"})," "+m.q]:[m.q]),h("td",{class:"c-ty"},[h("span",{class:"badge",text:m.type})]),h("td",{class:"num c-lo","data-label":"Leading outcome",text:leadText(m)}),h("td",{class:"r num c-vo","data-label":"Volume",text:money(m.vol)}),
-        h("td",{class:"r num c-li","data-label":"Liquidity",text:money(m.liq)}),h("td",{class:"c-cl","data-label":"Closes",text:(closeOf(m)||{label:"Not set"}).label}),h("td",{class:"c-st","data-status":m.status,text:m.status})]);tb.appendChild(r)});
+        h("td",{class:"r num c-li","data-label":"Liquidity",text:money(m.liq)}),h("td",{class:"c-cl","data-label":"Closes",text:(closeOf(m)||{label:"Not set"}).label}),h("td",{class:"c-st","data-status":m.status,text:m.status}),h("td",{class:"r c-sv"},[star(m)])]);tb.appendChild(r)});
     t.appendChild(tb);w.appendChild(roles(t));return f}
 
   function render(){var list=sorted(M.filter(matches)),out=document.getElementById("out"),f=h("div");
@@ -120,9 +140,11 @@
           action:{text:"Clear filters",onclick:clearFilters},secondary:{text:"Create a market",onclick:function(){cmOpen()}}}));
       patch(out,f);return}
     document.getElementById("count").textContent=list.length===M.length?M.length+" markets":list.length+" of "+M.length+" markets";
-    if(!list.length)f.appendChild(h("div",{class:"empty"},["No markets match these filters. ",h("button",{class:"wl-link",type:"button",text:"Clear filters",onclick:function(){clearFilters();countEl.setAttribute("tabindex","-1");countEl.focus({preventScroll:true})}})]));
+    if(!list.length&&st.saved&&!savedCount()&&DM)f.appendChild(DM.emptyView({level:"panel",hl:"h2",kind:"Saved",title:"Saved markets",text:"No saved markets. Press the star on a market to save it.",
+      action:{text:"Show all markets",onclick:function(){clearFilters();countEl.setAttribute("tabindex","-1");countEl.focus({preventScroll:true})}}}));
+    else if(!list.length)f.appendChild(h("div",{class:"empty"},["No markets match these filters. ",h("button",{class:"wl-link",type:"button",text:"Clear filters",onclick:function(){clearFilters();countEl.setAttribute("tabindex","-1");countEl.focus({preventScroll:true})}})]));
     else if(st.view==="table")f.appendChild(table(list));else{var g=h("div",{class:"mgrid"});list.forEach(function(m){g.appendChild(card(m))});f.appendChild(g)}
-    patch(out,f,{flip:".mcard, tbody tr"})}
+    patch(out,f,{flip:".mcell, tbody tr"})}
 
   /* detail panel + trade ticket */
   var lastFocus=null,flow=null,redrawTicket=null;
@@ -359,10 +381,10 @@
     /* the first market of an empty explorer brings the explorer back */
     if(pageState==="empty"){pageState="ok";sections(true)}
     if(pageState!=="ok"){if(cmFocus&&cmFocus.isConnected)cmFocus.focus();return}
-    if(!matches(first)||listErr||listEmpty){st.cat="All";st.type="";st.status="";st.q="";qs=snap();listErr=null;listEmpty=false;listSlot.cancel();document.getElementById("out").classList.remove("dm-dim");
+    if(!matches(first)||listErr||listEmpty){st.cat="All";st.type="";st.status="";st.q="";st.saved=false;qs=snap();listErr=null;listEmpty=false;listSlot.cancel();document.getElementById("out").classList.remove("dm-dim");
       document.getElementById("q").value="";document.getElementById("status").value=""}
     stats();cats();types();
-    var show=function(){render();var c=document.querySelector('#out [data-key="m'+first.id+'"], #out [data-key="r'+first.id+'"]');if(!c)return;
+    var show=function(){render();var c=document.querySelector('#out [data-key="m'+first.id+'"] .mcard, #out [data-key="r'+first.id+'"]');if(!c)return;
       if(window.Motion){Motion.anim(c,[{boxShadow:"0 0 0 2px var(--violet)"},{boxShadow:"0 0 0 2px transparent"}],{duration:1600,easing:Motion.E.standard,delay:420});Motion.pop(c.querySelectorAll(".badge.new"),260)}
       if(view)c.focus({preventScroll:true})};
     if(view){var y=document.getElementById("count").getBoundingClientRect().top+scrollY-(parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)||0);
@@ -393,15 +415,15 @@
     /* the tiles keep their keys, so the real ones morph into these and only the figures change */
     U.clear(statsEl);["Open or live","Total volume","Liquidity"].forEach(function(l){statsEl.appendChild(h("div",{class:"dm-skel","data-key":l},[h("small",{text:l}),h("b",{class:"num"},[S(l==="Open or live"?"2ch":"5ch")])]))});
     U.clear(catsEl);["All","Politics","Sports","Business","Crypto","Pop Culture","Elections","Weather","Science"].forEach(function(c,i){catsEl.appendChild(h("span",{class:"tab dm-skchip","aria-hidden":"true",style:"--sk-d:"+i*40+"ms",text:c}))});
-    U.clear(typesEl);["All types"].concat(TYPES.map(function(t){return t+" · 00"})).forEach(function(c,i){typesEl.appendChild(h("span",{class:"chip dm-skchip","aria-hidden":"true",style:"--sk-d:"+i*40+"ms",text:c}))});
+    U.clear(typesEl);["All types"].concat(TYPES.map(function(t){return t+" · 00"}),["Saved · 0"]).forEach(function(c,i){typesEl.appendChild(h("span",{class:"chip dm-skchip","aria-hidden":"true",style:"--sk-d:"+i*40+"ms",text:c}))});
     toolbarEl.classList.add("dm-skz");filtersEl.inert=true;
     countEl.textContent="";countEl.appendChild(S("9ch"));
     U.clear(outEl);outEl.appendChild(skList(st.view==="table"))}
   /* placeholder cards (or table rows) in the list's own layout */
   function skList(table){var S=DM.sk,f=h("div",{class:"dm-skel"});
     if(table){var tb=h("tbody");for(var i=0;i<8;i++)tb.appendChild(h("tr",{class:"dm-skr",style:"--i:"+i},[h("td",{class:"mq c-q"},[S([70,54,82,60,66,48,74,58][i]+"%")]),h("td",{class:"c-ty"},[S("10ch")]),h("td",{class:"num c-lo"},[S("80%")]),
-        h("td",{class:"r num c-vo"},[S("5ch")]),h("td",{class:"r num c-li"},[S("5ch")]),h("td",{class:"c-cl"},[S("6ch")]),h("td",{class:"c-st"},[S("5ch")])]));
-      var hd=h("tr");["Market","Type","Leading outcome","Volume","Liquidity","Closes","Status"].forEach(function(c,k){hd.appendChild(h("th",{scope:"col",class:k===3||k===4?"r":"",text:c}))});
+        h("td",{class:"r num c-vo"},[S("5ch")]),h("td",{class:"r num c-li"},[S("5ch")]),h("td",{class:"c-cl"},[S("6ch")]),h("td",{class:"c-st"},[S("5ch")]),h("td",{class:"r c-sv"},[S("2ch")])]));
+      var hd=h("tr");["Market","Type","Leading outcome","Volume","Liquidity","Closes","Status","Saved"].forEach(function(c,k){hd.appendChild(h("th",{scope:"col",class:k===3||k===4||k===7?"r":"",text:c}))});
       f.appendChild(h("div",{class:"tbl-wrap rtbl app-tbl","aria-hidden":"true"},[h("table",{},[h("thead",{},[hd]),tb])]));return f}
     var g=h("div",{class:"mgrid","aria-hidden":"true"});
     [[92,58,3],[84,0,2],[96,70,3],[78,0,2],[88,52,3],[74,0,2],[90,64,2],[80,0,3]].forEach(function(c,i){
@@ -410,8 +432,8 @@
         [h("div",{class:"sk-foot"},[DM.skBlock("sk-line","--w:38%"),DM.skBlock("sk-pill")])])))});
     f.appendChild(g);return f}
   function unskeleton(){toolbarEl.classList.remove("dm-skz");filtersEl.inert=false}
-  function filtered(){return st.cat!=="All"||st.type||st.status||st.q}
-  function clearFilters(){st.cat="All";st.type="";st.status="";st.q="";document.getElementById("q").value="";document.getElementById("status").value="";
+  function filtered(){return st.cat!=="All"||st.type||st.status||st.q||st.saved}
+  function clearFilters(){st.cat="All";st.type="";st.status="";st.q="";st.saved=false;document.getElementById("q").value="";document.getElementById("status").value="";
     cats();types();if(pageState==="ok")refilter();else load({initial:true})}
   function modal(){return[].some.call(document.querySelectorAll('[aria-modal="true"]'),function(n){return!n.closest("[inert]")})}
   function load(o){o=o||{};listSlot.cancel();outEl.classList.remove("dm-dim");
@@ -430,7 +452,7 @@
         /* after a skeleton the tiles morph in place and count up; the cards cross over (js/motion.js) and the rest
            reveal as they scroll in, exactly as on a first load */
         if(info.shown)Motion.countIn(statsEl.querySelectorAll("b"),80);else Motion.reveal("#stats > div",{onIn:Motion.dataIn});
-        Motion.reveal("#cats, .toolbar, #types, #count",{rise:8});Motion.reveal("#out .mcard, #out tbody tr")},
+        Motion.reveal("#cats, .toolbar, #types, #count",{rise:8});Motion.reveal("#out .mcell, #out tbody tr")},
       fail:function(e,info){unskeleton();pageState="error";sections(false);
         DM.renderError(pageBox,e,{level:"page",subject:"the markets",retry:function(){DM.holdFocus(wrap);load({initial:true,retried:true})},
           back:{text:"Back to home",href:"index.html"},focus:!modal()});
@@ -449,5 +471,5 @@
   else{DM.page({name:"app",replay:function(o){if(document.querySelector("#panel-root .panel"))closePanel();if(document.querySelector("#sheet-root .cm-sheet"))cmClose(false);load({initial:true,force:o.force})}});
     load({initial:true})}
   if(window.Motion){Motion.ready();
-    if(!DM){Motion.reveal("#stats > div",{onIn:Motion.dataIn});Motion.reveal("#cats, .toolbar, #types, #count",{rise:8});Motion.reveal("#out .mcard, #out tbody tr")}}
+    if(!DM){Motion.reveal("#stats > div",{onIn:Motion.dataIn});Motion.reveal("#cats, .toolbar, #types, #count",{rise:8});Motion.reveal("#out .mcell, #out tbody tr")}}
 })();

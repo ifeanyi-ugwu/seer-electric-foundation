@@ -17,7 +17,17 @@
 /* the 14 category tabs need about 1092px on one row; below that they become the select instead of wrapping an orphan */
 @container (max-width:1099px){.tabs{display:none}.cat-m{display:block}.sel-wrap:has(> .cat-m){display:inline-grid}}
 
-/* market cards */
+/* market cards: a cell holds the card button and, beside it, the star (a button cannot hold a button, and a press on the star must not open the market) */
+.mcell{position:relative;display:grid;min-width:0}
+.mcell .q{padding-right:calc(28px + var(--s-3))}
+/* the star toggle: 28px drawn, 44px to press (as the chips do); outline when saved is off, filled and violet when it is on */
+.star{position:relative;display:inline-grid;place-items:center;flex:none;width:28px;height:28px;padding:0;border:0;border-radius:var(--r-chip);background:none;color:var(--text-2);cursor:pointer}
+.star svg{fill:none;stroke:currentColor}
+.star[aria-pressed=true]{color:var(--violet-text)}
+.star[aria-pressed=true] svg{fill:currentColor}
+.star::after{content:"";position:absolute;left:50%;top:50%;width:var(--tap);height:var(--tap);transform:translate(-50%,-50%)}
+@media (hover:hover){.star:hover{color:var(--text)}.star[aria-pressed=true]:hover{color:var(--violet-text)}}
+.mcell > .star{position:absolute;top:calc(var(--s-4) + 8px);right:var(--s-4);z-index:1}
 .mgrid{position:relative;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:var(--gap-panel)}/* positioned: a card that leaves fades out in place (js/motion.js) */
 .mcard{background:var(--card);border-radius:var(--r-card);padding:var(--s-4);text-align:left;border:0;color:inherit;font:inherit;cursor:pointer;display:flex;flex-direction:column;gap:var(--s-2);min-height:216px;box-shadow:0 0 0 1px transparent}
 /* hover lift, press and tilt are springs in js/motion.js; the ring and shadow stay here */
@@ -86,7 +96,8 @@ td.mq{white-space:normal;min-width:240px;max-width:420px;font-size:var(--fs-ui)}
   .toolbar select.field,.toolbar .sel-wrap{width:100%}
   .toolbar .seg button{flex:1}
   /* table view: one card per market, two columns where they fit (shared card rules in shell.css) */
-  .app-tbl tr{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"ty ty st" "q q q" "lo lo lo" "vo li cl"}
+  .app-tbl tr{grid-template-columns:repeat(3,minmax(0,1fr)) auto;grid-template-areas:"ty ty st sv" "q q q q" "lo lo lo lo" "vo li cl cl"}
+  .app-tbl .c-sv{grid-area:sv;align-self:center;text-align:right}
   .app-tbl td[data-label]::before{display:block;margin:0 0 2px}
   .app-tbl .c-q{grid-area:q;max-width:none;min-width:0;font-size:var(--fs-ui);line-height:var(--lh-snug)}
   .app-tbl .c-ty{grid-area:ty;align-self:center}

@@ -496,11 +496,11 @@ function pinHead(bar,o){if(!bar||bar.__ph)return;bar.__ph=1;o=o||{};
 M.pinHead=pinHead;
 
 /* ---------- press, hover lift, tilt: delegated, so re-rendered controls need no setup ---------- */
-var PRESS=".btn,.chip,.tab,.pick,.sel,.mcard,.pill,.btn-v,.btn-w,.app,.shell-products a,.shell-icon,.theme-toggle,.seg > button,th button,.rtbl tr[tabindex],input[type=checkbox]";
+var PRESS=".btn,.chip,.tab,.pick,.sel,.star,.mcard,.pill,.btn-v,.btn-w,.app,.shell-products a,.shell-icon,.theme-toggle,.seg > button,th button,.rtbl tr[tabindex],input[type=checkbox]";
 var HOVER=".mgrid .mcard,.pick,.rtbl tr[tabindex],.btn.lg,.btn.act,.pill,.btn-v,.btn-w,.btn-pill,.app,tr[tabindex]";
 var LIFT=[[".mgrid .mcard",-3],[".pick",-2],[".rtbl tr[tabindex]",-1],[".btn.lg,.btn.act,.pill,.btn-v,.btn-w,.btn-pill,.app",-1]];
 function liftOf(t){for(var i=0;i<LIFT.length;i++)if(t.matches(LIFT[i][0]))return LIFT[i][1];return 0}
-function pressScale(t){return t.matches("input[type=checkbox]")?.86:t.matches(".mcard,.pick,.app,.rtbl tr")?.985:t.matches("th button")?.94:.965}
+function pressScale(t){return t.matches("input[type=checkbox]")?.86:t.matches(".star")?.8:t.matches(".mcard,.pick,.app,.rtbl tr")?.985:t.matches("th button")?.94:.965}
 /* a table row (table layout, or a desktop row grid) stays flat; a row reflowed into a card (its body is a grid) lifts and presses */
 function flatRow(t){return t.tagName==="TR"&&getComputedStyle(t.parentNode).display!=="grid"}
 function phys(){if(phys.on||!SP)return;phys.on=1;var pressed=null,hov=null,card=null,rect=null,ev=null,q=0;
