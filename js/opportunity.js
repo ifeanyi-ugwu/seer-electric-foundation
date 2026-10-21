@@ -43,7 +43,7 @@ var W=window.SeerWallet,flow=W.flow({box:function(){return document.querySelecto
 function focusPlace(){var b=document.querySelector('[data-tx="opp"] [data-tx-place]');if(b)b.focus()}
 function place(s){var yes=st.side==="Yes",p=Math.min(.99,Math.max(.01,yes?s.p:1-s.p)),a=st.amt,sh=a/p,side="Will "+(yes?"":"not ")+"be selected";
  flow.place(a,function(){return{amount:a,meta:{type:"Trade",market:s.n,mid:s.id,product:"opportunity",outcome:null,side:side,shares:sh,price:p,status:"Open"},
-  rows:[["Submission",s.n,"tx-q"],["Side",side],["Amount",W.money(a)+" USDC","tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(sh)],
+  rows:[["Submission",s.n,"tx-q"],["Side",side],["Amount",W.money(a)+" USDC","tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(sh)],["Max slippage","1%"],["Minimum shares",U.shares(sh*.99)],
    ["Payout if reviewers agree","$"+U.num(sh,2)],["Network fee","Free in demo","tx-free"]],
   done:"You bought "+U.shares(sh)+" shares on "+s.n+": "+side.toLowerCase()+"."}},"amt")}
 function close(){var s=st.sel;st.sel=null;selSlot.cancel();flow.reset();draw();if(s){var r=document.querySelector('tr[data-key="s'+s.id+'"]');if(r)r.focus({preventScroll:true})}}
@@ -64,7 +64,7 @@ function draw(){if(pageState!=="ok")return;var target=document.getElementById("r
   /* agreement is the normal case and prints nothing; only a difference is flagged, inside the decision cell */
   h("td",{class:"c-d"},[h("span",{class:"dec"},[badge(s.r),df?h("span",{class:"flag",text:"\u25C6 Differs from the market"}):null])])]))});
  var tbl=h("div",{class:"tbl opp rtbl"},[U.roles(h("table",{},[h("thead",{},[h("tr",{},[["Submission",""],["Market signal: chance of selection",""],["Volume","r"],["Reviewer decision",""]].map(function(c){return h("th",{scope:"col",class:c[1],text:c[0]})}))]),body]))]);
- var main=h("div",{class:"stack list-sec"},[bar,h("p",{class:"tap-hint",text:"Select a submission to see its signal and trade"}),tbl]);
+ var main=h("div",{class:"stack list-sec"},[bar,meta(),h("p",{class:"tap-hint",text:"Select a submission to see its signal and trade"}),tbl]);
  if(narrow)root.appendChild(main);
  else{var sl=st.sel&&det.id===st.sel.id&&det.state==="loading",side=h("div",Object.assign({class:"panel-c ticket opp-side","aria-busy":sl?"true":null},st.sel?{"data-tx":"opp",style:flow.style()}:{}));
   if(st.sel){side.appendChild(h("h2",{text:st.sel.n}));sideKids(st.sel).forEach(function(n){side.appendChild(n)})}
@@ -72,6 +72,8 @@ function draw(){if(pageState!=="ok")return;var target=document.getElementById("r
   root.appendChild(h("div",{class:"cols rev"},[main,side]))}
  U.patch(target,root,{flip:"tbody tr"});
  U.sheet({open:!!(st.sel&&narrow),label:st.sel?st.sel.n:"",title:st.sel?st.sel.n:"",kids:st.sel&&narrow?[h("div",{class:"panel-c ticket","data-tx":"opp",style:flow.style(),"aria-busy":det.id===st.sel.id&&det.state==="loading"?"true":null},sideKids(st.sel,true))]:[],onClose:close,instant:!narrow})}
+/* the round's two dates, counted from today as on the explorer */
+function meta(){return h("p",{class:"muted",text:"Round closes "+U.dayIn(40)+" \u00b7 Reviewers decide by "+U.dayIn(47)})}
 function loadSel(s){det={id:s.id,state:"ok",err:null};
  selSlot.run({key:"opp:submission:"+s.id,cacheLabel:"Submission: "+s.n,producer:function(){return s},scope:"details",initial:true,label:"Loading submission",
   show:function(){det={id:s.id,state:"loading",err:null};draw()},
@@ -86,7 +88,7 @@ function skPage(){var SK=DM.sk,B=DM.skBlock,narrow=U.narrow.matches,rows=[];
   h("td",{class:"c-s"},[h("span",{class:"sigbar"},[B("sk-box","width:120px;height:8px;border-radius:0"),SK("3ch")])]),h("td",{class:"r num c-v"},[SK("5ch")]),h("td",{class:"c-d"},[SK("12ch")])]));
  var tbl=h("div",{class:"tbl opp rtbl"},[h("table",{},[h("thead",{},[h("tr",{},[["Submission",""],["Market signal: chance of selection",""],["Volume","r"],["Reviewer decision",""]].map(function(c){return h("th",{scope:"col",class:c[1],text:c[0]})}))]),h("tbody",{},rows)])]);
  var main=h("div",{class:"stack list-sec"},[h("div",{class:"head"},[h("div",{class:"ctrls"},[B("sk-box","height:var(--ctl);width:430px;max-width:100%;border-radius:999px"),h("span",{class:"check"},[SK("20ch")])]),B("sk-box","height:var(--ctl);width:190px;border-radius:999px")]),
-  h("p",{class:"tap-hint",text:"Select a submission to see its signal and trade"}),tbl]);
+  meta(),h("p",{class:"tap-hint",text:"Select a submission to see its signal and trade"}),tbl]);
  return[h("div",{class:"kpi top"},["Submissions","Slots filled","Reviewers differ"].map(function(l){return h("div",{},[h("small",{text:l}),h("b",{class:"num"},[SK("4ch")])])})),
   narrow?main:h("div",{class:"cols rev"},[main,h("div",{class:"panel-c ticket opp-side"},[h("h2",{text:"Select a submission"}),h("p",{class:"note",text:"See its market signal and, while reviewers are still deciding, forecast the outcome."})])])]}
 function load(o){o=o||{};selSlot.cancel();

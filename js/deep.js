@@ -24,9 +24,11 @@ var dotEls=[],rowEls=new Map(),shown=null,sideK=null,ui={};
 function dotOn(c,on){c.setAttribute("stroke",on?"var(--text)":"none");c.setAttribute("stroke-width",on?3:2);c.setAttribute("aria-pressed",String(on))}
 function dots(){var s=U.svg("svg",{class:"dotfield",viewBox:"0 0 300 300",width:"100%",role:"group","aria-label":"Field of 100 proposals coloured by forecast score"});
  D.forEach(function(d,i){var c=U.svg("circle",{cx:15+(i%10)*30,cy:15+Math.floor(i/10)*30,r:4+d.s*.8,fill:"var(--violet)","fill-opacity":(.18+d.s/10*.82).toFixed(2),tabindex:"0",role:"button","aria-label":"#"+d.id+" "+d.name+", forecast "+d.s});dotOn(c,st.sel===d);
-  c.onclick=function(){choose(d)};c.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();choose(d)}};dotEls.push(c);s.appendChild(c)});return s}
+  c.onclick=function(){choose(d,"dot")};c.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();choose(d,"dot")}};dotEls.push(c);s.appendChild(c)});return s}
 /* selecting updates in place; the dot for the choice ripples so the eye finds it in the field */
-function choose(d){if(st.sel!==d)flow.reset();st.sel=d;loadSel(d);if(window.Motion)Motion.ripple(dotEls[d.id-1])}
+/* src is where the choice was made, a dot or a row: closing the selection returns focus there */
+var src="row";
+function choose(d,from){src=from||"row";if(st.sel!==d)flow.reset();st.sel=d;loadSel(d);if(window.Motion)Motion.ripple(dotEls[d.id-1])}
 /* a selection's details: the readout (or the sheet's body) shows placeholders at once while they load */
 function loadSel(d){det={id:d.id,state:"ok",err:null};
  selSlot.run({key:"deep:proposal:"+d.id,cacheLabel:"Deep proposal #"+d.id,producer:function(){return d},scope:"details",initial:true,label:"Loading proposal details",
@@ -37,10 +39,10 @@ function split(d){var p=Math.round(ag(d)*100);return h("span",{class:"split","ar
 function rowOn(tr,on){tr.classList.toggle("is-sel",on);if(on)tr.setAttribute("aria-current","true");else tr.removeAttribute("aria-current")}
 /* one row per proposal, built the first time it is shown and reused after that (its values never change) */
 function row(d){var tr=rowEls.get(d.id);if(tr)return tr;
- tr=h("tr",{tabindex:"0","data-key":"d"+d.id,role:"row",onclick:function(){choose(d)},onkeydown:function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();choose(d)}}},[
+ tr=h("tr",{tabindex:"0","data-key":"d"+d.id,role:"row",onclick:function(){choose(d,"row")},onkeydown:function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();choose(d,"row")}}},[
   h("td",{class:"num muted c-id",role:"cell",text:String(d.id)}),h("td",{class:"c-n",role:"cell",text:d.name}),h("td",{class:"r num c-s",role:"cell","data-label":"Forecast",text:d.s.toFixed(1)}),h("td",{class:"r num muted c-r",role:"cell","data-label":"90% range",text:d.lo+" to "+d.hi}),h("td",{class:"c-ag",role:"cell"},[split(d)]),
   h("td",{class:"r num c-av",role:"cell","data-label":"Agent vol.",text:U.money(d.av)}),h("td",{class:"r num c-hv",role:"cell","data-label":"Human vol.",text:U.money(d.hv)}),
-  h("td",{class:"r num c-ch "+(d.ch>=0?"pos":"neg"),role:"cell","data-label":"7d",text:(d.ch>=0?"▲ +":"▼ ")+d.ch.toFixed(1)})]);
+  h("td",{class:"r num c-ch "+(d.ch>0?"pos":d.ch<0?"neg":"muted"),role:"cell","data-label":"7d",text:d.ch===0?"0.0":(d.ch>0?"▲ +":"▼ ")+d.ch.toFixed(1)})]);
  if(st.sel===d)rowOn(tr,true);rowEls.set(d.id,tr);return tr}
 /* the selected proposal's readout. It repeats the row's score and range on purpose: a dot-field pick may sit in a
    row that is filtered out or not yet loaded, and the readout adds who is trading it. */
@@ -50,14 +52,16 @@ function readout(d,inSheet){var S=DM&&DM.sk,L=["Forecast score","90% range","Age
   back:{text:"Back to the list",onclick:close},titles:{notfound:"This proposal no longer exists"},texts:{notfound:"It may have been withdrawn from the round. Go back to the list to pick another."}});
  if(det.id===d.id&&det.state==="empty")return DM.emptyView({level:inSheet?"sheet":"panel",title:"No forecast yet",text:"Nobody has traded this proposal yet, so there is no score to show. Check again in a moment.",action:{text:"Check again",onclick:function(){loadSel(d)}}});
  return h("div",{class:"kpi k4"},[h("div",{},[h("small",{text:"Forecast score"}),h("b",{class:"num",text:d.s.toFixed(1)+" / 10"})]),h("div",{},[h("small",{text:"90% range"}),h("b",{class:"num",text:d.lo+" to "+d.hi})]),h("div",{},[h("small",{text:"Agent traders"}),h("b",{class:"num",text:String(d.at)})]),h("div",{},[h("small",{text:"Human traders"}),h("b",{class:"num",text:String(d.ht)})])])}
-function close(){var d=st.sel;st.sel=null;selSlot.cancel();flow.reset();render();if(!d)return;var r=rowEls.get(d.id);if(!r||!r.isConnected||r.__out)r=dotEls[d.id-1];r.focus({preventScroll:true})}
+function close(){var d=st.sel;st.sel=null;selSlot.cancel();flow.reset();render();if(!d)return;var r=rowEls.get(d.id),o=dotEls[d.id-1],ok=function(n){return n&&n.isConnected&&!n.__out},t=src==="dot"?[o,r]:[r,o];(ok(t[0])?t[0]:ok(t[1])?t[1]:o).focus({preventScroll:true})}
 /* desktop: the readout sits beside the field. Tablet and phone: it opens in a sheet, and this panel keeps the hint. */
 function side(narrow){var inline=st.sel&&!narrow;return h("div",{class:"stack"},[h("div",{class:"kpi top"},[h("div",{},[h("small",{text:"Agent volume"}),h("b",{class:"num",text:U.money(TOT.av)})]),h("div",{},[h("small",{text:"Human volume"}),h("b",{class:"num",text:U.money(TOT.hv)})]),h("div",{},[h("small",{text:"Top forecast"}),h("b",{class:"num",text:BEST.toFixed(1)+" / 10"})])]),
   h("div",{class:"notice",text:"Evaluators still score every proposal. The market forecasts their scores; it does not choose winners."}),
-  inline?h("div",{class:"panel-c"},[h("div",{class:"line"},[h("h2",{text:"#"+st.sel.id+" "+st.sel.name}),h("button",{class:"btn soft",type:"button",text:"Clear",onclick:function(){st.sel=null;selSlot.cancel();flow.reset();render()}})]),readout(st.sel)].concat(tradable(st.sel)?[ticketNode()]:[]))
+  inline?h("div",{class:"panel-c"},[h("div",{class:"line"},[h("h2",{text:"#"+st.sel.id+" "+st.sel.name}),h("button",{class:"btn soft",type:"button",text:"Clear",onclick:close})]),readout(st.sel)].concat(tradable(st.sel)?[ticketNode()]:[]))
    :h("div",{class:"panel-c"},[h("h2",{text:"Select a proposal"}),h("p",{class:"note",text:"Pick a dot in the field or a proposal below to see its forecast score, 90% range and who is trading it."})])])}
+/* the round's one date: when the evaluators score (a day counted from today, as on the explorer) */
+function meta(){return h("p",{class:"muted"},["Evaluators score by "+U.dayIn(52)])}
 function head(l){return h("div",{class:"head"},[
- h("div",{class:"ctrls"},[h("input",{class:"field",type:"search",placeholder:"Search proposals",value:st.q,"aria-label":"Search proposals",oninput:function(e){st.q=e.target.value;st.n=25;moreReset();render()}}),
+ h("div",{class:"ctrls"},[h("input",{class:"field",type:"search",placeholder:"Search proposals",value:st.q,"aria-label":"Search proposals","aria-keyshortcuts":"/",oninput:function(e){st.q=e.target.value;st.n=25;moreReset();render()}}),
   h("div",{class:"seg",role:"group","aria-label":"Participation"},[["all","All"],["agent","Agent-led"],["human","Human-led"]].map(function(f){return h("button",{type:"button","aria-pressed":String(st.f===f[0]),text:f[1],onclick:function(){st.f=f[0];st.n=25;moreReset();render()}})}))]),
  h("span",{class:"muted",role:"status",text:"Showing "+Math.min(st.n,l.length)+" of "+l.length})])}
 var COLS=[["id","#"],["name","Proposal"],["s","Forecast score","r"],["lo","90% range","r"],["ag","Agent vs human volume"],["av","Agent vol.","r"],["hv","Human vol.","r"],["ch","7d change","r"]];
@@ -103,12 +107,12 @@ function frame(){var target=document.getElementById("root"),root=h("div"),l=view
  var tbl=h("div",{class:"tbl tall rtbl deep-tbl","data-key":"tbl"},[U.roles(h("table",{},[h("thead",{},[tr]),body]))]);
  ui.more=h("button",{class:"btn lg",type:"button",text:"Show 25 more",onclick:more});
  /* the filter bar belongs to the list, so it sits closer to the table than to the field above */
- var sec=h("section",{class:"stack list-sec","aria-label":"Proposals"},[head(l),sortbar(),tbl]);
+ var sec=h("section",{class:"stack list-sec","aria-label":"Proposals"},[head(l),meta(),sortbar(),tbl]);
  if(l.length>st.n)sec.appendChild(ui.more);
  root.appendChild(top);root.appendChild(sec);
  U.patch(target,root,{flip:"tbody tr"});
  U.sheet({open:false,onClose:close});
- ui.side=top.lastChild;ui.sec=sec;ui.head=sec.firstChild;ui.sortbar=sec.children[1];ui.tbody=body;shown=st.sel;sideK=st.sel&&!narrow?st.sel.id+":"+det.state:0}
+ ui.side=top.lastChild;ui.sec=sec;ui.head=sec.firstChild;ui.sortbar=sec.children[2];ui.tbody=body;shown=st.sel;sideK=st.sel&&!narrow?st.sel.id+":"+det.state:0}
 function render(){var l=view(),narrow=U.narrow.matches,want=l.slice(0,st.n).map(row),more=l.length>st.n&&!moreErr,sk=st.sel&&!narrow?st.sel.id+":"+det.state:0;
  /* the list first: its rows are measured before anything above them can change height, so every shift glides */
  U.patch(ui.sec,function(ctx){rows(ctx,want);var m=ui.more;
@@ -137,7 +141,7 @@ function tprice(d){return tside==="Long"?d.s/10:1-d.s/10}
 function focusPlace(){var b=document.querySelector('[data-tx="deep"] [data-tx-place]');if(b)b.focus()}
 function place(){var d=st.sel,p=tprice(d),a=tamt,s=a/p,sd=tside,name="#"+d.id+" "+d.name;
  flow.place(a,function(){return{amount:a,meta:{type:"Trade",market:"Grant round",mid:d.id,product:"deep",outcome:name,side:sd,shares:s,price:p,status:"Open"},
-  rows:[["Proposal",name,"tx-q"],["Side",sd],["Amount",W.money(a)+" USDC","tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(s)],["Network fee","Free in demo","tx-free"]],
+  rows:[["Proposal",name,"tx-q"],["Side",sd],["Amount",W.money(a)+" USDC","tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(s)],["Max slippage","1%"],["Minimum shares",U.shares(s*.99)],["Network fee","Free in demo","tx-free"]],
   note:"Pays $1.00 per share at "+(sd==="Long"?"10":"0")+".",
   done:"You bought "+U.shares(s)+" "+sd.toLowerCase()+" shares on the score of proposal #"+d.id+"."}},"deep-amt")}
 function ticketKids(){var d=st.sel,p=tprice(d),ks=[h("h3",{class:"wl-sub","data-key":"tk-h",text:"Trade this score"})];
@@ -181,7 +185,7 @@ function skPage(){var S=DM.sk,B=DM.skBlock,narrow=U.narrow.matches,rows=[];for(v
    h("div",{class:"stack"},[h("div",{class:"kpi top"},["Agent volume","Human volume","Top forecast"].map(function(l){return h("div",{},[h("small",{text:l}),h("b",{class:"num"},[S("5ch")])])})),
     h("div",{class:"notice",text:"Evaluators still score every proposal. The market forecasts their scores; it does not choose winners."}),
     h("div",{class:"panel-c"},[h("h2",{text:"Select a proposal"}),h("p",{class:"note",text:"Pick a dot in the field or a proposal below to see its forecast score, 90% range and who is trading it."})])])]),
-  h("section",{class:"stack list-sec"},[h("div",{class:"head"},[h("div",{class:"ctrls"},[B("sk-box","height:var(--ctl);width:240px;max-width:100%;border-radius:999px"),B("sk-box","height:var(--ctl);width:260px;max-width:100%;border-radius:999px")]),h("span",{class:"muted"},[S("14ch")])]),
+  h("section",{class:"stack list-sec"},[h("div",{class:"head"},[h("div",{class:"ctrls"},[B("sk-box","height:var(--ctl);width:240px;max-width:100%;border-radius:999px"),B("sk-box","height:var(--ctl);width:260px;max-width:100%;border-radius:999px")]),h("span",{class:"muted"},[S("14ch")])]),meta(),
    narrow?h("div",{class:"sortbar narrow-only"},[h("label",{text:"Sort by"}),B("sk-box","height:var(--ctl);flex:1 1 auto;max-width:320px;border-radius:999px"),B("sk-box","height:var(--ctl);width:120px;border-radius:var(--r-chip)")]):null,
    h("div",{class:"tbl tall rtbl deep-tbl"},[h("table",{},[h("thead",{},[hr]),h("tbody",{},rows)])])])]}
 function load(o){o=o||{};selSlot.cancel();moreSlot.cancel();moreErr=null;
@@ -202,5 +206,6 @@ U.narrow.addEventListener("change",function(){if(pageState==="ok")render()});
 W.subscribe(function(){if(pageState==="ok")drawTicket()});
 if(DM){DM.page({name:"deep",replay:function(o){load({force:o.force,replay:true})}});load()}
 else{frame()}
+U.slashSearch('.list-sec input[type="search"]');
 if(window.Motion){Motion.ready();if(!DM)reveal()}
 })();

@@ -30,8 +30,18 @@ window.U={
  patch:function(root,next,o){if(window.Motion)return Motion.patch(root,next,o);if(typeof next==="function")return next({added:[],removed:[],drop:function(n,p){p.removeChild(n)},back:function(){}});
   while(root.firstChild)root.removeChild(root.firstChild);while(next.firstChild)root.appendChild(next.firstChild)},
  /* Tablet and phone (up to 1100px): detail opens in a sheet instead of a side column. */
- narrow:matchMedia("(max-width:1100px)")
+ narrow:matchMedia("(max-width:1100px)"),
+ /* British dates worked out from today: U.dayIn(n) is the day n days on, as "5 Oct" ("5 Oct 2027" in another year). The explorer's closing dates and the round dates on Deep and Opportunity Markets use it. */
+ MON:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+ dayIn:function(n){var now=new Date(),d=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()+n)),s=d.getUTCDate()+" "+U.MON[d.getUTCMonth()];return d.getUTCFullYear()===now.getUTCFullYear()?s:s+" "+d.getUTCFullYear()}
 };
+/* "/" focuses the page's search field (sel is its selector), unless the key is typed into a field, a modal sheet is open, or the field is not on screen */
+U.slashSearch=function(sel){document.addEventListener("keydown",function(e){
+ if(e.key!=="/"||e.defaultPrevented||e.ctrlKey||e.metaKey||e.altKey)return;
+ var t=e.target,tag=t&&t.tagName;if(tag==="INPUT"||tag==="SELECT"||tag==="TEXTAREA"||(t&&t.isContentEditable))return;
+ if([].some.call(document.querySelectorAll('[aria-modal="true"]'),function(n){return!n.closest("[inert]")}))return;
+ var f=document.querySelector(sel);if(!f||!f.getClientRects().length||f.closest("[inert]"))return;
+ e.preventDefault();f.focus()})};
 /* keep Tab and Shift+Tab inside an open modal sheet */
 U.trap=function(e,panel){if(e.key!=="Tab"||!panel)return;var f=[].filter.call(panel.querySelectorAll("a[href],button,input,select,textarea,[tabindex]:not([tabindex='-1'])"),function(n){return!n.disabled&&n.getClientRects().length});
  if(!f.length)return;var a=f[0],z=f[f.length-1];

@@ -10,13 +10,16 @@ var shown="exploit",tst={state:"ok",err:null};
 var DM=window.SeerDemo;
 function slot(){return DM?DM.slot():{run:function(o){o.apply({data:o.producer(),fromCache:false,empty:false},{sync:true,shown:false})},cancel:function(){}}}
 var pageSlot=slot(),typeSlot=slot(),pageState="ok";
+/* adding a fourth protocol drops the oldest: the live region says so and the note under the heatmap shows the same text for 3 seconds */
+var dropMsg="",dropT=0;
+function dropped(i){dropMsg=P[i][0]+" removed from the comparison.";clearTimeout(dropT);dropT=setTimeout(function(){dropMsg="";draw(false)},3000);if(DM)DM.announce(dropMsg)}
 function val(t,i,z){return +(base[t][i]*[.22,.55,.8,1.15][z]*(1+((i*7+z*3)%5-2)*.04)).toFixed(1)}
 function draw(animate){if(pageState!=="ok")return;var target=document.getElementById("root"),root=h("div"),t=shown,all=[],tl=tst.state==="loading",ph=phone.matches,sec=h("section",{class:"stack","aria-label":"Risk by protocol and horizon"});P.forEach(function(_,i){HZ.forEach(function(_,z){all.push(val(t,i,z))})});var mx=Math.max.apply(null,all);
  sec.appendChild(h("div",{class:"head"},[h("div",{class:"seg",role:"group","aria-label":"Risk type"},TYPES.map(function(x){return h("button",{type:"button","aria-pressed":String(st.type===x[0]),onclick:function(){if(st.type===x[0])return;st.type=x[0];draw(false);loadType()}},[h("span",{class:"rlabel",text:x[1]}),h("span",{class:"rlabel-s",text:x[2]})])})),
   h("span",{class:"muted",text:"Market-estimated probability of a loss event within each horizon"})]));
  var rows=P.map(function(p,i){return i}).sort(function(a,b){return val(t,b,st.sort)-val(t,a,st.sort)});
  var head=h("tr",{},[h("th",{scope:"col",text:"Protocol"})].concat(HZ.map(function(z,k){return h("th",{scope:"col",class:"r","aria-sort":st.sort===k?"descending":"none"},[h("button",{type:"button",text:z+(st.sort===k?" ↓":""),onclick:function(){st.sort=k;draw()}})])}),[h("th",{scope:"col",class:"r",text:"Compare"})]));
- var body=h("tbody");rows.forEach(function(i){var on=st.sel.indexOf(i)>=0;body.appendChild(h("tr",{"data-key":"p"+i,class:on?"is-cmp":null},[h("td",{class:"c-p"},[h("b",{text:P[i][0]}),h("span",{class:"muted",text:P[i][1]})])].concat(HZ.map(function(z,k){var v=val(t,i,k);return h("td",{class:"r num h","data-label":HS[k],style:"background:color-mix(in srgb,var(--violet) "+Math.round(6+v/mx*44)+"%,transparent);--g:"+(v/mx).toFixed(2),text:v.toFixed(1)+"%"})}),[h("td",{class:"c-c"},[h("button",{class:on?"btn":"btn soft",type:"button","aria-pressed":String(on),"aria-label":(on?"Remove ":"Add ")+P[i][0]+(on?" from":" to")+" comparison",text:on?"Comparing":"Add",onclick:function(){var k=st.sel.indexOf(i);if(k>=0)st.sel.splice(k,1);else{if(st.sel.length>=3)st.sel.shift();st.sel.push(i)}draw()}})])])))});
+ var body=h("tbody");rows.forEach(function(i){var on=st.sel.indexOf(i)>=0;body.appendChild(h("tr",{"data-key":"p"+i,class:on?"is-cmp":null},[h("td",{class:"c-p"},[h("b",{text:P[i][0]}),h("span",{class:"muted",text:P[i][1]})])].concat(HZ.map(function(z,k){var v=val(t,i,k);return h("td",{class:"r num h","data-label":HS[k],style:"background:color-mix(in srgb,var(--violet) "+Math.round(6+v/mx*44)+"%,transparent);--g:"+(v/mx).toFixed(2),text:v.toFixed(1)+"%"})}),[h("td",{class:"c-c"},[h("button",{class:on?"btn":"btn soft",type:"button","aria-pressed":String(on),"aria-label":(on?"Remove ":"Add ")+P[i][0]+(on?" from":" to")+" comparison",text:on?"Comparing":"Add",onclick:function(){var k=st.sel.indexOf(i);if(k>=0)st.sel.splice(k,1);else{if(st.sel.length>=3)dropped(st.sel.shift());st.sel.push(i)}draw()}})])])))});
  /* phones: the horizon headers are hidden with the card layout, so the same sort state gets a select.
     From 601px the heatmap stays a table: reading down a column is the comparison. */
  if(ph)sec.appendChild(h("div",{class:"sortbar narrow-only","data-key":"sortbar"},[h("label",{for:"risk-sort",text:"Sort by risk at"}),
@@ -24,7 +27,7 @@ function draw(animate){if(pageState!=="ok")return;var target=document.getElement
  /* a type that failed to load: only the heatmap says so (the chart keeps the type it shows, named in its title) */
  if(tst.state==="error")sec.appendChild(DM.errorView(tst.err,{level:"panel",hl:"h2",subject:"the "+TYPES.filter(function(x){return x[0]===st.type})[0][1].toLowerCase()+" estimates",retry:function(){DM.holdFocus(document.querySelector("#root > section"));loadType()}}));
  else{sec.appendChild(h("div",{class:"tbl heat"+(ph?" rtbl":"")+(tl?" dm-dim":""),"data-key":"heat","aria-busy":tl?"true":null},[U.roles(h("table",{},[h("thead",{},[head]),body]))]));
- sec.appendChild(h("p",{class:"note",text:"Darker cell = higher estimated risk. Compare up to three protocols."}))}
+ sec.appendChild(h("p",{class:"note",text:dropMsg||"Darker cell = higher estimated risk. Compare up to three protocols."}))}
  root.appendChild(sec);
  /* compare chart */
  /* Drawn at the panel's pixel width (no viewBox scaling) so every label stays 11px. */

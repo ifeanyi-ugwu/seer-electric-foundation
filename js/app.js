@@ -16,7 +16,7 @@
   /* Close times are worked out from today (markets.js holds closeIn, in days, and closeAt, a UTC hour), so no open market goes stale.
      A market created in a session carries closeTs. A market with neither keeps its plain close label. Dates are British: "14 Nov",
      "14 Nov 2027" in another year, "14 Nov 2026, 17:00 UTC" in full. */
-  var MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var MON=U.MON;
   function ago(ms){var a=Math.abs(ms),n,u;
     if(a<864e5){n=Math.max(1,Math.round(a/36e5));u=n===1?"hour":"hours"}
     else{var d=Math.round(a/864e5);if(d===1)return ms>0?"tomorrow":"yesterday";
@@ -28,7 +28,7 @@
     var d=new Date(t),day=d.getUTCDate()+" "+MON[d.getUTCMonth()],y=d.getUTCFullYear(),hh=String(d.getUTCHours()).padStart(2,"0");
     return{label:y===now.getUTCFullYear()?day:day+" "+y,full:day+" "+y+", "+hh+":00 UTC",rel:ago(t-now.getTime()),past:t<now.getTime()}}
   /* a day counted from today, as "5 Oct" (with the year when it is not this one) */
-  function dayIn(n){var now=new Date(),d=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()+n)),s=d.getUTCDate()+" "+MON[d.getUTCMonth()];return d.getUTCFullYear()===now.getUTCFullYear()?s:s+" "+d.getUTCFullYear()}
+  var dayIn=U.dayIn;
   /* what the sheet says about resolution: a market without its own record (one made in a session) gets a plain one */
   function resOf(m){return m.res||{state:m.status==="Resolved"?"final":"trading",answer:null,reportedIn:null,source:"Reality.eth",rules:"The answer reported for the question decides the outcome."}}
   function rulesBox(m,cl){var rs=resOf(m),addr=U.addr(m.id),a="Not reported yet",row=function(k,v,c){return h("div",{class:"tx-row"+(c?" "+c:"")},[h("dt",{text:k}),h("dd",{},[].concat(v))])};
@@ -143,7 +143,7 @@
 
   /* explicit table roles: on phones the table is laid out as cards, which drops the native semantics (see shell.css) */
   function roles(t){t.setAttribute("role","table");Array.prototype.forEach.call(t.querySelectorAll("thead,tbody,tr,th,td"),function(n){n.setAttribute("role",{THEAD:"rowgroup",TBODY:"rowgroup",TR:"row",TH:"columnheader",TD:"cell"}[n.tagName])});return t}
-  function leadText(m){var l=lead(m);if(l)return l[0]+" · "+pc(l[1]);
+  function leadText(m){if(m.outs&&!m.outs.length)return"No outcomes yet";var l=lead(m);if(l)return l[0]+" · "+pc(l[1]);
     if(m.scalar)return"Estimate "+(m.scalar.per?U.num(m.scalar.est,2,0)+" "+m.scalar.per:sfmt(m.scalar.est,m.scalar.unit));
     return m.cond.a==null?"No trades yet":"Pass "+U.num(m.cond.a,2,0)+" / fail "+U.num(m.cond.b,2,0)}
   function table(list){var w=h("div",{class:"tbl-wrap rtbl app-tbl"}),t=h("table"),hd=h("tr"),f=document.createDocumentFragment();
@@ -228,6 +228,8 @@
           titles:{notfound:"This market no longer exists"},texts:{notfound:"It may have been removed after it resolved. Go back to the list to find another market."}}))}})}
     load();
     function fill(info){
+    /* a market with no outcomes has nothing to trade: the sheet says so in place of the details */
+    if(m.outs&&!m.outs.length){body.appendChild(DM.emptyView({level:"sheet",title:"No outcomes yet",text:"This market has no outcomes to trade yet."}));return}
     /* side is Yes or No on every type: Yes is Buy Yes, Long, or the "If" branch; No is Buy No, Short, or "If not". A two-outcome market has no side: its outcome rows are the choice. */
     var bin=!!m.outs&&m.outs.length===2,pick=init&&init.pick<(m.outs||[]).length?init.pick:0,side=!bin&&init&&init.side==="No"?"No":"Yes",amt=50;
     var sp=m.scalar?Math.max(0,Math.min(1,(m.scalar.est-m.scalar.lo)/((m.scalar.hi-m.scalar.lo)||1))):.5;
@@ -242,7 +244,7 @@
     function focusPlace(){var b=tk.querySelector("[data-tx-place]");if(b)b.focus()}
     function place(){var p=Math.min(.99,Math.max(.01,price())),a=amt,s=a/p,o=m.outs?m.outs[pick][0]:null,sd=sideName();
       fl.place(a,function(){return{amount:a,meta:{type:"Trade",market:m.q,mid:m.id,product:"app",outcome:o,side:bin?"":sd,shares:s,price:p,status:m.status},
-        rows:[["Market",m.q,"tx-q"]].concat(o?[["Outcome",o,"tx-q"]]:[],bin?[]:[["Side",sd]],[["Amount",W.money(a)+" USDC","tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(s)],[m.scalar?"Maximum payout":"Payout if correct","$"+U.num(s,2)],["Network fee","Free in demo","tx-free"]]),
+        rows:[["Market",m.q,"tx-q"]].concat(o?[["Outcome",o,"tx-q"]]:[],bin?[]:[["Side",sd]],[["Amount",W.money(a)+" USDC","tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(s)],["Max slippage","1%"],["Minimum shares",U.shares(s*.99)],[m.scalar?"Maximum payout":"Payout if correct","$"+U.num(s,2)],["Network fee","Free in demo","tx-free"]]),
         done:"You bought "+U.shares(s)+" "+(o?(bin?"shares on "+o:side+" shares on "+o):m.scalar?sd.toLowerCase()+" shares":"shares on the branch \u201c"+sd.toLowerCase()+"\u201d")+"."}},"amt")}
     var drawTicket=function(){var p=Math.min(.99,Math.max(.01,price())),f=h("div");
       tk.style.minHeight=fl.style()?fl.hold+"px":"";
@@ -429,6 +431,7 @@
   /* the wallet changed (connected, disconnected, a balance after a trade): tickets and the form follow */
   W.subscribe(function(){if(redrawTicket)redrawTicket();if(cm&&document.querySelector("#sheet-root .cm-sheet"))cmDraw()});
 
+  U.slashSearch("#q");
   document.getElementById("q").oninput=function(e){st.q=e.target.value;render();clearTimeout(qt);qt=setTimeout(urlSync,300)};
   document.getElementById("cat-m").onchange=function(e){st.cat=e.target.value;cats();refilter()};
   document.getElementById("status").onchange=function(e){st.status=e.target.value;refilter()};
@@ -512,6 +515,7 @@
      One page, two views, chosen by the bare hash: #leaderboard shows the leaderboard, #markets or no hash the explorer (any other hash,
      such as #demo, leaves the view as it is). The switch in the page head pushes the hash without scrolling, so Back, Forward and a reload
      keep the view. A view loads when it is first shown. */
+  var pvTitle=document.querySelector(".phead h1"),pvLede=document.querySelector(".phead .lede"),pvT0=pvTitle.textContent,pvL0=pvLede.textContent;
   var tab="markets",started=false,pvM=document.getElementById("pv-m"),pvL=document.getElementById("pv-l");
   function hashView(){var x=location.hash;return x==="#leaderboard"?"leaderboard":x===""||x==="#markets"?"markets":null}
   function startExplorer(){if(started)return;started=true;
@@ -520,6 +524,9 @@
   function showView(v){tab=v;var l=v==="leaderboard";wrap.hidden=l;lbEl.hidden=!l;
     pvM.setAttribute("aria-pressed",String(!l));pvL.setAttribute("aria-pressed",String(l));
     document.title=l?"Seer app | Leaderboard":"Seer app | Market explorer";
+    /* the page head follows the view: its title and sentence, and Create market only where a market can be created */
+    pvTitle.textContent=l?"Leaderboard":pvT0;pvLede.textContent=l?"The most profitable traders, with volume and win rate.":pvL0;
+    document.getElementById("create").hidden=l;
     if(l){if(lbState==="idle")lbLoad({initial:true});else if(lbState==="ok")lbRender()}else startExplorer()}
   function go(v){if(v===tab)return;try{history.pushState(null,"",v==="leaderboard"?"#leaderboard":location.pathname+location.search)}catch(e){}
     showView(v);if(DM)DM.announce(v==="leaderboard"?"Showing the leaderboard.":"Showing the markets.")}

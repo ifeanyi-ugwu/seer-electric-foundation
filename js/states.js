@@ -130,10 +130,14 @@
 
   /* ---------- loading: a valid ?next is opened after the minimum display time; otherwise it loops ---------- */
   if(page==="loading"){
-    var NEXT={"app.html":"Seer app","futarchy.html":"Futarchy","deep.html":"Deep","opportunity.html":"Opportunity Markets","risk.html":"Risk Pricing","index.html":"the home page"};
+    /* for each page that can follow: its name, the kicker and the title of this page while it loads */
+    var NEXT={"app.html":["Seer app","Market explorer","Loading markets"],"futarchy.html":["Futarchy","Futarchy","Loading proposals"],"deep.html":["Deep","Deep","Loading proposals"],
+      "opportunity.html":["Opportunity Markets","Opportunity Markets","Loading submissions"],"risk.html":["Risk Pricing","Risk Pricing","Loading risk estimates"],"index.html":["the home page","Home page","Loading the home page"]};
     var MIN=1600,next=param("next");
     if(own(NEXT,next)){
-      var nl=$("#st-next");nl.textContent="Then opening "+NEXT[next];nl.removeAttribute("hidden");
+      var nl=$("#st-next"),kk=$(".st-lhead .st-kicker"),tt=$(".st-lhead .st-ltitle [role=status]"),sk=$(".st-skwrap");
+      kk.lastChild.textContent=NEXT[next][1];tt.textContent=NEXT[next][2];sk.setAttribute("aria-label",NEXT[next][2].replace(/^Loading /,"").replace(/^./,function(c){return c.toUpperCase()}));
+      nl.textContent="Then opening "+NEXT[next][0];nl.removeAttribute("hidden");
       root.classList.add("is-once");
       /* under reduced motion the strip steps in quarters, with no animation between steps */
       if(reduced()){var cols=d.querySelectorAll(".st-prog .on g"),n=cols.length;
