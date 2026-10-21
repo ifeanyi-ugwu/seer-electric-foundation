@@ -11,7 +11,7 @@ var DM=window.SeerDemo;
 function slot(){return DM?DM.slot():{run:function(o){o.apply({data:o.producer(),fromCache:false,empty:false},{sync:true,shown:false})},cancel:function(){}}}
 var pageSlot=slot(),selSlot=slot(),pageState="ok",det={id:0,state:"ok",err:null};
 function differs(s){return(s.r==="Selected"&&s.p<.3)||(s.r==="Not selected"&&s.p>=.5)}
-var ICON={"Selected":"✓","Not selected":"✕","In review":"…","Pending":"–"};
+var ICON={"Selected":"✓","Not selected":"✕","In review":"…","Pending":"○"};
 function badge(s){var c=s==="Selected"?"var(--pos)":s==="Not selected"?"var(--neg)":"var(--text-2)";return h("span",{style:"color:"+c,class:"num",text:ICON[s]+" "+s})}
 /* the trade panel for one submission: inline beside the table on desktop, in a sheet on tablet and phone */
 function sideKids(s,inSheet){var p=st.side==="Yes"?s.p:1-s.p,open=s.r==="In review"||s.r==="Pending",k=[],SK=DM&&DM.sk,B=DM&&DM.skBlock;

@@ -65,7 +65,7 @@ function list(){var root=document.getElementById("list"),el=h("div");
  el.appendChild(h("div",{class:"muted list-label",text:"Active proposals · "+P.length}));
  P.forEach(function(p){var d=delta(p);el.appendChild(h("button",{class:"pick",type:"button","data-key":"p"+p.id,"aria-pressed":String(p===sel),onclick:function(){if(sel===p)return;flow.reset();sel=p;list();loadProposal()}},[
   h("b",{text:"#"+p.id+" "+p.t}),h("span",{class:"muted",text:p.metric}),
-  h("div",{class:"line"},[h("span",{class:"num "+(d.good?"pos":"neg"),text:d.arrow+d.text+(d.good?" · better":" · worse")}),h("span",{class:"muted num",text:"vote ends "+p.vote.end})])]))});U.patch(root,el)}
+  h("div",{class:"line"},[h("span",{class:"num "+(d.good?"pos":"neg"),text:d.arrow+d.text+(d.good?" · better":" · worse")}),h("span",{class:"muted num",text:"vote ends in "+p.vote.end})])]))});U.patch(root,el)}
 function detail(animate){var p=view.p,d=delta(p),root=document.getElementById("detail"),el=h("div");
  /* a proposal that failed to load: its title (known from the list) and the error, in place of the panels */
  if(det.state==="error"){

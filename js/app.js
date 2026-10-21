@@ -13,6 +13,20 @@
     (kids||[]).forEach(function(c){if(c!=null)n.appendChild(typeof c==="string"?document.createTextNode(c):c)});return n}
   function money(v){if(v>=1e9)return"$"+(v/1e9).toFixed(1)+"B";if(v>=1e6)return"$"+(v/1e6).toFixed(v>=1e8?0:1).replace(/\.0$/,"")+"M";if(v>=1e3)return"$"+Math.round(v/1e3)+"K";return"$"+v}
   function pc(p){return Math.round(p*100)+"%"}
+  /* Close times are worked out from today (markets.js holds closeIn, in days, and closeAt, a UTC hour), so no open market goes stale.
+     A market created in a session carries closeTs. A market with neither keeps its plain close label. Dates are British: "14 Nov",
+     "14 Nov 2027" in another year, "14 Nov 2026, 17:00 UTC" in full. */
+  var MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  function ago(ms){var a=Math.abs(ms),n,u;
+    if(a<864e5){n=Math.max(1,Math.round(a/36e5));u=n===1?"hour":"hours"}
+    else{var d=Math.round(a/864e5);if(d===1)return ms>0?"tomorrow":"yesterday";
+      if(d<60){n=d;u="days"}else if(d<730){n=Math.round(d/30.4);u="months"}else{n=Math.round(d/365.25);u="years"}}
+    return ms>0?"in "+n+" "+u:n+" "+u+" ago"}
+  function closeOf(m){var t=m.closeTs,now=new Date();
+    if(t==null&&m.closeIn!=null)t=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()+m.closeIn,m.closeAt==null?17:m.closeAt);
+    if(t==null)return m.close?{label:m.close,full:m.close,rel:"",past:false}:null;
+    var d=new Date(t),day=d.getUTCDate()+" "+MON[d.getUTCMonth()],y=d.getUTCFullYear(),hh=String(d.getUTCHours()).padStart(2,"0");
+    return{label:y===now.getUTCFullYear()?day:day+" "+y,full:day+" "+y+", "+hh+":00 UTC",rel:ago(t-now.getTime()),past:t<now.getTime()}}
   /* a scalar value with its unit: "$" leads, a word follows after a space, a symbol follows directly */
   function sfmt(v,u){return u==="$"?"$"+v:u&&/^[A-Za-z]/.test(u)?v+" "+u:v+(u||"")}
   function lead(m){if(!m.outs)return null;return m.outs.slice().sort(function(a,b){return b[1]-a[1]})[0]}
@@ -66,7 +80,7 @@
       body.push(h("div",{class:"cond"},[h("div",{},[h("small",{text:"If "+c.if.toLowerCase()}),h("b",{class:"num",text:f(c.a)})]),h("div",{},[h("small",{text:"If not"}),h("b",{class:"num",text:f(c.b)})])]))}
     var live=m.status==="Live",tb=h("span",{class:"badge",text:m.type});
     return[h("div",{class:"q"},[h("div",{class:"pfp",text:m.q.charAt(0)}),h("span",{text:m.q})])].concat(body,[
-      h("div",{class:"foot"},[h("div",{class:"meta"},[h("span",{class:"num",text:money(m.vol)+" Vol."}),h("i"),h("span",{text:live?"LIVE":m.status==="Open"?(m.close?"Closes "+m.close:"No close date"):m.status,class:live?"status-live":""})]),
+      h("div",{class:"foot"},[h("div",{class:"meta"},[h("span",{class:"num",text:money(m.vol)+" Vol."}),h("i"),h("span",{text:live?"LIVE":m.status==="Open"?(closeOf(m)?"Closes "+closeOf(m).label:"No close date"):m.status,class:live?"status-live":""})]),
         m.isNew?h("span",{class:"foot-b"},[h("span",{class:"badge new",text:"New"}),tb]):tb])])}
   function card(m){return h("button",{class:"mcard",type:"button","data-key":"m"+m.id,onclick:function(){openPanel(m)},"aria-label":m.q+", "+m.type+(m.isNew?", new":"")},cardBody(m))}
 
@@ -82,7 +96,7 @@
     list.forEach(function(m){
       var r=h("tr",{tabindex:"0","data-key":"r"+m.id,onclick:function(){openPanel(m)},onkeydown:function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();openPanel(m)}}},[
         h("td",{class:"mq c-q"},m.isNew?[h("span",{class:"badge new",text:"New"})," "+m.q]:[m.q]),h("td",{class:"c-ty"},[h("span",{class:"badge",text:m.type})]),h("td",{class:"num c-lo","data-label":"Leading outcome",text:leadText(m)}),h("td",{class:"r num c-vo","data-label":"Volume",text:money(m.vol)}),
-        h("td",{class:"r num c-li","data-label":"Liquidity",text:money(m.liq)}),h("td",{class:"c-cl","data-label":"Closes",text:m.close||"Not set"}),h("td",{class:"c-st","data-status":m.status,text:m.status})]);tb.appendChild(r)});
+        h("td",{class:"r num c-li","data-label":"Liquidity",text:money(m.liq)}),h("td",{class:"c-cl","data-label":"Closes",text:(closeOf(m)||{label:"Not set"}).label}),h("td",{class:"c-st","data-status":m.status,text:m.status})]);tb.appendChild(r)});
     t.appendChild(tb);w.appendChild(roles(t));return f}
 
   function render(){var list=sorted(M.filter(matches)),out=document.getElementById("out"),f=h("div");
@@ -175,8 +189,8 @@
     var list=null;
     if(m.outs){list=h("div",{class:"olist"},[]);var draw=function(){var f=h("div");m.outs.forEach(function(o,i){f.appendChild(h("button",{type:"button",class:"orow sel","data-key":"o"+i,"aria-pressed":String(pick===i),onclick:function(){pick=i;if(fl.step!=="form")fl.reset();draw();drawTicket()}},[h("span",{text:o[0]}),h("span",{class:"num",text:pc(o[1])})]))});patch(list,f)};draw()}
     else{list=h("div",{class:"mcard static"},cardBody(m))}
-    var ld=lead(m);
-    [h("div",{class:"kv"},[h("div",{},[h("small",{text:"Volume"}),h("b",{class:"num",text:money(m.vol)})]),h("div",{},[h("small",{text:"Liquidity"}),h("b",{class:"num",text:money(m.liq)})]),h("div",{},[h("small",{text:"Closes"}),h("b",{text:m.close||"Not set"})]),h("div",{},[h("small",{text:"Status"}),h("b",{text:m.status})])]),
+    var ld=lead(m),cl=closeOf(m);
+    [h("div",{class:"kv"},[h("div",{},[h("small",{text:"Volume"}),h("b",{class:"num",text:money(m.vol)})]),h("div",{},[h("small",{text:"Liquidity"}),h("b",{class:"num",text:money(m.liq)})]),h("div",{},[h("small",{text:cl&&cl.past?"Closed":"Closes"}),h("b",{text:cl?cl.full:"Not set"}),cl&&cl.rel?h("span",{class:"rel",text:cl.rel}):null]),h("div",{},[h("small",{text:"Status"}),h("b",{text:m.status})])]),
       list,ld?spark(m.id*37,ld[1],ld[0]):null,tk].forEach(function(n){if(n)body.appendChild(n)});
     drawTicket();
     /* the same entrance whether the details were at hand or had to load; a load after a skeleton starts at once */
@@ -196,7 +210,7 @@
   function allCats(){return M.map(function(m){return m.cat}).filter(function(c,i,a){return a.indexOf(c)===i})}
   function iso(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
   function tomorrow(){var d=new Date();d.setDate(d.getDate()+1);return iso(d)}
-  function closeTxt(v){if(!v)return"";var p=v.split("-"),d=new Date(+p[0],+p[1]-1,+p[2]),s=d.toLocaleDateString("en-US",{month:"short",day:"numeric"});return d.getFullYear()===new Date().getFullYear()?s:s+", "+d.getFullYear()}
+  function closeTs(v){if(!v)return null;var p=v.split("-");return Date.UTC(+p[0],+p[1]-1,+p[2],12)}
   function num(v){return v===""||v==null||isNaN(+v)?null:+v}
   function isOutT(t){return t==="Categorical"||t==="Multi-categorical"}
   function errs(c){var e={},q=c.q.trim(),bal=W.state;
@@ -218,7 +232,7 @@
     for(i=0;i<cm.outs.length;i++)if(id==="cm-o-"+cm.outs[i].id)return"Outcome "+(i+1);
     for(i=0;i<cm.ms.length;i++){k="cm-r-"+cm.ms[i].id;if(id===k+"-l")return"Range "+(i+1)+" name";if(id===k+"-min")return"Range "+(i+1)+" values"}return"Field"}
   function toMarket(c,id){var t=c.type,m={id:id||0,q:c.q.trim()||"Your question appears here",type:t,cat:c.cat==="__new"?(c.catNew.trim()||"New category"):(c.cat||"No category"),
-      status:"Open",vol:0,liq:Math.max(0,num(c.liq)||0),close:closeTxt(c.date),isNew:id?Date.now():1};
+      status:"Open",vol:0,liq:Math.max(0,num(c.liq)||0),closeTs:closeTs(c.date),isNew:id?Date.now():1};
     if(isOutT(t)){var o=c.outs.map(function(r,i){return r.v.trim()||"Outcome "+(i+1)}).concat(c.other?["Other"]:[]);m.outs=o.map(function(n){return[n,t==="Categorical"?1/o.length:.5]})}
     else if(t==="Scalar"){var a=num(c.sc.min),b=num(c.sc.max),s=num(c.sc.est);if(a==null)a=0;if(b==null||b<=a)b=a+100;if(s==null||s<a||s>b)s=+(a+(b-a)/2).toFixed(2);m.scalar={lo:a,hi:b,est:s,unit:c.sc.unit.trim()}}
     else if(t==="Multi-scalar"){var rs=c.ms.map(function(r,i){var a=num(r.min),b=num(r.max);return(r.l.trim()||"Range "+(i+1))+(a!=null&&b!=null?" ("+a+" to "+b+")":"")});m.outs=rs.map(function(n){return[n,1/rs.length]})}
@@ -294,7 +308,7 @@
     if(Object.keys(e).length){cmDraw();var s=document.getElementById("cm-sum");if(s)s.focus();return}
     var m=toMarket(cm),liq=num(cm.liq),detail=m.outs?m.outs.map(function(o){return o[0]}).join(", "):m.scalar?m.scalar.lo+" to "+m.scalar.hi+(m.scalar.unit?" "+m.scalar.unit:"")+", estimate "+m.scalar.est:m.cond.if+"; "+m.cond.metric+(m.cond.unit?" ("+m.cond.unit+")":"");
     cflow.review({amount:liq,meta:{type:"Create market",market:m.q},
-      rows:[["Question",m.q,"tx-q"],["Category",m.cat],["Type",m.type],[m.outs?(m.type==="Multi-scalar"?"Ranges":"Outcomes"):m.scalar?"Range":"Condition",detail,"tx-q"],["Closes",m.close],
+      rows:[["Question",m.q,"tx-q"],["Category",m.cat],["Type",m.type],[m.outs?(m.type==="Multi-scalar"?"Ranges":"Outcomes"):m.scalar?"Range":"Condition",detail,"tx-q"],["Closes",(closeOf(m)||{full:"Not set"}).full],
         ["Liquidity locked",W.money(liq)+" USDC","tx-tot"],["Network fee","Free in demo","tx-free"]],
       note:"The liquidity stays locked in the market until it resolves.",
       done:"“"+m.q+"” is open for trading. Its liquidity is locked in the market."})}

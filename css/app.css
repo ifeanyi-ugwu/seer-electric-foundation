@@ -55,7 +55,8 @@ td.mq{white-space:normal;min-width:240px;max-width:420px;font-size:var(--fs-ui)}
 .kv{display:grid;grid-template-columns:1fr 1fr;gap:var(--s-2)}
 .kv div{background:var(--card);border-radius:var(--r-card);padding:var(--s-3);clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
 .kv small{display:block;color:var(--muted);font-size:var(--fs-cap);margin-bottom:2px}
-.kv b{font-weight:500;font-size:var(--fs-ui)}
+.kv b{font-weight:500;font-size:var(--fs-ui);overflow-wrap:anywhere}
+.kv .rel{display:block;color:var(--muted);font-size:var(--fs-cap);margin-top:2px}
 .olist{display:grid;gap:var(--s-2)}
 .sel{cursor:pointer;border:2px solid transparent;width:100%;font:inherit;color:inherit;text-align:left}
 @media (hover:hover){.sel:hover{border-color:color-mix(in srgb,var(--violet) 45%,transparent)}}
