@@ -1,10 +1,10 @@
 (function(){
 SeerShell.mount({product:"futarchy",cta:"Connect wallet"});
 var h=U.h,P=[
- {id:14,t:"Fund a liquidity programme",dao:"Example DAO",metric:"Token price in 90 days",unit:"$",dec:2,pass:1.24,fail:1.09,better:"higher",vote:{f:62,a:38,end:"3 days"},vol:182e3},
- {id:15,t:"Raise protocol fee to 0.30%",dao:"Example DAO",metric:"Protocol revenue, next 30 days",unit:"$K",dec:0,pass:412,fail:388,better:"higher",vote:{f:48,a:52,end:"5 days"},vol:96e3},
- {id:16,t:"Hire a dedicated security lead",dao:"Example DAO",metric:"Critical audit findings in 6 months",unit:"",dec:1,pass:2.1,fail:3.4,better:"lower",vote:{f:81,a:19,end:"1 day"},vol:41e3},
- {id:17,t:"Diversify 20% of treasury into stables",dao:"Example DAO",metric:"Treasury value in 180 days",unit:"$M",dec:1,pass:18.2,fail:18.9,better:"higher",vote:{f:57,a:43,end:"4 days"},vol:128e3},
+ {id:14,ev:.64,t:"Fund a liquidity programme",dao:"Example DAO",metric:"Token price in 90 days",unit:"$",dec:2,pass:1.24,fail:1.09,better:"higher",vote:{f:62,a:38,end:"3 days"},vol:182e3},
+ {id:15,ev:.41,t:"Raise protocol fee to 0.30%",dao:"Example DAO",metric:"Protocol revenue, next 30 days",unit:"$K",dec:0,pass:412,fail:388,better:"higher",vote:{f:48,a:52,end:"5 days"},vol:96e3},
+ {id:16,ev:.83,t:"Hire a dedicated security lead",dao:"Example DAO",metric:"Critical audit findings in 6 months",unit:"",dec:1,pass:2.1,fail:3.4,better:"lower",vote:{f:81,a:19,end:"1 day"},vol:41e3},
+ {id:17,ev:.58,t:"Diversify 20% of treasury into stables",dao:"Example DAO",metric:"Treasury value in 180 days",unit:"$M",dec:1,pass:18.2,fail:18.9,better:"higher",vote:{f:57,a:43,end:"4 days"},vol:128e3},
  /* decided: the vote has closed; result.actual is the metric as measured for the branch that happened */
  {id:12,t:"Add a second oracle provider",dao:"Example DAO",metric:"Token price in 90 days",unit:"$",dec:2,pass:1.24,fail:1.08,better:"higher",vote:{f:68,a:32},vol:154e3,result:{passed:true,actual:1.31}},
  {id:11,t:"Pay a one-off bonus to core contributors",dao:"Example DAO",metric:"Token price in 90 days",unit:"$",dec:2,pass:.84,fail:.97,better:"higher",vote:{f:36,a:64},vol:87e3,result:{passed:false,actual:.95}}];
@@ -13,8 +13,8 @@ var MKT={14:18,15:22,16:23,17:24};
 function mlink(p){return MKT[p.id]?h("a",{class:"wl-link",href:"app.html?m="+MKT[p.id],text:"Open in the Seer app"}):null}
 /* sel and range are what the person picked; view is what the detail shows (the last proposal and range that loaded) */
 var sel=P[0],range=60,view={p:P[0],range:60},branch="pass",amt=100,W=window.SeerWallet;
-/* ?p=<proposal id> picks the proposal on load and follows the choice (replaceState, so Back leaves the page). The first proposal is the default and is left out; an id that is not a proposal is ignored. */
-try{var pid=new URLSearchParams(location.search).get("p"),pp=P.filter(function(x){return String(x.id)===pid})[0];if(pp){sel=pp;view={p:pp,range:60}}}catch(e){}
+/* ?p=<proposal id> picks the proposal on load and follows the choice (replaceState, so Back leaves the page). The first proposal is the default and is left out; an id that is not a proposal is ignored and the address goes back to the default. */
+try{var pid=new URLSearchParams(location.search).get("p"),pp=P.filter(function(x){return String(x.id)===pid})[0];if(pp){sel=pp;view={p:pp,range:60}}else if(pid!==null)urlSync()}catch(e){}
 function urlSync(){try{history.replaceState(history.state,"",location.pathname+(sel===P[0]?"":"?p="+sel.id)+location.hash)}catch(e){}}
 /* loads go through js/demo.js (delay, errors, offline, cache); without it they resolve at once, as before */
 var DM=window.SeerDemo;
@@ -30,8 +30,11 @@ function place(){var p=view.p,b=branch,a=amt,pr=b==="pass"?p.pass:p.fail,px=bpri
    ["Price per share","$"+px.toFixed(2)],["Shares",U.shares(sh)],["Max slippage","1%"],["Minimum shares",U.shares(sh*.99)],["Payout if correct","$"+U.num(sh,2)],["Network fee","Free in demo","tx-free"]],
   note:"If the other branch happens, this trade is refunded.",
   done:"You bought "+U.shares(sh)+" shares in the "+(b==="pass"?"pass":"fail")+" branch of proposal #"+p.id+"."}},"amt")}
-function fmt(p,v){if(p.unit==="$"&&Math.abs(v)>=1e3)return U.money(v);var n=U.num(v,p.dec),neg=n.charAt(0)==="\u2212";if(neg)n=n.slice(1);
- return(neg?"\u2212":"")+(p.unit==="$"?"$":"")+n+(p.unit&&p.unit!=="$"?" "+p.unit.replace("$",""):"")}
+/* a forecast with its unit, in the site's number style: "$1.24", "$412K", "$18.2M", "2.1"; a negative has the sign first (U+2212) */
+function fmt(p,v){if(p.unit==="$"&&Math.abs(v)>=1e3)return U.money(v);var n=U.num(v,p.dec),neg=n.charAt(0)==="\u2212",pre=p.unit.charAt(0)==="$"?"$":"";if(neg)n=n.slice(1);
+ return(neg?"\u2212":"")+pre+n+p.unit.slice(pre.length)}
+/* a signed percentage with the true minus: "+13.8%", "\u221238.2%" */
+function pct(v){return(v>0?"+":"")+U.num(v,1)+"%"}
 function series(p,key,n){var r=U.rng(p.id*7+(key==="pass"?1:2)),end=p[key],start=(p.pass+p.fail)/2,v=start,out=[];
  for(var i=0;i<n;i++){v+=(r()-.5)*Math.abs(end-start)*.9+(end-v)*(.05+i/n*.08);out.push(v)}out[n-1]=end;return out}
 function chartH(cw){return Math.max(280,Math.round(cw))<520?200:240}
@@ -41,7 +44,7 @@ function chart(p,cw,range){
  var X=function(i){return L+i/(range-1)*(W-L-R)},Y=function(v){return T+(1-(v-mn)/(mx-mn))*(H-T-B)};
  /* data-y and data-fmt let js/motion.js add a pointer readout: value range, plot top and bottom, plot left and right, and the number format */
  var s=U.svg("svg",{class:"chart",viewBox:"0 0 "+W+" "+H,width:W,height:H,role:"img","aria-label":"Forecast of "+p.metric+" if the proposal passes ("+fmt(p,p.pass)+") versus if it fails ("+fmt(p,p.fail)+")",
-  "data-y":[mn,mx,T,H-B,L,W-R].map(function(v){return+v.toFixed(2)}).join(" "),"data-fmt":(p.unit==="$"?"$":"")+"|"+p.dec+"|"+(p.unit&&p.unit!=="$"?" "+p.unit.replace("$",""):"")});
+  "data-y":[mn,mx,T,H-B,L,W-R].map(function(v){return+v.toFixed(2)}).join(" "),"data-fmt":(p.unit.charAt(0)==="$"?"$":"")+"|"+p.dec+"|"+p.unit.replace("$","")});
  for(var g=0;g<5;g++){var gy=T+g*(H-T-B)/4,gv=mx-g*(mx-mn)/4;s.appendChild(U.svg("line",{x1:L,x2:W-R,y1:gy,y2:gy,stroke:"var(--line)"}));var t=U.svg("text",{x:L-8,y:gy+4,"text-anchor":"end","font-size":"11",fill:"var(--muted)",class:"num"});t.textContent=gv.toFixed(p.dec);s.appendChild(t)}
  var lab=[["Start",0],[p.result?"Close":"Now",range-1]];lab.forEach(function(l,k){var tx=U.svg("text",{x:X(l[1]),y:H-6,"text-anchor":k?"end":"start","font-size":"11",fill:"var(--muted)"});tx.textContent=l[0];s.appendChild(tx)});
  function path(arr,col,dash){var d=arr.map(function(v,i){return(i?"L":"M")+X(i).toFixed(1)+" "+Y(v).toFixed(1)}).join(" ");s.appendChild(U.svg("path",{class:"m-line","data-tween":"d",d:d,fill:"none",stroke:col,"stroke-width":"2.5","stroke-dasharray":dash||"","stroke-linejoin":"round"}))}
@@ -50,7 +53,7 @@ function chart(p,cw,range){
  s.appendChild(U.svg("rect",{class:"m-end","data-tween":"x y",x:X(range-1)-5,y:Y(b[range-1])-5,width:10,height:10,fill:"var(--neg)"}));
  return s}
 function delta(p){var d=(p.pass-p.fail)/p.fail*100,good=(p.better==="higher")===(d>0);
- return{pct:d,good:good,arrow:d>0?"▲ ":"▼ ",text:(d>0?"+":"")+d.toFixed(1)+"% under pass",
+ return{pct:d,good:good,arrow:d>0?"▲ ":"▼ ",text:"Impact "+pct(d),
   lead:(good?"Better":"Worse")+" for the DAO's goal if it "+(p.result?"passed":"passes")+".",
   msg:" The market "+(p.result?"expected ":"expects ")+p.metric.toLowerCase()+" to be "+(d>0?"higher":"lower")+" under pass, and the DAO "+(p.result?"wanted":"wants")+" it "+p.better+"."}}
 /* a decided proposal's outcome in one line: the vote's result, the measured value and the forecast for the branch that happened */
@@ -63,7 +66,7 @@ function skDetail(){var S=DM.sk,B=DM.skBlock;
  return[h("div",{class:"dhead"},[B("sk-box","width:220px;height:20px;border-radius:4px"),h("h2",{},[S("56%")])]),
   h("div",{class:"two"},[h("div",{class:"panel-c"},[h("h2",{text:"The market's forecast"}),h("div",{class:"fork-metric"},[S("18ch")]),B("sk-box","height:40px;opacity:.5"),
     h("div",{class:"fork-legs"},["If it passes","If it fails"].map(function(l,i){return h("div",{class:"leg"},[h("small",{},[h("i",{class:"mk "+(i?"fail":"pass")}),l]),h("b",{class:"num"},[S("4ch")])])})),
-    h("div",{class:"fork-meta"},[h("div",{},[h("span",{text:"Change under pass"}),S("5ch")]),h("div",{},[h("span",{text:"Market volume"}),S("5ch")])])]),
+    h("div",{class:"fork-meta"},[h("div",{},[h("span",{text:"Impact"}),S("5ch")]),h("div",{},[h("span",{text:"Chance it passes"}),S("3ch")]),h("div",{},[h("span",{text:"Market volume"}),S("5ch")])])]),
    h("div",{class:"panel-c"},[h("h2",{text:"The DAO's decision"}),h("div",{class:"line"},[h("span",{text:"Voting open"}),h("span",{class:"muted"},[S("9ch")])]),
     h("div",{class:"votes"},["For","Against"].map(function(v){return h("div",{},[h("div",{class:"line"},[h("span",{text:v}),S("3ch")]),h("div",{class:"vote-bar"})])})),
     h("p",{class:"note",text:"Token holders decide. The vote is binding; the forecast is not."})])]),
@@ -95,7 +98,7 @@ function detail(animate){U.tipClose();var p=view.p,d=delta(p),root=document.getE
    back:{text:"Back to the first proposal",onclick:function(){flow.reset();sel=P[0];urlSync();list();loadProposal()}},titles:{notfound:"This proposal no longer exists"},
    texts:{notfound:"It may have been withdrawn by the DAO. Pick another proposal from the list."}}));
   U.patch(root,el,{animate:animate!==false});focusHead();return}
- /* Each figure has one home: pass/fail values in the fork, the change under pass in the fork and the list,
+ /* Each figure has one home: pass/fail values in the fork, the impact in the fork and the list,
     the reading in the notice, the price of a branch in the ticket. */
  var head=h("div",{class:"dhead"},[h("span",{class:"badge",text:"Conditional market · Proposal #"+p.id}),mlink(p),h("h2",{text:p.t,tabindex:"-1"})]);
  var fork=U.svg("svg",{class:"fork-lines",viewBox:"0 0 200 40",preserveAspectRatio:"none","aria-hidden":"true"});
@@ -105,7 +108,7 @@ function detail(animate){U.tipClose();var p=view.p,d=delta(p),root=document.getE
    h("div",{class:"fork-metric",text:p.metric}),fork,
    h("div",{class:"fork-legs"},[h("div",{class:"leg"},[h("small",{},[h("i",{class:"mk pass"}),"If it passes"]),h("b",{class:"num",text:fmt(p,p.pass)})]),
      h("div",{class:"leg"},[h("small",{},[h("i",{class:"mk fail"}),"If it fails"]),h("b",{class:"num",text:fmt(p,p.fail)})])]),
-   h("div",{class:"fork-meta"},[h("div",{},[h("span",{class:"tt-row"},[h("span",{text:"Change under pass"}),U.tip(U.GLOSS.change,"What change under pass means")]),h("span",{class:"num "+(d.good?"pos":"neg"),text:d.arrow+(d.pct>0?"+":"")+d.pct.toFixed(1)+"%"})]),h("div",{},[h("span",{text:"Market volume"}),h("span",{class:"num",text:U.money(p.vol)})])].concat(p.result?[h("div",{class:"res"},[h("span",{text:"Result"}),h("span",{class:"num",text:resultText(p)})])]:[]))]);
+   h("div",{class:"fork-meta"},[h("div",{},[h("span",{class:"tt-row"},[h("span",{text:"Impact"}),U.tip(U.GLOSS.impact,"What impact means")]),h("span",{class:"num "+(d.good?"pos":"neg"),text:d.arrow+pct(d.pct)})])].concat(p.result?[]:[h("div",{},[h("span",{text:"Chance it passes"}),h("span",{class:"num",text:U.num(p.ev*100,0)+"%"})])],[h("div",{},[h("span",{text:"Market volume"}),h("span",{class:"num",text:U.money(p.vol)})])],p.result?[h("div",{class:"res"},[h("span",{text:"Result"}),h("span",{class:"num",text:resultText(p)})])]:[]))]);
  var dao=h("div",{class:"panel-c"},[h("h2",{text:"The DAO's decision"}),h("div",{class:"line"},[h("span",{text:p.result?"Voting closed":"Voting open"}),h("span",{class:"muted num",text:p.result?(p.result.passed?"Passed":"Failed"):"ends in "+p.vote.end})]),
    h("div",{class:"votes"},[["For",p.vote.f],["Against",p.vote.a]].map(function(v){return h("div",{},[h("div",{class:"line"},[h("span",{text:v[0]}),h("span",{class:"num",text:v[1]+"%"})]),h("div",{class:"vote-bar"},[h("i",{"data-tween":"bar",style:"width:"+v[1]+"%"})])])})),
    h("p",{class:"note",text:"Token holders decide. The vote is binding; the forecast is not."})]);

@@ -138,22 +138,22 @@ function reveal(){if(!window.Motion)return;
  Motion.reveal([].slice.call(ui.tbody.children,0,14),{rise:8,onIn:Motion.dataIn})}
 
 /* ---------- the ticket: trade the selected proposal's score ----------
-   The score runs 0 to 10. A long share costs score/10 and pays $1.00 at 10; a short share costs 1 minus that and pays $1.00 at 0.
+   The score runs 0 to 10. An Up share costs score/10 and pays $1.00 at 10; a Down share costs 1 minus that and pays $1.00 at 0.
    The ticket is one node, inline in the side panel on desktop and in the sheet on tablet and phone. It redraws itself on its own
    (typing, side, wallet, flow step), so the table and the dot field are never touched. */
-var tside="Long",tamt=50,flow=W.flow({box:function(){return document.querySelector('[data-tx="deep"]')},onChange:function(){drawTicket()}});
+var tside="Up",tamt=50,flow=W.flow({box:function(){return document.querySelector('[data-tx="deep"]')},onChange:function(){drawTicket()}});
 function tradable(d){return det.id!==d.id||det.state==="ok"}
-function tprice(d){return tside==="Long"?d.s/10:1-d.s/10}
+function tprice(d){return tside==="Up"?d.s/10:1-d.s/10}
 function focusPlace(){var b=document.querySelector('[data-tx="deep"] [data-tx-place]');if(b)b.focus()}
 function place(){var d=st.sel,p=tprice(d),a=tamt,s=a/p,sd=tside,name="#"+d.id+" "+d.name;
  flow.place(a,function(){return{amount:a,meta:{type:"Trade",market:"Grant round",mid:d.id,product:"deep",outcome:name,side:sd,shares:s,price:p,status:"Open"},
   rows:[["Proposal",name,"tx-q"],["Side",sd],["Amount",W.money(a)+" "+U.COLL,"tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(s)],["Max slippage","1%"],["Minimum shares",U.shares(s*.99)],["Network fee","Free in demo","tx-free"]],
-  note:"Pays $1.00 per share at "+(sd==="Long"?"10":"0")+".",
-  done:"You bought "+U.shares(s)+" "+sd.toLowerCase()+" shares on the score of proposal #"+d.id+"."}},"deep-amt")}
+  note:"Pays $1.00 per share at "+(sd==="Up"?"10":"0")+".",
+  done:"You bought "+U.shares(s)+" "+sd+" shares on the score of proposal #"+d.id+"."}},"deep-amt")}
 function ticketKids(){var d=st.sel,p=tprice(d),ks=[h("h3",{class:"wl-sub","data-key":"tk-h",text:"Trade this score"})];
  if(flow.step!=="form"){ks.push(flow.view());return ks}
  var err=W.amountError(tamt,flow.tried),at=W.amountAttrs("deep-amt",err);
- ks.push(h("div",{class:"seg",role:"group","aria-label":"Side"},["Long","Short"].map(function(s){return h("button",{type:"button","aria-pressed":String(tside===s),text:s,onclick:function(){tside=s;drawTicket()}})})));
+ ks.push(h("div",{class:"seg",role:"group","aria-label":"Side"},["Up","Down"].map(function(s){return h("button",{type:"button","aria-pressed":String(tside===s),text:s,onclick:function(){tside=s;drawTicket()}})})));
  W.holdLines(d.id,"deep").forEach(function(n){ks.push(n)});
  var inp=h("input",{class:"field",type:"number",min:"1",value:String(tamt),id:"deep-amt","aria-label":"Amount in "+U.COLL,"aria-invalid":at["aria-invalid"],"aria-describedby":at["aria-describedby"],
   oninput:function(e){tamt=Number(e.target.value)||0;var n=document.querySelector('[data-tx="deep"] [data-k="shares"]'),t=U.shares(Math.max(0,tamt)/p);
@@ -161,7 +161,7 @@ function ticketKids(){var d=st.sel,p=tprice(d),ks=[h("h3",{class:"wl-sub","data-
  ks.push(h("div",{class:"field-grp"},[W.amountLabel("deep-amt","Amount ("+U.COLL+")"),inp,W.amountErr("deep-amt",err)]));
  ks.push(h("div",{class:"line"},[h("span",{text:"Price per share"}),h("span",{class:"num","data-k":"price",text:"$"+p.toFixed(2)})]));
  ks.push(h("div",{class:"line"},[h("span",{text:"Shares"}),h("span",{class:"num","data-k":"shares",text:U.shares(Math.max(0,tamt)/p)})]));
- ks.push(h("div",{class:"line"},[h("span",{text:"Pays $1.00 per share at "+(tside==="Long"?"10":"0")})]));
+ ks.push(h("div",{class:"line"},[h("span",{text:"Pays $1.00 per share at "+(tside==="Up"?"10":"0")})]));
  ks.push(W.placeBtn({onPlace:place}));
  var hn=W.hint({after:focusPlace});if(hn)ks.push(hn);return ks}
 function ticketNode(){return h("div",{class:"ticket","data-tx":"deep","data-key":"tk",style:flow.style()},ticketKids())}

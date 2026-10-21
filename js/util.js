@@ -139,7 +139,7 @@ U.GLOSS={
  range:"The 90% range is where the market expects the evaluators' score to land nine times out of ten. A narrow range means traders agree; a wide one means they do not.",
  agents:"AI agents trade beside people. Each row in Deep shows how much of the volume comes from agents and how much from people, so you can see where the forecast comes from.",
  differs:"Differs from the market marks a submission where the reviewers' decision went against the signal: selected with less than a 30% chance, or not selected with 50% or more. It flags only the exceptions, so most rows show nothing.",
- change:"Change under pass is how much higher or lower the forecast is if the proposal passes than if it fails, as a percentage of the forecast if it fails."};
+ impact:"Impact is how much higher or lower the forecast is if the proposal passes than if it fails, as a percentage of the forecast if it fails."};
 /* U.tip(text, label): a toggletip. A 24px "?" button (44px hit area) that opens a small popover with one sentence. The popover is one polite live region
    on the page (role status) that is empty while closed, so the sentence is announced once, when it opens; the button is aria-expanded and
    aria-describedby that region. Escape and a press outside close it (Escape returns focus to the button); so do leaving the button, a resize and

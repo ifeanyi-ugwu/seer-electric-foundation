@@ -68,13 +68,13 @@ function addPos(amount,m){if(m.mid==null||!(m.shares>0))return;var n={mid:m.mid,
 W.positions=function(mid,product){if(!S.on)return[];return S.pos.filter(function(p){return(mid==null||p.mid===mid)&&(!product||p.product===product)}).map(function(p){return Object.assign({},p)})};
 W.posKey=pkey;
 var PRODUCT={app:"Seer app",futarchy:"Futarchy",deep:"Deep",opportunity:"Opportunity Markets",risk:"Risk"};
-/* "21.05 Yes shares on No change": a side that is Yes, No, Long or Short is part of the noun; any other side (a branch, a decision) follows */
+/* "21.05 Yes shares on No change": a side that is Yes, No, Up or Down is part of the noun; any other side (a branch, a decision) follows */
 /* held shares always show two decimals, so a position reads the same in the ticket, the wallet sheet and the redemption */
 function sh2(v){return U.num(v,2)}
-function holdText(p){var sd=p.side||"",kind=/^(Yes|No|Long|Short)$/.test(sd),t=sh2(p.shares)+(kind?" "+sd:"")+" shares";
+function holdText(p){var sd=p.side||"",kind=/^(Yes|No|Up|Down)$/.test(sd),t=sh2(p.shares)+(kind?" "+sd:"")+" shares";
   if(p.outcome)t+=" on "+p.outcome;if(sd&&!kind)t+=", "+sd.charAt(0).toLowerCase()+sd.slice(1);return t}
 /* "21.05 Yes · No change": the same position as a row title */
-function posTitle(p){var sd=p.side||"",kind=/^(Yes|No|Long|Short)$/.test(sd);return[sh2(p.shares)+(kind?" "+sd:" shares"),p.outcome,kind?null:sd||null].filter(Boolean).join(" \u00b7 ")}
+function posTitle(p){var sd=p.side||"",kind=/^(Yes|No|Up|Down)$/.test(sd);return[sh2(p.shares)+(kind?" "+sd:" shares"),p.outcome,kind?null:sd||null].filter(Boolean).join(" \u00b7 ")}
 W.holdText=holdText;
 /* a ticket's "You hold ..." lines, one per position in the market */
 W.holdLines=function(mid,product){return W.positions(mid,product).map(function(p,i){return h("div",{class:"line","data-key":"hold"+i},[h("span",{text:"You hold "+holdText(p)})])})};

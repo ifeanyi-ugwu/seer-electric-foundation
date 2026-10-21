@@ -250,13 +250,13 @@
     function fill(info){
     /* a market with no outcomes has nothing to trade: the sheet says so in place of the details */
     if(m.outs&&!m.outs.length){body.appendChild(DM.emptyView({level:"sheet",title:"No outcomes yet",text:"This market has no outcomes to trade yet."}));return}
-    /* side is Yes or No on every type: Yes is Buy Yes, Long, or the "If" branch; No is Buy No, Short, or "If not". A two-outcome market has no side: its outcome rows are the choice. */
+    /* side is Yes or No on every type: Yes is Buy Yes, Up, or the "If" branch; No is Buy No, Down, or "If not". A two-outcome market has no side: its outcome rows are the choice. */
     var bin=!!m.outs&&m.outs.length===2,pick=init&&init.pick<(m.outs||[]).length?init.pick:0,side=!bin&&init&&init.side==="No"?"No":"Yes",amt=50;
     var sp=m.scalar?Math.max(0,Math.min(1,(m.scalar.est-m.scalar.lo)/((m.scalar.hi-m.scalar.lo)||1))):.5;
     var cp=m.cond&&m.cond.a!=null&&m.cond.b!=null&&m.cond.a+m.cond.b>0?m.cond.a/(m.cond.a+m.cond.b):.5;
     var base=function(){return m.outs?m.outs[pick][1]:m.scalar?sp:cp};
     var price=function(){return side==="Yes"?base():1-base()};
-    var sideName=function(){return m.scalar?(side==="Yes"?"Long":"Short"):m.cond?(side==="Yes"?"If "+m.cond.if.toLowerCase():"If not"):side};
+    var sideName=function(){return m.scalar?(side==="Yes"?"Up":"Down"):m.cond?(side==="Yes"?"If "+m.cond.if.toLowerCase():"If not"):side};
     var tk=h("div",{class:"ticket","data-tx":"app"});
     /* the ticket runs the whole trade in place: form, review, signature, result (js/wallet.js) */
     flow=W.flow({box:function(){return tk},onChange:function(){drawTicket()}});
@@ -265,7 +265,7 @@
     function place(){var p=Math.min(.99,Math.max(.01,price())),a=amt,s=a/p,o=m.outs?m.outs[pick][0]:null,sd=sideName();
       fl.place(a,function(){return{amount:a,meta:{type:"Trade",market:m.q,mid:m.id,product:"app",outcome:o,side:bin?"":sd,shares:s,price:p,status:m.status},
         rows:[["Market",m.q,"tx-q"]].concat(o?[["Outcome",o,"tx-q"]]:[],bin?[]:[["Side",sd]],[["Amount",W.money(a)+" "+U.COLL,"tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(s)],["Max slippage","1%"],["Minimum shares",U.shares(s*.99)],[m.scalar?"Maximum payout":"Payout if correct","$"+U.num(s,2)],["Network fee","Free in demo","tx-free"]]),
-        done:"You bought "+U.shares(s)+" "+(o?(bin?"shares on "+o:side+" shares on "+o):m.scalar?sd.toLowerCase()+" shares":"shares on the branch \u201c"+sd.toLowerCase()+"\u201d")+"."}},"amt")}
+        done:"You bought "+U.shares(s)+" "+(o?(bin?"shares on "+o:side+" shares on "+o):m.scalar?sd+" shares":"shares on the branch \u201c"+sd.toLowerCase()+"\u201d")+"."}},"amt")}
     var drawTicket=function(){var p=Math.min(.99,Math.max(.01,price())),f=h("div");
       tk.style.minHeight=fl.style()?fl.hold+"px":"";
       if(fl.step!=="form"){f.appendChild(fl.view());patch(tk,f);return}
@@ -275,9 +275,9 @@
         else f.appendChild(h("p",{text:"Trading is closed for this market.",class:"note"}));
         patch(tk,f);return}
       var tk0=tk;tk=f;
-      var labs=m.scalar?["Long","Short"]:m.cond?["If "+m.cond.if.toLowerCase(),"If not"]:["Buy Yes","Buy No"];
+      var labs=m.scalar?["Up","Down"]:m.cond?["If "+m.cond.if.toLowerCase(),"If not"]:["Buy Yes","Buy No"];
       if(!bin)tk.appendChild(h("div",{class:"seg",role:"group","aria-label":m.cond?"Branch":"Side"},["Yes","No"].map(function(s,i){return h("button",{type:"button","aria-pressed":String(side===s),text:labs[i],onclick:function(){side=s;drawTicket()}})})));
-      if(m.scalar)tk.appendChild(h("p",{class:"note",text:"Long gains as the value resolves higher; short gains as it resolves lower."}));
+      if(m.scalar)tk.appendChild(h("p",{class:"note",text:"Up gains as the value resolves higher; Down gains as it resolves lower."}));
       if(m.cond)tk.appendChild(h("p",{class:"note",text:"If the condition does not happen, this branch's shares are worth nothing."}));
       W.holdLines(m.id,"app").forEach(function(n){tk.appendChild(n)});
       var err=W.amountError(amt,fl.tried),at=W.amountAttrs("amt",err);
@@ -299,9 +299,11 @@
       var hn=W.hint({after:focusPlace});if(hn)tk.appendChild(hn);tk=tk0;patch(tk,f)};
     redrawTicket=drawTicket;
     var list=null;
+    /* every outcome market lists the Invalid result last: shown for completeness, not tradable here */
+    var inv=function(){return h("div",{class:"orow muted","data-key":"inv"},[h("span",{text:"Invalid result"}),h("span",{class:"pct num",text:"0%"})])};
     if(m.outs&&m.status==="Resolved"){/* a resolved market is not a choice: plain rows, the winner marked */
-      list=h("div",{class:"olist"},m.outs.map(function(o,i){return h("div",{class:"orow","data-key":"o"+i},[h("span",{text:o[0]}),h("span",{class:"pct"},[h("span",{class:"num",text:pc(o[1])}),o[0]===resOf(m).answer?h("span",{class:"won",text:"Won"}):null])])}))}
-    else if(m.outs){list=h("div",{class:"olist"},[]);var draw=function(){var f=h("div");m.outs.forEach(function(o,i){f.appendChild(h("button",{type:"button",class:"orow sel","data-key":"o"+i,"aria-pressed":String(pick===i),onclick:function(){pick=i;if(fl.step!=="form")fl.reset();draw();drawTicket()}},[h("span",{text:o[0]}),h("span",{class:"num",text:pc(o[1])})]))});patch(list,f)};draw()}
+      list=h("div",{class:"olist"},m.outs.map(function(o,i){return h("div",{class:"orow","data-key":"o"+i},[h("span",{text:o[0]}),h("span",{class:"pct"},[h("span",{class:"num",text:pc(o[1])}),o[0]===resOf(m).answer?h("span",{class:"won",text:"Won"}):null])])}).concat([inv()]))}
+    else if(m.outs){list=h("div",{class:"olist"},[]);var draw=function(){var f=h("div");m.outs.forEach(function(o,i){f.appendChild(h("button",{type:"button",class:"orow sel","data-key":"o"+i,"aria-pressed":String(pick===i),onclick:function(){pick=i;if(fl.step!=="form")fl.reset();draw();drawTicket()}},[h("span",{text:o[0]}),h("span",{class:"num",text:pc(o[1])})]))});f.appendChild(inv());patch(list,f)};draw()}
     else{list=h("div",{class:"mcard static"},cardBody(m).slice(1,-1))}
     var ld=lead(m),cl=closeOf(m),hist=ld?spark(m.id*37,ld[1],ld[0],m.status==="Resolved"):estHistory(m);
     [h("div",{class:"kv"},[h("div",{},[h("small",{text:"Volume"}),h("b",{class:"num",text:money(m.vol)})]),h("div",{},[h("small",{text:m.status==="Resolved"?"Result":"Liquidity"}),h("b",{class:m.status==="Resolved"?null:"num",text:m.status==="Resolved"?(resOf(m).answer||"Not set"):money(m.liq)})]),h("div",{},[h("small",{text:cl&&cl.past?"Closed":"Closes"}),h("b",{text:cl?cl.full:"Not set"}),cl&&cl.rel?h("span",{class:"rel",text:cl.rel}):null]),h("div",{},[h("small",{text:"Status"}),h("b",{text:m.status})])]),
@@ -315,7 +317,7 @@
      disconnected it connects (the wallet sheet opens above and the form keeps its values); connected it validates,
      then review, signature and result run inside the same sheet. A created market joins MARKETS and every render path. */
   var TYPE_NOTE={"Categorical":"One outcome wins. Each outcome trades Yes and No.","Multi-categorical":"Any number of outcomes can come true. Each trades on its own.",
-    "Scalar":"Trades a number inside a range: long gains as it resolves higher.","Multi-scalar":"Trades several numbers, each with its own range. Each outcome pays its answer's share of all the answers together.",
+    "Scalar":"Trades a number inside a range: Up gains as it resolves higher.","Multi-scalar":"Trades several numbers, each with its own range. Each outcome pays its answer's share of all the answers together.",
     "Conditional":"Trades a metric if a condition happens. If it does not happen, the shares are worth nothing."};
   var uid=0,cm=null,pending=[],cmFocus=null;
   function orow(v){return{id:++uid,v:v||""}}

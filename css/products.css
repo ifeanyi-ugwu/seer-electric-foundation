@@ -45,7 +45,7 @@
 .leg b{display:block;font-size:28px;line-height:var(--lh-tight);font-weight:500;letter-spacing:-.02em;margin-top:var(--s-2)}
 .mk{display:inline-block;width:9px;height:9px;flex:none}
 .mk.pass{background:var(--pos);border-radius:50%}.mk.fail{background:var(--neg)}
-.fork-meta{display:grid;grid-template-columns:1fr 1fr;gap:var(--s-2) var(--s-5);margin-top:var(--s-4)}
+.fork-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:var(--s-2) var(--s-5);margin-top:var(--s-4)}
 .fork-meta .res{grid-column:1/-1}
 .fork-meta .res .num{text-align:right}
 /* Active and Decided: the switch spans the list */
