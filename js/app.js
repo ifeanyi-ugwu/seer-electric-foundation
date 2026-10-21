@@ -180,18 +180,23 @@
     var fl=flow;
     function focusPlace(){var b=tk.querySelector("[data-tx-place]");if(b)b.focus()}
     function place(){var p=Math.min(.99,Math.max(.01,price())),a=amt,s=a/p,o=m.outs?m.outs[pick][0]:null,sd=sideName();
-      fl.place(a,function(){return{amount:a,meta:{type:"Trade",market:m.q},
+      fl.place(a,function(){return{amount:a,meta:{type:"Trade",market:m.q,mid:m.id,product:"app",outcome:o,side:bin?"":sd,shares:s,price:p,status:m.status},
         rows:[["Market",m.q,"tx-q"]].concat(o?[["Outcome",o,"tx-q"]]:[],bin?[]:[["Side",sd]],[["Amount",W.money(a)+" USDC","tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(s)],[m.scalar?"Maximum payout":"Payout if correct","$"+U.num(s,2)],["Network fee","Free in demo","tx-free"]]),
         done:"You bought "+U.shares(s)+" "+(o?(bin?"shares on "+o:side+" shares on "+o):m.scalar?sd.toLowerCase()+" shares":"shares on the branch \u201c"+sd.toLowerCase()+"\u201d")+"."}},"amt")}
     var drawTicket=function(){var p=Math.min(.99,Math.max(.01,price())),f=h("div");
-      if(m.status!=="Open"&&m.status!=="Live"){f.appendChild(h("p",{text:"Trading is closed for this market.",class:"note"}));patch(tk,f);return}
       tk.style.minHeight=fl.style()?fl.hold+"px":"";
       if(fl.step!=="form"){f.appendChild(fl.view());patch(tk,f);return}
+      if(m.status!=="Open"&&m.status!=="Live"){
+        /* a resolved market offers Redeem to a wallet that holds the winning side; any other closed market just says so */
+        if(m.status==="Resolved")W.redeem({flow:fl,market:m.q,mid:m.id,product:"app",after:focusPlace,win:function(x){return x.outcome===resOf(m).answer&&(!x.side||x.side==="Yes")}}).forEach(function(n){f.appendChild(n)});
+        else f.appendChild(h("p",{text:"Trading is closed for this market.",class:"note"}));
+        patch(tk,f);return}
       var tk0=tk;tk=f;
       var labs=m.scalar?["Long","Short"]:m.cond?["If "+m.cond.if.toLowerCase(),"If not"]:["Buy Yes","Buy No"];
       if(!bin)tk.appendChild(h("div",{class:"seg",role:"group","aria-label":m.cond?"Branch":"Side"},["Yes","No"].map(function(s,i){return h("button",{type:"button","aria-pressed":String(side===s),text:labs[i],onclick:function(){side=s;drawTicket()}})})));
       if(m.scalar)tk.appendChild(h("p",{class:"note",text:"Long gains as the value resolves higher; short gains as it resolves lower."}));
       if(m.cond)tk.appendChild(h("p",{class:"note",text:"If the other branch happens, this trade is refunded."}));
+      W.holdLines(m.id,"app").forEach(function(n){tk.appendChild(n)});
       var err=W.amountError(amt,fl.tried),at=W.amountAttrs("amt",err);
       var inp=h("input",{class:"field",type:"number",min:"1",value:String(amt),id:"amt","aria-label":"Amount in USDC","aria-invalid":at["aria-invalid"],"aria-describedby":at["aria-describedby"],
         oninput:function(e){amt=Number(e.target.value)||0;upd(true);W.amountLive(e.target,amt,fl)}});

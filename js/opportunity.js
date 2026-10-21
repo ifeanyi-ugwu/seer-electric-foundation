@@ -23,11 +23,15 @@ function sideKids(s,inSheet){var p=st.side==="Yes"?s.p:1-s.p,open=s.r==="In revi
   back:{text:"Back to the list",onclick:close},titles:{notfound:"This submission no longer exists"},texts:{notfound:"It may have been withdrawn. Go back to the list to pick another."}})];
  if(det.id===s.id&&det.state==="empty")return[DM.emptyView({level:inSheet?"sheet":"panel",title:"No signal yet",text:"Nobody has traded this submission yet. Check again in a moment.",action:{text:"Check again",onclick:function(){loadSel(s)}}})];
  k.push(h("div",{class:"line"},[h("span",{class:"muted",text:"Reviewer decision"}),badge(s.r)]));
- if(!open){k.push(h("p",{class:"note",text:"Reviewers have decided. This market is settled by their decision."}));return k}
  if(flow.step!=="form"){k.push(flow.view());return k}
+ if(!open){k.push(h("p",{class:"note",text:"Reviewers have decided. This market is settled by their decision."}));
+  /* a wallet that holds the side the reviewers' decision matched can redeem it, as on a resolved explorer market */
+  var won=s.r==="Selected"?"Will be selected":"Will not be selected";
+  W.redeem({flow:flow,market:s.n,mid:s.id,product:"opportunity",quiet:true,after:focusPlace,win:function(x){return x.side===won}}).forEach(function(n){k.push(n)});return k}
  k.push(h("div",{class:"seg",role:"group","aria-label":"Side"},["Yes","No"].map(function(x){return h("button",{type:"button","aria-pressed":String(st.side===x),text:"Will "+(x==="Yes"?"":"not ")+"be selected",onclick:function(){st.side=x;draw()}})})));
  var pay=function(){return"$"+U.num(Math.max(0,st.amt)/Math.min(.99,Math.max(.01,p)),2)},err=W.amountError(st.amt,flow.tried);
  k.push(h("div",{class:"line"},[h("span",{text:"Price"}),h("b",{class:"num",text:"$"+p.toFixed(2)})]));
+ W.holdLines(s.id,"opportunity").forEach(function(n){k.push(n)});
  k.push(h("div",{class:"field-grp"},[W.amountLabel("amt","Amount (USDC)"),
   h("input",Object.assign({class:"field",id:"amt",type:"number",min:"1",value:String(st.amt),oninput:function(e){st.amt=+e.target.value||0;var o=document.getElementById("opp-out");if(window.Motion)Motion.num(o,pay());else o.textContent=pay();W.amountLive(e.target,st.amt,flow)}},W.amountAttrs("amt",err))),
   W.amountErr("amt",err)]));
@@ -38,7 +42,7 @@ function sideKids(s,inSheet){var p=st.side==="Yes"?s.p:1-s.p,open=s.r==="In revi
 var W=window.SeerWallet,flow=W.flow({box:function(){return document.querySelector('[data-tx="opp"]')},onChange:function(){draw()}});
 function focusPlace(){var b=document.querySelector('[data-tx="opp"] [data-tx-place]');if(b)b.focus()}
 function place(s){var yes=st.side==="Yes",p=Math.min(.99,Math.max(.01,yes?s.p:1-s.p)),a=st.amt,sh=a/p,side="Will "+(yes?"":"not ")+"be selected";
- flow.place(a,function(){return{amount:a,meta:{type:"Trade",market:s.n},
+ flow.place(a,function(){return{amount:a,meta:{type:"Trade",market:s.n,mid:s.id,product:"opportunity",outcome:null,side:side,shares:sh,price:p,status:"Open"},
   rows:[["Submission",s.n,"tx-q"],["Side",side],["Amount",W.money(a)+" USDC","tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(sh)],
    ["Payout if reviewers agree","$"+U.num(sh,2)],["Network fee","Free in demo","tx-free"]],
   done:"You bought "+U.shares(sh)+" shares on "+s.n+": "+side.toLowerCase()+"."}},"amt")}

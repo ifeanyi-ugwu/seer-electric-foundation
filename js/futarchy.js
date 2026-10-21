@@ -16,7 +16,7 @@ function focusPlace(){var b=document.querySelector('[data-tx="fut"] [data-tx-pla
 /* an illustrative price for the long side of a branch: where its forecast sits in a range around both forecasts */
 function bprice(p,b){var lo=Math.min(p.pass,p.fail)*.75,hi=Math.max(p.pass,p.fail)*1.25,v=b==="pass"?p.pass:p.fail;return Math.round(Math.min(.95,Math.max(.05,(v-lo)/(hi-lo)))*100)/100}
 function place(){var p=view.p,b=branch,a=amt,pr=b==="pass"?p.pass:p.fail,px=bprice(p,b),sh=a/px,name="#"+p.id+" "+p.t;
- flow.place(a,function(){return{amount:a,meta:{type:"Trade",market:name},
+ flow.place(a,function(){return{amount:a,meta:{type:"Trade",market:name,mid:p.id,product:"futarchy",outcome:null,side:b==="pass"?"If it passes":"If it fails",shares:sh,price:px,status:"Open"},
   rows:[["Market",name,"tx-q"],["Branch",b==="pass"?"If it passes":"If it fails"],["Forecast",fmt(p,pr)],["Amount",W.money(a)+" USDC","tx-tot"],
    ["Price per share","$"+px.toFixed(2)],["Shares",U.shares(sh)],["Payout if correct","$"+U.num(sh,2)],["Network fee","Free in demo","tx-free"]],
   note:"If the other branch happens, this trade is refunded.",
@@ -109,6 +109,7 @@ function detail(animate){var p=view.p,d=delta(p),root=document.getElementById("d
  else{var err=W.amountError(amt,flow.tried);
   t.appendChild(h("div",{class:"seg t-a",role:"group","aria-label":"Branch"},[["pass","If it passes"],["fail","If it fails"]].map(function(b){return h("button",{type:"button","aria-pressed":String(branch===b[0]),text:b[1],onclick:function(){branch=b[0];detail()}})})));
   t.appendChild(h("div",{class:"line t-a"},[h("span",{text:"Current forecast"}),h("b",{class:"num",text:fmt(p,pr)})]));
+  W.holdLines(p.id,"futarchy").forEach(function(n){n.classList.add("t-b");t.appendChild(n)});
   var inp=h("input",Object.assign({class:"field",type:"number",min:"1",value:String(amt),id:"amt",oninput:function(e){amt=+e.target.value||0;W.amountLive(e.target,amt,flow)}},W.amountAttrs("amt",err)));
   t.appendChild(h("div",{class:"field-grp t-b"},[W.amountLabel("amt","Amount (USDC)"),inp,W.amountErr("amt",err)]));
   var pb=W.placeBtn({extra:true,onPlace:place});pb.classList.add("t-b");t.appendChild(pb);

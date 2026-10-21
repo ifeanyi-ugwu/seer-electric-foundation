@@ -4,8 +4,9 @@
    it is read synchronously before the header renders: with the page scripts render-blocking, the first paint already
    shows the right control (no flicker).
    API: state (snapshot), subscribe(fn) / onChange(fn) (returns an unsubscribe), connect(kind), disconnect(),
-   spend(amount, meta), log(entry), openConnect({from, after}), openAccount(), mount(slot), announce(text),
-   money(n), amountError(n, tried), maxBtn(inputId), amountLabel(id, text), flow(options) (the review, sign and result steps of a ticket or form).
+   spend(amount, meta), credit(amount, meta), log(entry), openConnect({from, after}), openAccount(), mount(slot), announce(text),
+   money(n), amountError(n, tried), maxBtn(inputId), amountLabel(id, text), flow(options) (the review, sign and result steps of a ticket or form),
+   positions(mid, product), holdLines(mid, product), redeem(options) (positions and Redeem for tickets and the wallet sheet).
    Needs js/util.js (U.h, U.sheet). js/motion.js is optional (count motion, step entrances). */
 (function(){
 "use strict";
@@ -27,24 +28,69 @@ function rnd(n){var s="",i,a=null;try{a=crypto.getRandomValues(new Uint8Array(n)
 function cased(h){return h.split("").map(function(c,i){return/[a-f]/.test(c)&&parseInt(h[(i*7+3)%h.length],16)>7?c.toUpperCase():c}).join("")}
 function load(){try{var v=JSON.parse(sessionStorage.getItem(KEY)||"null");return v&&typeof v.addr==="string"?v:null}catch(e){return null}}
 function save(){try{sessionStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
-var S=load()||{addr:"0x"+cased(rnd(40)),on:false,kind:null,bal:2480,act:[]};
-if(!S.act)S.act=[];save();
+var S=load()||{addr:"0x"+cased(rnd(40)),on:false,kind:null,bal:2480,act:[],pos:[],seeded:false};
+/* a wallet saved before positions existed has no pos: it starts empty */
+if(!S.act)S.act=[];if(!Array.isArray(S.pos))S.pos=[];
+/* Positions: one row per product, market, outcome and side, holding shares, cost and the current price of that side (this demo's prices do not move).
+   The first time a wallet connects it also holds 10 shares of the resolved MLB market, so Redeem can be reached without waiting for a market to resolve. */
+var SEED={mid:14,product:"app",market:"MLB All-Star Game: winning league",outcome:"American League",side:"",shares:10,cost:6.2,price:1,status:"Resolved"};
+function seed(){if(S.seeded)return;S.seeded=true;S.pos.push(Object.assign({},SEED))}
+if(S.on)seed();
+save();
 function money(n){return(Math.round(n*100)/100).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2})}
 function short(a){return a.slice(0,6)+"..."+a.slice(-4)}
 function ref(){var r=rnd(64);return{full:"0x"+r,short:"0x"+r.slice(0,8)+"..."+r.slice(-4)}}
-function snapshot(){return{connected:!!S.on,kind:S.kind,kindName:S.kind?KINDS[S.kind][0]:null,address:S.addr,short:short(S.addr),balance:S.bal,activity:S.act.slice()}}
+function snapshot(){return{connected:!!S.on,kind:S.kind,kindName:S.kind?KINDS[S.kind][0]:null,address:S.addr,short:short(S.addr),balance:S.bal,activity:S.act.slice(),positions:S.on?S.pos.map(function(p){return Object.assign({},p)}):[]}}
 function emit(){save();subs.slice().forEach(function(f){f(snapshot())})}
 W.subscribe=W.onChange=function(f){subs.push(f);return function(){var i=subs.indexOf(f);if(i>=0)subs.splice(i,1)}};
 Object.defineProperty(W,"state",{get:snapshot});
 W.money=money;
-W.connect=function(kind){S.on=true;S.kind=KINDS[kind]?kind:"browser";paint(true);emit()};
+W.connect=function(kind){S.on=true;S.kind=KINDS[kind]?kind:"browser";seed();paint(true);emit()};
 W.disconnect=function(){if(!S.on)return;S.on=false;S.kind=null;paint(false);emit();announce("Wallet disconnected.")};
 W.log=function(e){S.act.unshift({type:e.type,market:e.market,amount:e.amount,status:e.status,ref:e.ref||null});if(S.act.length>20)S.act.length=20;save();if(acct())sheet()};
 /* spend: takes the amount from the balance and records it; returns the transaction reference, or null */
 W.spend=function(amount,meta){meta=meta||{};if(!S.on||!(amount>0)||amount>S.bal+1e-9)return null;var r=ref();
   S.bal=Math.max(0,Math.round((S.bal-amount)*100)/100);
   S.act.unshift({type:meta.type||"Trade",market:meta.market||"",amount:amount,status:"Confirmed",ref:r.short});if(S.act.length>20)S.act.length=20;
-  paintBal(true);emit();return r.short};
+  addPos(amount,meta);paintBal(true);if(acct())sheet();emit();return r.short};
+/* credit: pays an amount into the balance (a redemption) and records it; the positions it settles are removed. Returns the reference, or null */
+W.credit=function(amount,meta){meta=meta||{};if(!S.on||!(amount>0))return null;var r=ref();
+  S.bal=Math.round((S.bal+amount)*100)/100;
+  S.act.unshift({type:meta.type||"Redeem",market:meta.market||"",amount:amount,status:"Confirmed",ref:r.short,plus:true});if(S.act.length>20)S.act.length=20;
+  S.pos=S.pos.filter(function(p){return(meta.redeem||[]).indexOf(pkey(p))<0});
+  paintBal(true);if(acct())sheet();emit();return r.short};
+/* ---------- positions ---------- */
+function pkey(p){return[p.product,p.mid,p.outcome||"",p.side||""].join("|")}
+function addPos(amount,m){if(m.mid==null||!(m.shares>0))return;var n={mid:m.mid,product:m.product||"app",market:m.market||"",outcome:m.outcome||null,side:m.side||"",shares:m.shares,cost:amount,price:m.price,status:m.status||"Open"},k=pkey(n),i;
+  for(i=0;i<S.pos.length;i++)if(pkey(S.pos[i])===k){var o=S.pos[i];S.pos.splice(i,1);n.shares=Math.round((o.shares+n.shares)*1e6)/1e6;n.cost=Math.round((o.cost+n.cost)*100)/100;break}
+  S.pos.unshift(n)}
+/* the positions in one market (or every position), while a wallet is connected */
+W.positions=function(mid,product){if(!S.on)return[];return S.pos.filter(function(p){return(mid==null||p.mid===mid)&&(!product||p.product===product)}).map(function(p){return Object.assign({},p)})};
+W.posKey=pkey;
+var PRODUCT={app:"Seer app",futarchy:"Futarchy",opportunity:"Opportunity Markets"};
+/* "21.05 Yes shares on No change": a side that is Yes, No, Long or Short is part of the noun; any other side (a branch, a decision) follows */
+/* held shares always show two decimals, so a position reads the same in the ticket, the wallet sheet and the redemption */
+function sh2(v){return U.num(v,2)}
+function holdText(p){var sd=p.side||"",kind=/^(Yes|No|Long|Short)$/.test(sd),t=sh2(p.shares)+(kind?" "+sd:"")+" shares";
+  if(p.outcome)t+=" on "+p.outcome;if(sd&&!kind)t+=", "+sd.charAt(0).toLowerCase()+sd.slice(1);return t}
+/* "21.05 Yes · No change": the same position as a row title */
+function posTitle(p){var sd=p.side||"",kind=/^(Yes|No|Long|Short)$/.test(sd);return[sh2(p.shares)+(kind?" "+sd:" shares"),p.outcome,kind?null:sd||null].filter(Boolean).join(" \u00b7 ")}
+W.holdText=holdText;
+/* a ticket's "You hold ..." lines, one per position in the market */
+W.holdLines=function(mid,product){return W.positions(mid,product).map(function(p,i){return h("div",{class:"line","data-key":"hold"+i},[h("span",{text:"You hold "+holdText(p)})])})};
+/* Redeem, for a resolved market (the explorer) or a decided submission (Opportunity). o: {flow, market, mid, product, win(position), after, quiet}.
+   Disconnected: a note whose Connect wallet button checks for winnings once connected. Connected with winning shares: what is held and a
+   "Redeem N USDC" button that runs review, signature and result in the ticket. Otherwise the note that nothing is held (nothing at all if quiet). */
+W.redeem=function(o){var done="This market has resolved.",wins;
+  if(!S.on)return o.quiet?[]:[h("p",{class:"note"},[done+" ",link("Connect wallet",function(e){W.openConnect({from:e.currentTarget,after:o.after})})," to check for winnings."])];
+  wins=W.positions(o.mid,o.product).filter(o.win);
+  if(!wins.length)return o.quiet?[]:[h("p",{class:"note",text:done+" You hold no winning shares."})];
+  var sh=wins.reduce(function(a,p){return a+p.shares},0),amt=Math.round(sh*100)/100,outs=wins.map(function(p){return p.outcome||p.side}).join(", ");
+  return wins.map(function(p,i){return h("div",{class:"line","data-key":"hold"+i},[h("span",{text:"You hold "+holdText(p)})])}).concat([
+    h("button",{class:"btn lg",type:"button","data-tx-place":"",text:"Redeem "+money(amt)+" USDC",onclick:function(){
+      o.flow.review({amount:amt,credit:true,t:{review:"Review redemption",done:"Winnings redeemed",doneBtn:"Done"},meta:{type:"Redeem",market:o.market,redeem:wins.map(pkey)},
+        rows:[["Market",o.market,"tx-q"],["Outcome",outs,"tx-q"],["Shares",sh2(sh)],["You receive",money(amt)+" USDC","tx-tot"]],
+        done:"You redeemed "+sh2(sh)+" winning shares for "+money(amt)+" USDC."})}})])};
 /* ticket amounts: an empty or zero amount is flagged once the person has tried to place; more than the balance at once */
 W.amountError=function(a,tried){if(a<0)return"Enter an amount more than 0.";if(!(a>0))return tried?"Enter an amount more than 0.":"";
   if(S.on&&a>S.bal+1e-9)return"Amount is more than your balance of "+money(S.bal)+" USDC.";return""};
@@ -140,13 +186,23 @@ function plan(base){var D=window.SeerDemo;return D&&D.wait?D.wait(base):{ms:base
 function start(k){clearTimeout(ws.t);ws.kind=k;ws.err=null;step("wait");var w=plan(k==="mobile"?1800:1200);
   ws.t=setTimeout(function(){if(!ws||ws.step!=="wait")return;var e=w.check();
     if(e){ws.err=e;step("fail");announce((CONN_ERR[e.offline?"offline":e.kind]||CONN_ERR.server)[0]+". No wallet was connected.");return}
-    S.on=true;S.kind=k;paint(true);step("done");emit();
+    S.on=true;S.kind=k;seed();paint(true);step("done");emit();
     announce("Wallet connected. Balance "+money(S.bal)+" USDC.");
     ws.ct=setTimeout(close,950)},w.ms)}
 function cancel(){clearTimeout(ws.t);ws.err=null;step("fail");announce("Connection cancelled. No wallet was connected.")}
 W.openConnect=function(o){o=o||{};if(S.on){if(o.after)o.after();return}
   if(ws)close();ws={mode:"connect",step:"list",from:o.from||doc.activeElement,after:o.after||null};sheet(true)};
 
+/* Your positions: up to four rows, then Show all; each at its current price, with the market's status word */
+function posSection(){var l=W.positions(),n=l.length,all=ws.allPos&&n>4,rows=all?l:l.slice(0,4);
+  return h("section",{class:"wl-acts-sec wl-pos","aria-labelledby":"wl-pos-h","data-key":"wl-pos"},[h("h3",{class:"wl-sub",id:"wl-pos-h",text:"Your positions"}),
+    n?h("ol",{class:"wl-act"},rows.map(function(p){var res=p.status==="Resolved",lost=res&&!(p.price>0);
+      return h("li",{"data-key":"p"+pkey(p)},[
+        h("span",{class:"wl-act-t"},[h("b",{class:"num",text:posTitle(p)}),h("span",{class:"wl-st "+(lost?"no":"ok"),text:p.status})]),
+        h("span",{class:"num wl-act-a",text:money(p.shares*p.price)+" USDC"}),
+        h("span",{class:"wl-act-m"},[h("span",{class:"muted",text:(PRODUCT[p.product]||"Seer")+" \u00b7 "}),p.market])])}))
+      :h("p",{class:"note",text:"No positions yet. Trades you place show here."}),
+    n>4?h("div",{class:"wl-more","data-key":"wl-more"},[link(all?"Show fewer":"Show all ("+n+")",function(){ws.allPos=!all;sheet()},{"aria-expanded":String(all)})]):null])}
 function accountBody(){var a=S.act.slice(0,3);
   return h("div",{class:"wl-step wl-acct","data-key":"wl-acct"},[
     h("div",{class:"wl-box"},[h("small",{text:"Address"}),
@@ -154,11 +210,12 @@ function accountBody(){var a=S.act.slice(0,3);
         h("button",{class:"btn soft wl-copy",type:"button","data-wl-focus":"","aria-label":ws.copied==="ok"?"Copied":"Copy address",onclick:copy},[ws.copied==="ok"?"Copied":"Copy"])]),
       ws.copied==="fail"?h("p",{class:"note",text:"Copying is blocked here. Select the address and copy it by hand."}):null]),
     h("div",{class:"wl-bal-tile"},[h("small",{text:"Balance"}),h("b",{class:"num",text:money(S.bal)+" USDC"})]),
+    posSection(),
     h("section",{class:"wl-acts-sec","aria-labelledby":"wl-act-h"},[h("h3",{class:"wl-sub",id:"wl-act-h",text:"Recent activity"}),
       a.length?h("ol",{class:"wl-act"},a.map(function(x,i){var ok=x.status==="Confirmed";return h("li",{"data-key":"a"+(S.act.length-i)},[
         h("span",{class:"wl-act-t"},[h("b",{text:x.type}),h("span",{class:"wl-st "+(ok?"ok":"no"),text:x.status})]),
         h("span",{class:"wl-act-m",text:x.market}),
-        h("span",{class:"num wl-act-a",text:(ok?"−":"")+money(x.amount)+" USDC"})])}))
+        h("span",{class:"num wl-act-a",text:(ok?x.plus?"+":"−":"")+money(x.amount)+" USDC"})])}))
        :h("p",{class:"note",text:"No activity in this session yet. Trades and new markets will show here."})]),
     h("button",{class:"btn soft wl-wide",type:"button",text:"Disconnect",onclick:function(){ws.from=hdr;W.disconnect();close()}})])}
 /* copyText: the clipboard API, then a hidden textarea where it is blocked; cb(true|false). Used by the wallet sheet and by W.copyBtn. */
@@ -204,8 +261,10 @@ Flow.prototype.sign=function(){var f=this,w=plan(1000);clearTimeout(f.tm);f.err=
     /* a failure from the network (js/demo.js, transactions scope): nothing is spent, the attempt is logged */
     if(e){f.err=e;W.log({type:f.sum.meta.type,market:f.sum.meta.market,amount:f.sum.amount,status:"Failed"});f.go("failed");
       announce("Transaction failed. "+txReason(e));return}
-    var r=W.spend(f.sum.amount,f.sum.meta);
-    if(!r){f.go("rejected");return}f.ref=r;if(f.o.onSuccess)f.o.onSuccess(f);f.go("done");announce(f.t.done+". "+f.sum.done+" Balance "+money(S.bal)+" USDC.")},w.ms)};
+    var r=f.sum.credit?W.credit(f.sum.amount,f.sum.meta):W.spend(f.sum.amount,f.sum.meta);
+    if(!r){f.go("rejected");return}f.ref=r;if(f.o.onSuccess)f.o.onSuccess(f);f.go("done");announce(f.copy().done+". "+f.sum.done+" Balance "+money(S.bal)+" USDC.")},w.ms)};
+/* the step copy: a summary may bring its own (a redemption in a ticket that otherwise trades) */
+Flow.prototype.copy=function(){return Object.assign({},this.t,(this.sum&&this.sum.t)||{})};
 function txReason(e){return({offline:"You are offline, so nothing was sent. Your balance is unchanged.",network:"The network could not be reached, so nothing was sent. Your balance is unchanged.",
   timeout:"The network did not confirm it in time, so nothing was sent. Your balance is unchanged.",server:"The network returned an error, so nothing was sent. Your balance is unchanged.",
   notfound:"This market is no longer available, so nothing was sent. Your balance is unchanged."})[e.offline?"offline":e.kind]||"Nothing was sent. Your balance is unchanged."}
@@ -218,7 +277,7 @@ Flow.prototype.finish=function(){var d=this.o.onDone;this.tried=false;if(d){d(th
   if(x){x.click();return}
   this.go("form","[data-tx-place]")};
 Flow.prototype.style=function(){return this.hold&&this.step!=="form"?"min-height:"+this.hold+"px":null};
-Flow.prototype.view=function(){var f=this,s=f.step,t=f.t,sum=f.sum||{rows:[]},cls="tx-step"+(f.dir<0?" tx-rev":"");
+Flow.prototype.view=function(){var f=this,s=f.step,t=f.copy(),sum=f.sum||{rows:[]},cls="tx-step"+(f.dir<0?" tx-rev":"");
   if(s==="review")return h("div",{class:cls,"data-key":"tx-review"},[
     h("h3",{class:"tx-h",tabindex:"-1","data-tx-focus":"",text:t.review}),
     h("dl",{class:"tx-sum"},sum.rows.map(function(r){return h("div",{class:"tx-row"+(r[2]?" "+r[2]:"")},[h("dt",{text:r[0]}),h("dd",{text:r[1]})])})),
