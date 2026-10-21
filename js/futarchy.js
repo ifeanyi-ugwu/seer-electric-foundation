@@ -7,6 +7,9 @@ var h=U.h,P=[
  {id:17,t:"Diversify 20% of treasury into stables",dao:"Example DAO",metric:"Treasury value in 180 days",unit:"$M",dec:1,pass:18.2,fail:18.9,better:"higher",vote:{f:57,a:43,end:"4 days"},vol:128e3}];
 /* sel and range are what the person picked; view is what the detail shows (the last proposal and range that loaded) */
 var sel=P[0],range=60,view={p:P[0],range:60},branch="pass",amt=100,W=window.SeerWallet;
+/* ?p=<proposal id> picks the proposal on load and follows the choice (replaceState, so Back leaves the page). The first proposal is the default and is left out; an id that is not a proposal is ignored. */
+try{var pid=new URLSearchParams(location.search).get("p"),pp=P.filter(function(x){return String(x.id)===pid})[0];if(pp){sel=pp;view={p:pp,range:60}}}catch(e){}
+function urlSync(){try{history.replaceState(history.state,"",location.pathname+(sel===P[0]?"":"?p="+sel.id)+location.hash)}catch(e){}}
 /* loads go through js/demo.js (delay, errors, offline, cache); without it they resolve at once, as before */
 var DM=window.SeerDemo;
 function slot(){return DM?DM.slot():{run:function(o){o.apply({data:o.producer(),fromCache:false,empty:false},{sync:true,shown:false})},cancel:function(){}}}
@@ -64,7 +67,7 @@ function skDetail(){var S=DM.sk,B=DM.skBlock;
 
 function list(){var root=document.getElementById("list"),el=h("div");
  el.appendChild(h("div",{class:"muted list-label",text:"Active proposals · "+P.length}));
- P.forEach(function(p){var d=delta(p);el.appendChild(h("button",{class:"pick",type:"button","data-key":"p"+p.id,"aria-pressed":String(p===sel),onclick:function(){if(sel===p)return;flow.reset();sel=p;list();headFocus=U.narrow.matches;loadProposal();toDetail()}},[
+ P.forEach(function(p){var d=delta(p);el.appendChild(h("button",{class:"pick",type:"button","data-key":"p"+p.id,"aria-pressed":String(p===sel),onclick:function(){if(sel===p)return;flow.reset();sel=p;urlSync();list();headFocus=U.narrow.matches;loadProposal();toDetail()}},[
   h("b",{text:"#"+p.id+" "+p.t}),h("span",{class:"muted",text:p.metric}),
   h("div",{class:"line"},[h("span",{class:"num "+(d.good?"pos":"neg"),text:d.arrow+d.text+(d.good?" · better":" · worse")}),h("span",{class:"muted num",text:"vote ends in "+p.vote.end})])]))});U.patch(root,el)}
 /* on a tablet or phone the detail sits below the list, so choosing a proposal scrolls its heading into view and focuses it once the detail has drawn */
@@ -77,7 +80,7 @@ function detail(animate){var p=view.p,d=delta(p),root=document.getElementById("d
  if(det.state==="error"){
   el.appendChild(h("div",{class:"dhead"},[h("span",{class:"badge",text:"Conditional market · Proposal #"+sel.id}),h("h2",{text:sel.t,tabindex:"-1"})]));
   el.appendChild(DM.errorView(det.err,{level:"panel",subject:"this proposal",retry:function(){DM.holdFocus(root);loadProposal()},
-   back:{text:"Back to the first proposal",onclick:function(){flow.reset();sel=P[0];list();loadProposal()}},titles:{notfound:"This proposal no longer exists"},
+   back:{text:"Back to the first proposal",onclick:function(){flow.reset();sel=P[0];urlSync();list();loadProposal()}},titles:{notfound:"This proposal no longer exists"},
    texts:{notfound:"It may have been withdrawn by the DAO. Pick another proposal from the list."}}));
   U.patch(root,el,{animate:animate!==false});focusHead();return}
  /* Each figure has one home: pass/fail values in the fork, the change under pass in the fork and the list,

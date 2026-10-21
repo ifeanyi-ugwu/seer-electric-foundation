@@ -64,6 +64,30 @@
   var saved=(function(){try{var v=JSON.parse(sessionStorage.getItem(SAVEKEY)||"[]");return Array.isArray(v)?v:[]}catch(e){return[]}})();
   function isSaved(id){return saved.indexOf(id)>=0}
   function savedCount(){return M.filter(function(m){return isSaved(m.id)}).length}
+
+  /* ======================= the address holds the explorer's state =======================
+     ?cat=&type=&status=&sort=&view=&q=&saved=1&m=<id>. A value that is the default is left out, and a value that is not valid is ignored. It is read
+     once, before the first load; the filters, the search (after 300 ms), the view and the Saved chip rewrite it with replaceState, so the page
+     keeps one history entry. Opening a market pushes one entry (m=<id>), so Back closes the sheet and stays on the page. The grid or table choice
+     is also kept in localStorage under seer-view; a view in the address wins over it. The hash (#leaderboard) is the view and is left as it is. */
+  var STATUSES=["Open","Live","Awaiting result","In dispute","Resolved"],SORTS=["vol","liq","name"],VIEWKEY="seer-view";
+  (function(){var p;try{p=new URLSearchParams(location.search)}catch(e){return}
+    var cat=p.get("cat"),type=p.get("type"),status=p.get("status"),sort=p.get("sort"),v=p.get("view"),q=p.get("q");
+    if(cat&&cat!=="All"&&ALL.some(function(m){return m.cat===cat}))st.cat=cat;
+    if(TYPES.indexOf(type)>=0)st.type=type;if(STATUSES.indexOf(status)>=0)st.status=status;if(SORTS.indexOf(sort)>=0)st.sort=sort;
+    if(q)st.q=q.slice(0,120);if(p.get("saved")==="1")st.saved=true;
+    if(v!=="grid"&&v!=="table"){v=null;try{v=localStorage.getItem(VIEWKEY)}catch(e){}}
+    if(v==="grid"||v==="table")st.view=v;
+    qs=snap()})();
+  var openId=null,pushed=false,closing=false,qt=0;
+  function query(mid){var p=new URLSearchParams();
+    if(st.cat!=="All")p.set("cat",st.cat);if(st.type)p.set("type",st.type);if(st.status)p.set("status",st.status);if(st.sort!=="vol")p.set("sort",st.sort);
+    if(st.view!=="grid")p.set("view",st.view);if(st.q)p.set("q",st.q);if(st.saved)p.set("saved","1");if(mid!=null)p.set("m",mid);return p.toString()}
+  /* the address of this page for the state now (the open market, if any), keeping the hash */
+  function here(mid){var q=query(mid);return location.pathname+(q?"?"+q:"")+location.hash}
+  function urlSync(){clearTimeout(qt);qt=0;try{history.replaceState(history.state,"",here(openId))}catch(e){}}
+  function shareUrl(id){return location.origin+location.pathname+"?"+query(id)}
+  addEventListener("pagehide",function(){if(qt)urlSync()});
   var STAR="M10 2.4l2.3 4.8 5.2.7-3.8 3.6.9 5.2L10 14.2l-4.6 2.5.9-5.2L2.5 7.9l5.2-.7z";
   /* the star: a toggle on a card and in a table row. It is a sibling of the card button, not inside it, so a press on it never opens the market */
   function star(m){var on=isSaved(m.id),ic=U.svg("svg",{viewBox:"0 0 20 20",width:"20",height:"20","aria-hidden":"true",focusable:"false","stroke-width":"1.6","stroke-linejoin":"round"});ic.appendChild(U.svg("path",{d:STAR}));
@@ -92,7 +116,7 @@
     [""].concat(TYPES).forEach(function(t){var n=M.filter(function(m){return!t||m.type===t}).length;
       f.appendChild(h("button",{class:"chip",type:"button","data-key":t||"all","aria-pressed":String(st.type===t),text:t?t+" · "+n:"All types",onclick:function(){st.type=t;types();refilter()}}))});
     /* Saved is one more chip after the types, and combines with every other filter. It filters the loaded markets at once, as search does. */
-    f.appendChild(h("button",{class:"chip",type:"button","data-key":"saved","aria-pressed":String(st.saved),text:"Saved · "+savedCount(),onclick:function(){st.saved=!st.saved;types();if(pageState==="ok"&&!pageSlot.pending)render()}}));patch(el,f)}
+    f.appendChild(h("button",{class:"chip",type:"button","data-key":"saved","aria-pressed":String(st.saved),text:"Saved · "+savedCount(),onclick:function(){st.saved=!st.saved;urlSync();types();if(pageState==="ok"&&!pageSlot.pending)render()}}));patch(el,f)}
 
   function cardBody(m){
     var body=[];
@@ -148,8 +172,13 @@
 
   /* detail panel + trade ticket */
   var lastFocus=null,flow=null,redrawTicket=null;
-  function closePanel(){var r=document.getElementById("panel-root"),p=r.querySelector(".panel"),s=r.querySelector(".scrim");document.removeEventListener("keydown",esc);
-    detSlot.cancel();if(flow)flow.reset();flow=null;redrawTicket=null;
+  /* Close, Escape and the scrim: a sheet that this page pushed a history entry for closes by going back, and popstate does the closing; a sheet
+     opened from the address (or one whose entry is gone) closes at once and takes ?m= out of the address */
+  function closePanel(){if(closing)return;
+    if(pushed&&openId!=null){closing=true;try{history.back();setTimeout(function(){if(closing&&openId!=null){closeNow();urlSync()}},600);return}catch(e){closing=false}}
+    closeNow();urlSync()}
+  function closeNow(){var r=document.getElementById("panel-root"),p=r.querySelector(".panel"),s=r.querySelector(".scrim");document.removeEventListener("keydown",esc);
+    openId=null;pushed=false;closing=false;detSlot.cancel();if(flow)flow.reset();flow=null;redrawTicket=null;
     var clear=function(){if(!p||p.isConnected)r.textContent=""};
     if(window.Motion&&p)Motion.exit([p,s],clear);else{clear();if(window.Motion&&Motion.sheetOff)Motion.sheetOff()}/* focus returns after the exit has finished, so the restyle it causes never lands in the middle of the slide */
     if(lastFocus){var lf=lastFocus,back=function(){if(lf.isConnected)lf.focus({preventScroll:true})};if(window.Motion&&!Motion.reduced())setTimeout(back,300);else back()}}
@@ -175,12 +204,16 @@
     k.push(h("div",{class:"ticket"},[DM.skBlock("sk-box","height:var(--ctl);width:200px;max-width:100%;border-radius:999px"),h("div",{class:"field-grp"},[h("label",{},[S("10ch")]),DM.skBlock("sk-box","height:var(--ctl);border-radius:999px")]),
       h("div",{class:"line"},[S("12ch"),S("5ch")]),h("div",{class:"line"},[S("6ch"),S("5ch")]),DM.skBlock("sk-box","height:var(--tap)")]));
     return h("div",{class:"dm-skel"},k)}
-  /* The sheet bar's More actions menu: Copy link (this page's address with ?m=<id>, which opens the same market on load) and View on explorer,
+  /* The sheet bar's More actions menu: Copy link (this page's address with the filters and ?m=<id>, which opens the same market on load) and View on explorer,
      a control of the live product that the concept note names */
   function moreMenu(m){var mn=U.menu({label:"More actions",items:[
-    ["Copy link",function(b){W.copyText(location.origin+location.pathname+"?m="+m.id,function(ok){mn.say(ok?"Copied":"Not copied");W.announce(ok?"Link copied.":"Copying is blocked here.")},b)}],
+    ["Copy link",function(b){W.copyText(shareUrl(m.id),function(ok){mn.say(ok?"Copied":"Not copied");W.announce(ok?"Link copied.":"Copying is blocked here.")},b)}],
     ["View on explorer",function(b){U.concept("Not part of this concept. In the product this opens the market on the chain explorer.",b)}]]});return mn}
-  function openPanel(m,init){lastFocus=document.activeElement;var root=document.getElementById("panel-root");root.textContent="";detSlot.cancel();
+  /* from: nothing for a press in the page (pushes an entry), "load" for the address on load, "pop" for Back or Forward */
+  function openPanel(m,init,from){lastFocus=document.activeElement;var root=document.getElementById("panel-root");root.textContent="";detSlot.cancel();
+    openId=m.id;closing=false;pushed=false;
+    if(from==="pop")pushed=!!(history.state&&history.state.m!=null);
+    else if(!from){try{history.pushState({m:m.id},"",here(m.id));pushed=true}catch(e){}}
     /* the pinned bar (badge, the title we already know, More actions, Close) shows at once; the body loads below it */
     var body=h("div",{class:"dm-body"}),p=h("div",{class:"panel",role:"dialog","aria-modal":"true","aria-label":m.q},[U.sheetTop(h("span",{class:"badge",text:m.isNew?"New · "+m.type:m.type}),m.q,closePanel,moreMenu(m).el),body]);
     root.appendChild(h("div",{class:"scrim",onclick:closePanel}));root.appendChild(p);document.addEventListener("keydown",esc);p.querySelector(".panel-top .pt-x").focus();
@@ -382,7 +415,7 @@
     if(pageState==="empty"){pageState="ok";sections(true)}
     if(pageState!=="ok"){if(cmFocus&&cmFocus.isConnected)cmFocus.focus();return}
     if(!matches(first)||listErr||listEmpty){st.cat="All";st.type="";st.status="";st.q="";st.saved=false;qs=snap();listErr=null;listEmpty=false;listSlot.cancel();document.getElementById("out").classList.remove("dm-dim");
-      document.getElementById("q").value="";document.getElementById("status").value=""}
+      document.getElementById("q").value="";document.getElementById("status").value="";urlSync()}
     stats();cats();types();
     var show=function(){render();var c=document.querySelector('#out [data-key="m'+first.id+'"] .mcard, #out [data-key="r'+first.id+'"]');if(!c)return;
       if(window.Motion){Motion.anim(c,[{boxShadow:"0 0 0 2px var(--violet)"},{boxShadow:"0 0 0 2px transparent"}],{duration:1600,easing:Motion.E.standard,delay:420});Motion.pop(c.querySelectorAll(".badge.new"),260)}
@@ -396,12 +429,15 @@
   /* the wallet changed (connected, disconnected, a balance after a trade): tickets and the form follow */
   W.subscribe(function(){if(redrawTicket)redrawTicket();if(cm&&document.querySelector("#sheet-root .cm-sheet"))cmDraw()});
 
-  document.getElementById("q").oninput=function(e){st.q=e.target.value;render()};
+  document.getElementById("q").oninput=function(e){st.q=e.target.value;render();clearTimeout(qt);qt=setTimeout(urlSync,300)};
   document.getElementById("cat-m").onchange=function(e){st.cat=e.target.value;cats();refilter()};
   document.getElementById("status").onchange=function(e){st.status=e.target.value;refilter()};
   document.getElementById("sort").onchange=function(e){st.sort=e.target.value;refilter()};
-  function view(v){st.view=v;document.getElementById("vg").setAttribute("aria-pressed",String(v==="grid"));document.getElementById("vt").setAttribute("aria-pressed",String(v==="table"));if(pageState==="ok"&&!pageSlot.pending)render()}
+  function view(v){st.view=v;try{localStorage.setItem(VIEWKEY,v)}catch(e){}urlSync();document.getElementById("vg").setAttribute("aria-pressed",String(v==="grid"));document.getElementById("vt").setAttribute("aria-pressed",String(v==="table"));if(pageState==="ok"&&!pageSlot.pending)render()}
   document.getElementById("vg").onclick=function(){view("grid")};document.getElementById("vt").onclick=function(){view("table")};
+  /* the controls show the state read from the address */
+  document.getElementById("q").value=st.q;document.getElementById("status").value=st.status;document.getElementById("sort").value=st.sort;
+  document.getElementById("vg").setAttribute("aria-pressed",String(st.view==="grid"));document.getElementById("vt").setAttribute("aria-pressed",String(st.view==="table"));
 
   /* ======================= loading =======================
      The page's markets load once (skeleton, error or empty state in place of the list), then a category, status,
@@ -433,7 +469,7 @@
     f.appendChild(g);return f}
   function unskeleton(){toolbarEl.classList.remove("dm-skz");filtersEl.inert=false}
   function filtered(){return st.cat!=="All"||st.type||st.status||st.q||st.saved}
-  function clearFilters(){st.cat="All";st.type="";st.status="";st.q="";st.saved=false;document.getElementById("q").value="";document.getElementById("status").value="";
+  function clearFilters(){st.cat="All";st.type="";st.status="";st.q="";st.saved=false;urlSync();document.getElementById("q").value="";document.getElementById("status").value="";
     cats();types();if(pageState==="ok")refilter();else load({initial:true})}
   function modal(){return[].some.call(document.querySelectorAll('[aria-modal="true"]'),function(n){return!n.closest("[inert]")})}
   function load(o){o=o||{};listSlot.cancel();outEl.classList.remove("dm-dim");
@@ -457,11 +493,16 @@
         DM.renderError(pageBox,e,{level:"page",subject:"the markets",retry:function(){DM.holdFocus(wrap);load({initial:true,retried:true})},
           back:{text:"Back to home",href:"index.html"},focus:!modal()});
         if(e.kind==="network")DM.onOnline(retryOnline)}})}
-  /* A shared link, app.html?m=<id>, opens that market's sheet once the first render is done. An id that is not a market does nothing. Nothing else is kept in the URL. */
+  /* A shared link, app.html?m=<id>, opens that market's sheet once the first render is done. An id that is not a market does nothing and leaves the address. */
   var deepId=null;try{deepId=new URLSearchParams(location.search).get("m")}catch(e){}
-  function openFromUrl(){var id=deepId;deepId=null;if(id==null)return;var m=ALL.filter(function(x){return String(x.id)===id})[0];if(m)openPanel(m)}
+  function marketBy(id){return ALL.filter(function(x){return String(x.id)===id})[0]}
+  function openFromUrl(){var id=deepId;deepId=null;if(id==null)return;var m=marketBy(id);if(m)openPanel(m,null,"load");else urlSync()}
+  /* Back and Forward: the sheet follows ?m= in the address */
+  function onPop(){syncView();var id=null;try{id=new URLSearchParams(location.search).get("m")}catch(e){}
+    if(id==null){if(openId!=null)closeNow();return}
+    if(String(openId)===id)return;var m=marketBy(id);if(m)openPanel(m,null,"pop");else if(openId!=null)closeNow()}
   function retryOnline(){if(pageState==="error")load({initial:true})}
-  function refilter(){if(pageState!=="ok"){return}
+  function refilter(){urlSync();if(pageState!=="ok"){return}
     var q=snap(),key="app:markets?"+[q.cat,q.status,q.type,q.sort].join("|");
     listSlot.run({key:key,cacheLabel:"Explorer markets, filtered",producer:function(){return ALL},scope:"page",busy:outEl,label:"Loading markets",empty:function(){return[]},
       show:function(){outEl.classList.add("dm-dim")},
@@ -484,7 +525,7 @@
     showView(v);if(DM)DM.announce(v==="leaderboard"?"Showing the leaderboard.":"Showing the markets.")}
   function syncView(){var v=hashView();if(v&&v!==tab)showView(v)}
   pvM.onclick=function(){go("markets")};pvL.onclick=function(){go("leaderboard")};
-  addEventListener("popstate",syncView);addEventListener("hashchange",syncView);
+  addEventListener("popstate",onPop);addEventListener("hashchange",syncView);
 
   /* ======================= leaderboard =======================
      25 illustrative traders in three fixed sets (js/leaders.js), ranked by profit, in a table from 1101px and cut-corner cards below it (the
