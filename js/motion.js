@@ -558,7 +558,7 @@ M.theme=function(apply,btn){if(reduced()){apply();return}
   var svg=btn&&btn.querySelector&&btn.querySelector("svg"),toLight=root.dataset.theme!=="light",keep=null,
       retreat=LIGHT_LEADS?!toLight:toLight; /* the retreating layer is the old view, shrinking into the toggle */
   /* the icon turns on its own spring; on the retreating direction it gets a springier curve so it turns, overshoots a touch and rests about when the layer has closed into it */
-  if(svg&&SP){var full=btn.classList.contains("theme-toggle")?180:90,from=toLight?0:full,to=toLight?full:0;
+  if(svg&&SP){var full=btn.classList.contains("theme-toggle")?180:360,from=toLight?0:full,to=toLight?full:0;
     drive(svg,{r:to},retreat?{k:380,c:23}:"snappy",{init:{r:from},eps:.2})}
   if(doc.startViewTransition&&btn&&btn.getBoundingClientRect){var r=btn.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,
       R=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y)),vt,c0="circle(0px at "+x+"px "+y+"px)",c1="circle("+R+"px at "+x+"px "+y+"px)",

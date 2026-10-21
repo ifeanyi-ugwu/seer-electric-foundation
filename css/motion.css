@@ -263,7 +263,7 @@ html{scroll-padding-top:var(--m-hdr,88px)}
 .app::after{transition:opacity var(--dur-2) var(--ease-standard)}
 .app-go,.go svg,.base-go svg{transition:transform var(--spring-snappy-t) var(--spring-snappy)}
 .theme-toggle svg,.shell-icon svg{transform:rotate(var(--m-r,0deg))}
-:root[data-theme=light] .shell-icon svg{--m-r:90deg}
+:root[data-theme=light] .shell-icon svg{--m-r:360deg}
 .theme-toggle[aria-pressed=true] svg{--m-r:180deg}
 .dotfield circle{transform-box:fill-box;transform-origin:center;transition:stroke var(--dur-2) var(--ease-standard),transform var(--spring-snappy-t) var(--spring-snappy)}
 .chart rect{transform-box:fill-box;transform-origin:50% 100%}
