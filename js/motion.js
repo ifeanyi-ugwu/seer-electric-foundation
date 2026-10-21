@@ -631,6 +631,22 @@ var pauseIO=("IntersectionObserver" in window)?new IntersectionObserver(function
 function pauseOff(sel){if(pauseIO)each(sel,function(el){if(!el.__po){el.__po=1;pauseIO.observe(el)}})}
 doc.addEventListener("visibilitychange",function(){root.classList.toggle("m-hidden",doc.hidden)});
 
+/* ---------- page-head glyph: the entrance replays on a press, one quiet ping every 12s while the head is on screen ---------- */
+var GLYPHS=["app","futarchy","deep","opportunity","risk"];
+function glyph(){var svg=doc.querySelector(".ph-glyph");if(!svg||svg.__g||reduced())return;svg.__g=1;
+  var btn=svg.closest(".ph-glyph-btn"),run=0,busy=false,lag=Math.max(0,GLYPHS.indexOf(svg.getAttribute("data-glyph")))*500;
+  /* clears the state class once every animation under the mark has finished (a timer backs it up) */
+  function after(cls,ms){var n=++run;function fin(){if(n!==run)return;svg.classList.remove(cls);busy=false}
+    var a=svg.getAnimations?svg.getAnimations({subtree:true}):[];
+    if(a.length)Promise.all(a.map(function(x){return x.finished})).then(fin,fin);
+    setTimeout(fin,ms)}
+  function play(){if(busy||reduced())return;busy=true;svg.classList.remove("m-gin","m-gping");svg.style.setProperty("--m-g0","0ms");void svg.getBoundingClientRect();svg.classList.add("m-gin");after("m-gin",1500)}
+  function ping(){if(!busy&&!reduced()&&!doc.hidden&&!svg.classList.contains("m-off")){busy=true;svg.classList.add("m-gping");after("m-gping",1100)}
+    setTimeout(ping,12000)}
+  if(svg.classList.contains("m-gin")){busy=true;after("m-gin",1900)}
+  if(btn)btn.addEventListener("click",play);
+  pauseOff(".ph-glyph");setTimeout(ping,12000+lag)}
+
 /* ---------- in-page anchors: an interruptible glide (wheel, touch or a key hands control back) ---------- */
 M.scrollTo=function(y,done){if(!SP||reduced()){scrollTo(0,y);if(done)done();return}
   function stop(){SP.stop("scroll");off()}
@@ -686,7 +702,7 @@ function landing(){try{sessionStorage.setItem("seer-hero","1")}catch(e){}
   requestAnimationFrame(function(){landingNav();progress();parallaxFallback();pauseOff(".dots,.hero");phys();focusRing();anchors();leave()})}
 
 /* ---------- product pages: called by each page script after its first render ---------- */
-M.ready=function(){requestAnimationFrame(function(){navInd();pinHead(doc.querySelector(".shell-bar"),{core:".shell-brand,.shell-end",row2:".shell-products",spacer:doc.getElementById("shell")});scan(doc);phys();focusRing();anchors();leave()})};
+M.ready=function(){requestAnimationFrame(function(){glyph();navInd();pinHead(doc.querySelector(".shell-bar"),{core:".shell-brand,.shell-end",row2:".shell-products",spacer:doc.getElementById("shell")});scan(doc);phys();focusRing();anchors();leave()})};
 M.frame=function(f){requestAnimationFrame(f)};
 
 if(doc.body&&doc.body.classList.contains("home"))landing();

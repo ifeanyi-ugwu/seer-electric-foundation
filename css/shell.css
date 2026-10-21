@@ -74,7 +74,11 @@ select:focus{outline:2px solid var(--violet-text);outline-offset:2px}
 .kicker{display:flex;align-items:center;gap:var(--s-3);color:var(--text-2);font-size:var(--fs-body);margin:0 0 var(--s-3)}
 .tag{display:inline-grid;place-items:center;min-width:30px;height:22px;padding:0 6px;background:var(--violet);color:#fff;font-size:var(--fs-meta);border-radius:2px}
 .phead-aside{display:flex;flex-direction:column;align-items:flex-end;gap:var(--s-3);flex:none}
-.ph-glyph{display:block;width:120px;height:40px;color:var(--text-2)}
+.ph-glyph{display:block;width:120px;height:40px;color:var(--text-2);overflow:visible}
+.ph-glyph *{transform-box:fill-box}
+/* the mark replays its entrance: a plain button with a 44px hit area that adds no layout */
+.ph-glyph-btn{position:relative;display:block;flex:none;padding:0;margin:0;border:0;background:none;color:inherit;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ph-glyph-btn::after{content:"";position:absolute;inset:-8px}
 .ph-glyph .g-v{fill:var(--violet)}
 .ph-glyph .g-s{fill:color-mix(in srgb,var(--text) 14%,transparent)}
 .ph-glyph .g-ln{fill:none;stroke:var(--text-2);stroke-width:1.5}

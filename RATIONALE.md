@@ -100,6 +100,10 @@ No table or toolbar scrolls sideways at any width. The header stays pinned at ev
 | Detail opens in a sheet on tablets and phones (side sheet, then bottom sheet) for the Explorer, Deep and Opportunity | A side column below a long list was off screen when a row was chosen. |
 | Risk compare chart uses short horizon labels (30d, 90d, 180d, 12m) on narrow screens | Keeps 11 to 12px text at 360px. |
 | A small decorative glyph per product (fork, dot field, signal bars, graded bars, slab columns) | Gives each product its own mark. Hidden from screen readers. |
+| The glyph draws itself once as the page head arrives, 340ms into the head sequence and within 0.9s: Seer app bars rise with the violet bar first, Futarchy draws the shared line, pops the fork node, draws the two branches and pops the end markers, Deep pops its 48 dots in a diagonal sweep, Opportunity wipes in both signal bars and then the tick and the cross, Risk wipes in the five bars one after another | The eye goes title, then mark, and each mark shows how its product works. The dashed fail branch is revealed with a clip, because a dash offset would change its dash pattern. |
+| At rest the glyph pings once every 12s while the head is on screen and the tab is visible, in under a second: the Seer app violet bar lifts, the Futarchy pass marker pulses, a soft wave of opacity crosses the Deep dots column by column, the Opportunity violet bar edges forward 12%, the longest Risk bar edges forward 5%. The first ping comes 12s after the page is ready, plus 500ms per product in menu order | A quiet sign that the page is live, with one moving part at a time. Nothing runs offscreen or in a hidden tab. |
+| The glyph is a button named "Replay animation" that wraps the hidden drawing, with a 44px hit area from a pseudo element that adds no layout, the site's focus ring and no hover effect. A press, tap, Enter or Space replays the entrance at once, and presses are ignored until it finishes | Hover means nothing on touch, and a mark that moves when the pointer crosses it reads as a fault. The button follows the theme toggle in the tab order and adds no second stop. |
+| Under reduced motion the glyph is the plain drawing: no button, no entrance, no ping | There is nothing to replay, so there is nothing to press. |
 | Charts drawn at their real width and redrawn on resize | Keeps chart text at 11 to 12px on every screen. |
 | A simulated wallet (`js/wallet.js`, `css/wallet.css`): the header control opens a pinned-header sheet with four generic ways to connect (browser, mobile with QR, hardware, email or social), a short connecting state with Cancel, a "Connection cancelled" retry state, then a connected pill with a short address and a balance that counts in | A judge can click through the whole product. One source of truth in sessionStorage, read before the first paint, so every tool page shows the same wallet with no flicker. "Demo only: no wallet is contacted and no funds move" appears once, in the connect sheet, and nowhere else. |
 | The connected pill opens "Your wallet": full address with Copy (a visible "Copied"), balance, the last three demo transactions (rejected ones included, marked) and Disconnect | Everything about the wallet lives behind the one header control, so there is still exactly one wallet control per page. |
@@ -183,7 +187,7 @@ Durations are 120, 200, 320, 520 and 900ms. Stagger is 40ms, up to 8 steps. Dist
 
 ### Entrance and exit
 
-Page heads: slabs slide in along their cut, then the kicker, title, lede and action rise in turn, and the tag and primary button wipe in diagonally. Tiles, controls, cards, rows and chart parts reveal once as they enter the viewport. Figures count up on a decelerating curve, bars grow and lines draw. Items that leave after a filter fade out in place as ghosts. Sorted rows glide on springs, and a row that moved far gets a brief violet wash. Sheets spring in, from the side on tablet and desktop and from the bottom on phones, while the page behind recedes to 98.5%. They leave faster than they came.
+Page heads: slabs slide in along their cut, then the kicker, title, lede and action rise in turn, and the tag and primary button wipe in diagonally. The product mark draws itself once the title has risen, and a press on it replays that. Tiles, controls, cards, rows and chart parts reveal once as they enter the viewport. Figures count up on a decelerating curve, bars grow and lines draw. Items that leave after a filter fade out in place as ghosts. Sorted rows glide on springs, and a row that moved far gets a brief violet wash. Sheets spring in, from the side on tablet and desktop and from the bottom on phones, while the page behind recedes to 98.5%. They leave faster than they came.
 
 ### Hover, press and focus
 
@@ -197,17 +201,19 @@ Numbers count on a critically damped curve and keep their own format. Changed va
 
 Ambient motion is slow, small and phase-offset: the hero slabs breathe over 14s, the dot matrix shimmers over 7s, the hero cards tilt over 13s and the LIVE marker pulses over 2.4s. All of it pauses offscreen and in hidden tabs, and none of it runs under reduced motion.
 
+The page-head mark has one ping every 12s while the head is on screen: a single part moves for under a second and settles. The pings start 500ms apart from product to product, so no two products ping on the same beat.
+
 ### Scroll
 
 The landing page has three depth layers (slabs, cards, copy). The back card fans away and the app columns settle onto the protocol base. Scroll timelines drive these where supported, with a JS fallback. The progress line follows the scroll with a little inertia. In-page anchors glide on a spring and hand control back on the first wheel, touch or key.
 
 ### Constraints
 
-Only transform, opacity, clip-path and mask animate, with four documented exceptions: colour cross-fades, the indicator's width, the row sweep and value washes. `will-change` is added while a spring runs and removed after. At most 60 rows glide at once, and the rows staying on screen go first. Re-renders morph the existing DOM, and motion state (classes and inline variables prefixed `m-`) survives the morph. Page changes use cross-document view transitions with only `<main>` moving. Browsers without them run an explicit exit of `<main>` before the link is followed.
+Only transform, opacity, clip-path and mask animate, with five documented exceptions: colour cross-fades, the indicator's width, the row sweep, value washes and stroke-dashoffset, which draws the solid lines of the page-head mark. `will-change` is added while a spring runs and removed after. At most 60 rows glide at once, and the rows staying on screen go first. Re-renders morph the existing DOM, and motion state (classes and inline variables prefixed `m-`) survives the morph. Page changes use cross-document view transitions with only `<main>` moving. Browsers without them run an explicit exit of `<main>` before the link is followed.
 
 ### Reduced motion and no JavaScript
 
-Under reduced motion every state change is instant: no springs, no loops, no parallax, no transitions. Content is visible without JavaScript. No information is carried by motion alone, and focus order and semantics do not change. Every page header reserves its height, so there is no layout shift, and it stays pinned and condensed under reduced motion with the changes made instantly.
+Under reduced motion every state change is instant: no springs, no loops, no parallax, no transitions, and the page-head mark is the plain drawing with no replay button. Content is visible without JavaScript. No information is carried by motion alone, and focus order and semantics do not change. Every page header reserves its height, so there is no layout shift, and it stays pinned and condensed under reduced motion with the changes made instantly.
 
 ## Known gaps
 

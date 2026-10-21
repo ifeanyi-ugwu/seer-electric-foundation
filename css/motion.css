@@ -5,7 +5,8 @@
    Everything here is enhancement: content is visible without it, and every JS-driven state degrades to the
    final state. Only transform, opacity, clip-path and mask are animated, with these deliberate exceptions:
    colour cross-fades on state changes, the sliding indicator's width (a childless absolute box), the
-   row-hover sweep (background-size), value-change washes (background-color), and the focus-ring follower. */
+   row-hover sweep (background-size), value-change washes (background-color), the focus-ring follower, and
+   stroke-dashoffset on the solid lines of the page-head glyph. */
 
 /* =================================================================================================
    TOKENS
@@ -271,6 +272,39 @@ html{scroll-padding-top:var(--m-hdr,88px)}/* js/motion.js writes the pinned head
   .ph-slabs path:nth-child(n+6){animation-delay:180ms}
   .phead .tag{-webkit-mask:var(--m-wipe-g) 0 0/300% 300% no-repeat;mask:var(--m-wipe-g) 0 0/300% 300% no-repeat;animation:m-wipe var(--dur-4) var(--ease-decel) 120ms both}
   .phead .btn.act::before{-webkit-mask:var(--m-wipe-g) 0 0/300% 300% no-repeat;mask:var(--m-wipe-g) 0 0/300% 300% no-repeat;animation:m-wipe var(--dur-4) var(--ease-decel) 300ms both}
+}
+
+/* ---------- page-head glyph: the entrance (m-gin) 340ms into the head sequence, a ping (m-gping) at rest ----------
+   Parts are drawn with transform, opacity, stroke-dashoffset (solid strokes, in pathLength units) or a clip. js/motion.js
+   adds and removes the two classes; without them the glyph is the plain drawing. */
+@keyframes m-g-up{from{transform:scaleY(.05);opacity:.3}}
+@keyframes m-g-draw{from{stroke-dashoffset:100}}
+@keyframes m-g-clip{from{clip-path:inset(-4px 100% -4px -4px)}}
+@keyframes m-g-pop{from{transform:scale(0);opacity:0}}
+@keyframes m-g-wipe{from{transform:scaleX(0)}}
+@keyframes m-g-lift{0%,100%{transform:scaleY(1)}35%{transform:scaleY(1.1)}}
+@keyframes m-g-pulse{0%,100%{transform:scale(1)}40%{transform:scale(1.45)}}
+@keyframes m-g-wave{0%,100%{opacity:1}45%{opacity:.35}}
+@keyframes m-g-edge{0%,100%{transform:scaleX(1)}40%{transform:scaleX(var(--m-g-x,1.12))}}
+@media (prefers-reduced-motion:no-preference){
+  .ph-glyph{--m-g0:340ms}
+  .m-gin .a-bar{transform-origin:50% 100%;animation:m-g-up var(--dur-4) var(--ease-decel) calc(var(--m-g0) + var(--i) * 60ms) backwards}
+  .m-gin .f-line{stroke-dasharray:100;animation:m-g-draw 300ms var(--ease-decel) var(--m-g0) backwards}
+  .m-gin .f-br{animation-duration:400ms;animation-delay:calc(var(--m-g0) + 260ms)}
+  .m-gin .f-clip{animation:m-g-clip 400ms var(--ease-decel) calc(var(--m-g0) + 260ms) backwards}
+  .m-gin .f-node{transform-origin:center;animation:m-g-pop var(--dur-3) var(--spring-snappy) calc(var(--m-g0) + 240ms) backwards}
+  .m-gin .f-dot{transform-origin:center;animation:m-g-pop 300ms var(--spring-snappy) calc(var(--m-g0) + 580ms) backwards}
+  .m-gin .f-dot2{animation-delay:calc(var(--m-g0) + 620ms)}
+  .m-gin .d-dot{transform-origin:center;animation:m-g-pop 340ms var(--spring-snappy) calc(var(--m-g0) + var(--c) * 30ms + var(--r) * 15ms) backwards}
+  .m-gin .o-bar{transform-origin:0 50%;animation:m-g-wipe var(--dur-4) var(--ease-decel) calc(var(--m-g0) + var(--i) * 90ms) backwards}
+  .m-gin .o-mark{transform-origin:center;animation:m-g-pop 300ms var(--spring-snappy) calc(var(--m-g0) + 480ms + var(--i) * 90ms) backwards}
+  .m-gin .r-bar{transform-origin:0 50%;animation:m-g-wipe var(--dur-4) var(--ease-decel) calc(var(--m-g0) + var(--i) * 70ms) backwards}
+
+  .m-gping .a-v{transform-origin:50% 100%;animation:m-g-lift 900ms var(--spring-snappy)}
+  .m-gping .f-end{transform-origin:center;animation:m-g-pulse 900ms var(--ease-standard)}
+  .m-gping .d-dot{animation:m-g-wave 450ms ease-in-out calc(var(--c) * 40ms)}
+  .m-gping .o-v{transform-origin:0 50%;animation:m-g-edge 900ms var(--spring-snappy)}
+  .m-gping .r-v{--m-g-x:1.05;transform-origin:0 50%;animation:m-g-edge 900ms var(--spring-snappy)}
 }
 
 /* ---------- reveal (state added by JS only; print and no-JS never see it) ---------- */

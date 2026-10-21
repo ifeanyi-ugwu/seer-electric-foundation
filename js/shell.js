@@ -20,15 +20,17 @@
     '<path d="M367 135.5V0H759.5V277L367 135.5Z" fill="url(#phs1)"/><path d="M686 456.5V0H1078.5V600L686 456.5Z" fill="url(#phs2)"/>'+
     '<path d="M1129.5 246.5V0H1440V359L1129.5 246.5Z" fill="url(#phs3)"/><path d="M821.5 299V0H1213.5V442L821.5 299Z" fill="url(#phs4)"/></svg>';
 
-  /* One small decorative glyph per product, drawn from each brief. */
-  function glyph(p){var g="",i,x;
-    if(p==="app"){[28,20,34,24,30].forEach(function(hh,k){x=k*24;g+='<path class="'+(k===2?"g-v":"g-s")+'" d="M'+x+' '+(40-hh+6)+'L'+(x+20)+' '+(40-hh)+'V40H'+x+'Z"/>'})}
-    else if(p==="futarchy"){g='<path class="g-ln" d="M2 20H44"/><path class="g-pos" d="M44 20C64 20 70 8 104 8"/><path class="g-neg" d="M44 20C64 20 70 32 104 32"/><circle class="f-pos" cx="110" cy="8" r="4.5"/><rect class="f-neg" x="105.5" y="27.5" width="9" height="9"/><circle class="g-v" cx="44" cy="20" r="3.5"/>'}
-    else if(p==="deep"){var r;for(i=0;i<48;i++){r=((Math.sin((i+1)*12.9898)*43758.5453)%1+1)%1;g+='<circle class="g-v" cx="'+(5+(i%12)*10)+'" cy="'+(5+Math.floor(i/12)*10)+'" r="'+(1.6+r*2).toFixed(1)+'" fill-opacity="'+(.18+r*.82).toFixed(2)+'"/>'}}
-    else if(p==="opportunity"){g='<rect class="g-s" x="0" y="8" width="80" height="6"/><rect class="g-v" x="0" y="8" width="62" height="6"/><path class="g-pos" d="M96 11l4 4 8-9"/>'+
-      '<rect class="g-s" x="0" y="26" width="80" height="6"/><rect class="g-v" x="0" y="26" width="22" height="6"/><path class="g-neg" style="stroke-dasharray:none" d="M97 24l9 9M106 24l-9 9"/>'}
-    else if(p==="risk"){[.3,.48,.66,.84,1].forEach(function(w,k){var ww=Math.round(118*w),y=k*8;g+='<path class="'+(k===4?"g-v":"g-s")+'" d="M0 '+y+'H'+ww+'L'+(ww-4)+' '+(y+5)+'H0Z"/>'})}
-    return '<svg class="ph-glyph" viewBox="0 0 120 40" aria-hidden="true" focusable="false">'+g+'</svg>'}
+  /* One small decorative glyph per product, drawn from each brief. Parts carry the classes and variables the page-head
+     entrance and ping in css/motion.css and js/motion.js use. Without reduced motion the mark is a replay button. */
+  function glyph(p){var g="",i,x,rm=matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if(p==="app"){[28,20,34,24,30].forEach(function(hh,k){x=k*24;g+='<path class="a-bar '+(k===2?"g-v a-v":"g-s")+'" style="--i:'+[1,2,0,3,4][k]+'" d="M'+x+' '+(40-hh+6)+'L'+(x+20)+' '+(40-hh)+'V40H'+x+'Z"/>'})}
+    else if(p==="futarchy"){g='<path class="g-ln f-line" pathLength="100" d="M2 20H44"/><path class="g-pos f-line f-br" pathLength="100" d="M44 20C64 20 70 8 104 8"/><path class="g-neg f-clip" d="M44 20C64 20 70 32 104 32"/><circle class="f-pos f-end f-dot" cx="110" cy="8" r="4.5"/><rect class="f-neg f-dot f-dot2" x="105.5" y="27.5" width="9" height="9"/><circle class="g-v f-node" cx="44" cy="20" r="3.5"/>'}
+    else if(p==="deep"){var r;for(i=0;i<48;i++){r=((Math.sin((i+1)*12.9898)*43758.5453)%1+1)%1;g+='<circle class="g-v d-dot" style="--c:'+(i%12)+';--r:'+Math.floor(i/12)+'" cx="'+(5+(i%12)*10)+'" cy="'+(5+Math.floor(i/12)*10)+'" r="'+(1.6+r*2).toFixed(1)+'" fill-opacity="'+(.18+r*.82).toFixed(2)+'"/>'}}
+    else if(p==="opportunity"){g='<rect class="g-s o-bar" style="--i:0" x="0" y="8" width="80" height="6"/><rect class="g-v o-bar o-v" style="--i:0" x="0" y="8" width="62" height="6"/><path class="g-pos o-mark" style="--i:0" d="M96 11l4 4 8-9"/>'+
+      '<rect class="g-s o-bar" style="--i:1" x="0" y="26" width="80" height="6"/><rect class="g-v o-bar" style="--i:1" x="0" y="26" width="22" height="6"/><path class="g-neg o-mark" style="--i:1;stroke-dasharray:none" d="M97 24l9 9M106 24l-9 9"/>'}
+    else if(p==="risk"){[.3,.48,.66,.84,1].forEach(function(w,k){var ww=Math.round(118*w),y=k*8;g+='<path class="r-bar '+(k===4?"g-v r-v":"g-s")+'" style="--i:'+k+'" d="M0 '+y+'H'+ww+'L'+(ww-4)+' '+(y+5)+'H0Z"/>'})}
+    var svg='<svg class="ph-glyph'+(rm?"":" m-gin")+'" data-glyph="'+p+'" viewBox="0 0 120 40" aria-hidden="true" focusable="false">'+g+'</svg>';
+    return rm?svg:'<button type="button" class="ph-glyph-btn" aria-label="Replay animation">'+svg+'</button>'}
 
   window.SeerShell={mount:function(o){
     var el=document.getElementById("shell"); if(!el)return;
