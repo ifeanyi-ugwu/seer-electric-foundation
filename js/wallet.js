@@ -117,20 +117,29 @@ function connectStep(){var s=ws.step,k=ws.kind;
   if(s==="wait")return h("div",{class:"wl-step wl-center","data-key":"wl-wait-"+k},[k==="mobile"?qr():dots(),
     h("h3",{class:"wl-h",tabindex:"-1","data-wl-focus":"",text:WAIT[k][0]}),
     h("p",{class:"note",role:"status",text:WAIT[k][1]}),link("Cancel",cancel)]);
-  if(s==="fail")return h("div",{class:"wl-step wl-center","data-key":"wl-fail"},[mark(false),
-    h("h3",{class:"wl-h",tabindex:"-1",text:"Connection cancelled"}),
-    h("p",{class:"note",text:"No wallet was connected. Try again, or choose another way to connect."}),
+  if(s==="fail"){var fe=ws.err,ft=fe?CONN_ERR[fe.offline?"offline":fe.kind]||CONN_ERR.server:null;
+    return h("div",{class:"wl-step wl-center","data-key":"wl-fail"+(fe?"-"+fe.kind:"")},[mark(false),
+    h("h3",{class:"wl-h",tabindex:"-1",text:ft?ft[0]:"Connection cancelled"}),
+    h("p",{class:"note",text:ft?ft[1]:"No wallet was connected. Try again, or choose another way to connect."}),
     h("div",{class:"wl-acts"},[h("button",{class:"btn lg",type:"button","data-wl-focus":"",text:"Try again",onclick:function(){start(k)}}),
-      h("button",{class:"btn soft wl-wide",type:"button",text:"Try another wallet",onclick:function(){step("list")}})])]);
+      h("button",{class:"btn soft wl-wide",type:"button",text:"Try another wallet",onclick:function(){step("list")}})])])}
   return h("div",{class:"wl-step wl-center","data-key":"wl-done"},[mark(true),
     h("h3",{class:"wl-h",tabindex:"-1","data-wl-focus":"",text:"Wallet connected"}),
     h("p",{class:"note"},[KINDS[k][0]+" ",h("span",{class:"num",text:short(S.addr)})])])}
-function start(k){clearTimeout(ws.t);ws.kind=k;step("wait");
-  ws.t=setTimeout(function(){if(!ws||ws.step!=="wait")return;
+/* the demo data layer (js/demo.js) can slow the connection down or make it fail (its transactions scope); the steps look the same */
+var CONN_ERR={offline:["No network connection","Seer could not reach the network, so no wallet was connected. Try again when you are back online."],
+  network:["Connection failed","The network dropped while connecting, so no wallet was connected. Try again."],
+  timeout:["Connection timed out","Your wallet did not answer in time, so no wallet was connected. Try again."],
+  server:["Connection failed","The connection could not be completed, so no wallet was connected. Try again."],
+  notfound:["Wallet not found","That wallet could not be found. Try again, or choose another way to connect."]};
+function plan(base){var D=window.SeerDemo;return D&&D.wait?D.wait(base):{ms:base,err:null,check:function(){return null}}}
+function start(k){clearTimeout(ws.t);ws.kind=k;ws.err=null;step("wait");var w=plan(k==="mobile"?1800:1200);
+  ws.t=setTimeout(function(){if(!ws||ws.step!=="wait")return;var e=w.check();
+    if(e){ws.err=e;step("fail");announce((CONN_ERR[e.offline?"offline":e.kind]||CONN_ERR.server)[0]+". No wallet was connected.");return}
     S.on=true;S.kind=k;paint(true);step("done");emit();
     announce("Wallet connected. Balance "+money(S.bal)+" USDC.");
-    ws.ct=setTimeout(close,950)},k==="mobile"?1800:1200)}
-function cancel(){clearTimeout(ws.t);step("fail");announce("Connection cancelled. No wallet was connected.")}
+    ws.ct=setTimeout(close,950)},w.ms)}
+function cancel(){clearTimeout(ws.t);ws.err=null;step("fail");announce("Connection cancelled. No wallet was connected.")}
 W.openConnect=function(o){o=o||{};if(S.on){if(o.after)o.after();return}
   if(ws)close();ws={mode:"connect",step:"list",from:o.from||doc.activeElement,after:o.after||null};sheet(true)};
 
@@ -173,15 +182,22 @@ Flow.prototype.go=function(s,sel){var b=this.o.box&&this.o.box();
   /* the whole step comes into view (the review's Confirm too), not just the control that took focus */
   var st=s==="form"?n:b.querySelector(".tx-step")||n,rm=window.Motion&&Motion.reduced();
   try{st.scrollIntoView({block:"nearest",behavior:rm?"auto":"smooth"})}catch(e){st.scrollIntoView(false)}};
-Flow.prototype.reset=function(){clearTimeout(this.tm);this.tm=0;this.step="form";this.hold=0;this.tried=false;this.sum=null};
+Flow.prototype.reset=function(){clearTimeout(this.tm);this.tm=0;this.step="form";this.hold=0;this.tried=false;this.sum=null;this.err=null};
 /* place: amount and a summary builder; invalid amounts flag the field and keep focus on it */
 Flow.prototype.place=function(amount,sum,field){if(!S.on)return;var e=W.amountError(amount,true);
   if(e){this.tried=true;this.o.onChange();var f=field&&doc.getElementById(field);if(f)f.focus();return}
   this.sum=sum();this.go("review")};
 Flow.prototype.review=function(sum){if(!S.on)return;this.sum=sum;this.go("review")};
-Flow.prototype.sign=function(){var f=this;clearTimeout(f.tm);f.go("sign");
-  f.tm=setTimeout(function(){f.tm=0;if(f.step!=="sign")return;var r=W.spend(f.sum.amount,f.sum.meta);
-    if(!r){f.go("rejected");return}f.ref=r;if(f.o.onSuccess)f.o.onSuccess(f);f.go("done");announce(f.t.done+". "+f.sum.done+" Balance "+money(S.bal)+" USDC.")},1000)};
+Flow.prototype.sign=function(){var f=this,w=plan(1000);clearTimeout(f.tm);f.err=null;f.go("sign");
+  f.tm=setTimeout(function(){f.tm=0;if(f.step!=="sign")return;var e=w.check();
+    /* a failure from the network (js/demo.js, transactions scope): nothing is spent, the attempt is logged */
+    if(e){f.err=e;W.log({type:f.sum.meta.type,market:f.sum.meta.market,amount:f.sum.amount,status:"Failed"});f.go("failed");
+      announce("Transaction failed. "+txReason(e));return}
+    var r=W.spend(f.sum.amount,f.sum.meta);
+    if(!r){f.go("rejected");return}f.ref=r;if(f.o.onSuccess)f.o.onSuccess(f);f.go("done");announce(f.t.done+". "+f.sum.done+" Balance "+money(S.bal)+" USDC.")},w.ms)};
+function txReason(e){return({offline:"You are offline, so nothing was sent. Your balance is unchanged.",network:"The network could not be reached, so nothing was sent. Your balance is unchanged.",
+  timeout:"The network did not confirm it in time, so nothing was sent. Your balance is unchanged.",server:"The network returned an error, so nothing was sent. Your balance is unchanged.",
+  notfound:"This market is no longer available, so nothing was sent. Your balance is unchanged."})[e.offline?"offline":e.kind]||"Nothing was sent. Your balance is unchanged."}
 Flow.prototype.reject=function(){clearTimeout(this.tm);this.tm=0;W.log({type:this.sum.meta.type,market:this.sum.meta.market,amount:this.sum.amount,status:"Rejected"});
   this.go("rejected");announce("Transaction rejected. Nothing was sent.")};
 Flow.prototype.finish=function(){var d=this.o.onDone;this.tried=false;if(d){d(this);return}
@@ -201,6 +217,11 @@ Flow.prototype.view=function(){var f=this,s=f.step,t=f.t,sum=f.sum||{rows:[]},cl
   if(s==="sign")return h("div",{class:cls+" wl-center","data-key":"tx-sign"},[dots(),
     h("h3",{class:"tx-h",tabindex:"-1","data-tx-focus":"",text:"Waiting for your signature"}),
     h("p",{class:"note",role:"status",text:SIGN[S.kind||"browser"]}),link("Reject",function(){f.reject()})]);
+  if(s==="failed")return h("div",{class:cls+" wl-center","data-key":"tx-failed"},[mark(false),
+    h("h3",{class:"tx-h",tabindex:"-1",text:"Transaction failed"}),
+    h("p",{class:"note",text:txReason(f.err||{})}),
+    h("div",{class:"wl-acts"},[h("button",{class:"btn lg",type:"button","data-tx-focus":"",text:"Try again",onclick:function(){f.sign()}}),
+      h("button",{class:"btn soft wl-wide",type:"button",text:"Back",onclick:function(){f.go("form","[data-tx-place]")}})])]);
   if(s==="rejected")return h("div",{class:cls+" wl-center","data-key":"tx-rejected"},[mark(false),
     h("h3",{class:"tx-h",tabindex:"-1",text:"Transaction rejected"}),
     h("p",{class:"note",text:"You rejected the request in your wallet. Nothing was sent and your balance is unchanged."}),

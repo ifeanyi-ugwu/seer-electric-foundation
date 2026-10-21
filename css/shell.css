@@ -11,6 +11,7 @@
   /* gutters that also clear notches and rounded corners in landscape */
   --gut-l:max(var(--gut),env(safe-area-inset-left));
   --gut-r:max(var(--gut),env(safe-area-inset-right));
+  --sat:env(safe-area-inset-top,0px);                     /* status bar and notch above the pinned header */
 }
 :root[data-theme=light]{
   --ph-bg:color-mix(in srgb,var(--violet) 7%,#f3f3f8);
@@ -26,11 +27,18 @@ p{text-wrap:pretty}
 .skip:focus{top:12px}
 
 /* ---------- header bar ---------- */
-/* The wrapper is the sticky element (a sticky child of a same-height wrapper never sticks), and its height is
-   reserved so the JS-rendered header causes no layout shift. One row from 801px, two rows below. */
-#shell{position:sticky;top:0;z-index:20;min-height:68px}
-.shell-bar{position:relative;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-.shell-in{max-width:var(--maxw);margin:0 auto;display:flex;align-items:center;gap:var(--s-5);padding:12px var(--gut-r) 12px var(--gut-l)}
+/* Pinned on every page at every size, portrait and landscape: the bar is fixed to the top of the viewport and #shell
+   is its spacer, so no ancestor (overflow, transform, contain, a height limit) can ever unpin it, and focusing a
+   header control never makes the browser scroll the page (it does for a sticky bar inside the scroll-padding band).
+   The spacer's height is reserved here, safe-area inset included, so the JS-rendered header causes no layout shift;
+   js/motion.js keeps it equal to the bar if text zoom makes the bar taller. One row from 801px, two rows below. The bar
+   lets touches through except where it is painted or a control sits, so the strip a condensed or tucked bar frees
+   belongs to the page (css/motion.css, js/motion.js pinHead). */
+#shell{position:relative;z-index:20;min-height:calc(68px + var(--sat));pointer-events:none}
+:where(#shell) > *{pointer-events:auto}
+#shell > .skip{position:fixed}
+.shell-bar{position:fixed;top:0;left:0;right:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.shell-in{max-width:var(--maxw);margin:0 auto;display:flex;align-items:center;gap:var(--s-5);padding:calc(12px + var(--sat)) var(--gut-r) 12px var(--gut-l)}
 .shell-brand{display:flex;align-items:center;flex:none;min-height:44px}
 :root[data-theme=light] .shell-brand img{filter:invert(1) hue-rotate(180deg) brightness(.35) saturate(3)}
 .shell-products{display:flex;gap:var(--s-1);overflow-x:auto;scrollbar-width:none}
@@ -191,13 +199,13 @@ tr.is-sel td:first-child{box-shadow:inset 3px 0 0 var(--violet)}
 .tap-hint{display:none;align-items:center;gap:var(--s-2);color:var(--muted);font-size:var(--fs-meta);margin:0 0 var(--s-3)}
 .tap-hint::before{content:"";width:16px;height:2px;background:var(--violet)}
 .narrow-only{display:none}/* not "m-": that prefix is reserved for motion state, which morphs preserve */
-/* desktop: long tables scroll with the page; the column headers stay in view under the header bar */
+/* desktop: long tables scroll with the page; the column headers stay in view just below the pinned header, whose
+   visible height (--hdr-h, kept by js/motion.js as it condenses or tucks) they track */
 @media (min-width:1101px){
   .tbl.tall{overflow:visible}
-  .tbl.tall thead th{position:sticky;top:56px;z-index:2;background:var(--card);box-shadow:inset 0 -1px 0 var(--line)}
+  .tbl.tall thead th{position:sticky;top:var(--hdr-h,56px);z-index:2;background:var(--card);box-shadow:inset 0 -1px 0 var(--line)}
   .tbl.tall thead th:first-child{border-top-left-radius:var(--r-card)}.tbl.tall thead th:last-child{border-top-right-radius:var(--r-card)}
 }
-@media (min-width:1101px) and (max-height:500px) and (orientation:landscape){.tbl.tall thead th{top:0}}
 /* sort control that stands in for the hidden column headers of a reflowed table */
 .sortbar{align-items:center;gap:var(--s-2);margin:0 0 var(--s-3)}
 .sortbar label{color:var(--text-2);font-size:var(--fs-meta);flex:none}
@@ -275,15 +283,15 @@ html:not(.m-js) .panel-top::after{opacity:1}/* without the motion runtime the ha
   .shell-products a{padding:8px 10px;min-height:44px}
 }
 @media (max-width:800px){
-  #shell{min-height:116px}
-  .shell-in{padding-top:var(--s-2);padding-bottom:var(--s-2);flex-wrap:wrap;gap:var(--s-2) var(--s-3)}
+  #shell{min-height:calc(116px + var(--sat))}
+  .shell-in{padding-top:calc(var(--s-2) + var(--sat));padding-bottom:var(--s-2);flex-wrap:wrap;gap:var(--s-2) var(--s-3)}
   /* all five products share one row and never scroll; they wrap only below ~300px */
   .shell-products{order:3;width:100%;flex-wrap:wrap;justify-content:space-between;gap:0;overflow:visible;padding-bottom:var(--s-1)}
   .shell-products a{min-height:44px;flex:1 1 auto;justify-content:center;padding:8px 6px}
 }
-/* short landscape phones: the header scrolls away instead of holding a third of the screen, and the sheet's pinned
-   title steps down a size so the bar holds less of it */
-@media (max-height:500px) and (orientation:landscape){#shell{position:relative}.panel .pt-title{font-size:var(--fs-h3)}}
+/* short landscape phones: the header stays pinned (one 56px row once condensed, the product row tucked on two-row
+   widths), and the sheet's pinned title steps down a size so the bar holds less of it */
+@media (max-height:500px) and (orientation:landscape){.panel .pt-title{font-size:var(--fs-h3)}}
 
 /* ---------- tablet page head: copy left, mark right, no wrap ---------- */
 @media (max-width:1100px){
@@ -310,10 +318,10 @@ html:not(.m-js) .panel-top::after{opacity:1}/* without the motion runtime the ha
   .panel-top{touch-action:none}/* a drag that starts on the bar always moves the sheet (js/motion.js), never the body */
   .panel-grip{left:50%;top:10px;width:40px;height:4px;margin-left:-20px;border-radius:2px}
 }
-/* a 280px folded cover screen: the logo shows its mark only, the product row takes two lines,
-   and the header scrolls away instead of holding a quarter of the screen */
+/* a 280px folded cover screen: the logo shows its mark only and the product row takes two lines; the header stays
+   pinned, and once scrolling down the product row tucks away so only the 52px core row holds the screen */
 @media (max-width:340px){
-  #shell{min-height:160px;position:relative}
+  #shell{min-height:calc(160px + var(--sat))}
   .shell-brand img{width:24px;height:24px;object-fit:cover;object-position:0 50%}
   .shell-in{column-gap:var(--s-2)}
   .shell-end{gap:var(--s-2)}

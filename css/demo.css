@@ -1,0 +1,211 @@
+/* Seer demo data layer (js/demo.js): skeletons, the reload veil, the inline error and empty states, the offline bar and
+   the freshness note. Loaded on all six pages after motion.css. Sizes and colours come from tokens.css.
+   The skeleton is the owner-approved pattern from css/states.css (copied, not linked): placeholders shaped like the
+   content, one soft sweep per element staggered per card, static under reduced motion, paused in hidden tabs.
+   Ranges: phone up to 600px (checked from 280px), tablet 601 to 1100px, desktop 1101px and up. */
+
+:root{--sk-base:color-mix(in srgb,var(--text) 8%,transparent);--sk-hi:color-mix(in srgb,var(--text) 7%,transparent);
+  --dm-amber:var(--neg);--dm-gut-l:max(var(--gut),env(safe-area-inset-left));--dm-gut-r:max(var(--gut),env(safe-area-inset-right))}
+:root[data-theme=light]{--sk-base:color-mix(in srgb,var(--text) 7%,transparent);--sk-hi:rgba(255,255,255,.75)}
+.dm-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+
+/* =================================================================================================
+   SKELETON
+     .sk          any placeholder block
+     .sk-t        a text placeholder: an inline block on the text's own line box, so the element that holds it keeps
+                  the height its text will have (width from --w)
+     .sk-line     a block line of text (12px), .sk-pill a chip, .sk-box a block with its size set inline
+     .sk-card / .sk-row   the explorer card and an outcome row
+   ================================================================================================= */
+.sk{position:relative;display:block;overflow:hidden;background:var(--sk-base);border-radius:var(--r-chip)}
+.sk::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,var(--sk-hi) 50%,transparent);
+  animation:dm-sweep 1.8s cubic-bezier(.2,0,0,1) infinite;animation-delay:var(--sk-d,0s)}
+@keyframes dm-sweep{0%{transform:translateX(-100%)}60%,100%{transform:translateX(100%)}}
+.sk-t{display:inline-block;vertical-align:middle;height:.72em;width:var(--w,60%);max-width:100%;border-radius:3px}
+.sk-line{height:12px;width:var(--w,100%);border-radius:3px}
+.sk-pill{width:64px;height:24px;flex:none}
+.sk-pfp{width:40px;height:40px;flex:none;border-radius:var(--r-card);clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+.sk-box{width:100%;border-radius:var(--r-card)}
+/* a skeleton appears with the page, not after it */
+@media (prefers-reduced-motion:no-preference){.dm-skel{animation:dm-in var(--dur-3,.32s) var(--ease-standard,ease) both}}
+@keyframes dm-in{from{opacity:0}}
+html.m-hidden .sk::after{animation-play-state:paused}
+
+/* the explorer card (the real .mcard's box, so the grid keeps its rhythm) */
+.mcard.dm-skc{cursor:default;min-height:216px;--sk-d:calc(var(--i,0) * 90ms)}
+.mcard.dm-skc:hover{box-shadow:none}
+.sk-q{display:flex;gap:var(--s-3);align-items:center;min-height:44px;margin-bottom:var(--s-1)}
+.sk-stack{flex:1;display:grid;gap:var(--s-2);min-width:0}
+.sk-row{display:flex;align-items:center;justify-content:space-between;gap:var(--s-3);min-height:44px;padding:0 var(--s-3);background:var(--row);border-radius:var(--r-card)}
+.sk-row .sk-pill{width:44px;height:20px}
+.sk-foot{display:flex;align-items:center;justify-content:space-between;gap:var(--s-3);margin-top:auto;padding-top:var(--s-2)}
+.sk-foot .sk-pill{width:84px;height:20px}
+:root[data-theme=light] .sk-row{background:var(--surface)}
+/* skeleton tabs and chips keep the real control's box (border, height, padding, text width) with the text hidden */
+.dm-skchip{pointer-events:none;color:transparent!important;background:var(--sk-base)!important;border-color:transparent!important;overflow:hidden;position:relative;user-select:none}
+.dm-skchip::before{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,var(--sk-hi) 50%,transparent);
+  animation:dm-sweep 1.8s cubic-bezier(.2,0,0,1) infinite;animation-delay:var(--sk-d,0s)}
+/* table skeleton rows: the real row's padding and line height */
+tr.dm-skr td{cursor:default}
+tr.dm-skr{--sk-d:calc(var(--i,0) * 60ms)}
+.rtbl tr.dm-skr{min-height:0}
+@media (hover:hover){tr.dm-skr:hover td{background:none}}
+
+/* static controls (the explorer's search, selects and view toggle) wait as placeholders of their own shape */
+.dm-skz{position:relative;overflow:hidden}
+.dm-skz :is(.field,.seg){color:transparent!important;background:var(--sk-base)!important;border-color:transparent!important;box-shadow:none!important}
+.dm-skz .field::placeholder{color:transparent}
+.dm-skz .seg button{color:transparent!important;background:none!important}
+.dm-skz .seg .m-ind,.dm-skz .sel-wrap::after{opacity:0!important}
+.dm-skz::after{content:"";position:absolute;inset:0;transform:translateX(-100%);pointer-events:none;background:linear-gradient(90deg,transparent,var(--sk-hi) 50%,transparent);
+  animation:dm-sweep 2.2s cubic-bezier(.2,0,0,1) infinite}
+
+/* =================================================================================================
+   RELOAD VEIL: an in-page reload dims what is on screen and sweeps a skeleton band across it, so the region never
+   goes blank. A child marked .dm-keep (a panel's own title row) stays at full strength.
+   ================================================================================================= */
+.dm-dim{position:relative;overflow:hidden;pointer-events:none}
+.dm-dim > :not(.dm-keep){opacity:.38;transition:opacity var(--dur-2,.2s) var(--ease-standard,ease)}
+.dm-dim::after{content:"";position:absolute;inset:var(--dm-top,0) 0 0 0;z-index:3;pointer-events:none;transform:translateX(-100%);
+  background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--text) 9%,transparent) 50%,transparent);animation:dm-sweep 1.6s cubic-bezier(.2,0,0,1) infinite}
+:root[data-theme=light] .dm-dim::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.8) 50%,transparent)}
+.dm-dim > .dm-keep{pointer-events:auto}
+.chart-panel.dm-dim{--dm-top:56px}
+html.m-hidden .dm-dim::after,html.m-hidden .dm-skz::after,html.m-hidden .dm-skchip::before{animation-play-state:paused}
+
+/* =================================================================================================
+   INLINE STATE: one component for errors (network, offline, timeout, server, not found) and empty results, in the
+   language of error.html: a violet cut-corner block with the icon, a kicker with a violet square, a title, one
+   sentence, one primary action and a quiet link, then the reference code with a copy button.
+     .dm-page   replaces a page's data region (the header, nav and page head stay)
+     .dm-panel  inside one panel (a chart, the heatmap, the results list)
+     .dm-sheet  inside a detail sheet, below its pinned bar (Close stays)
+   ================================================================================================= */
+.dm-state{display:grid;grid-template-columns:auto minmax(0,1fr);gap:var(--s-5) var(--s-6);align-items:start;min-width:0;
+  background:var(--card);border-radius:var(--r-card);padding:var(--s-6);text-align:left}
+.dm-page{padding:var(--s-7) var(--s-6);min-height:320px;align-content:center}
+.dm-panel{padding:var(--s-5);gap:var(--s-4) var(--s-5)}
+.dm-sheet{padding:var(--s-5) var(--s-4);grid-template-columns:minmax(0,1fr)}
+.panel .dm-state{background:var(--card)}
+.dm-block{position:relative;width:96px;aspect-ratio:1;flex:none;margin:0 12px 12px 0}
+.dm-block::before{content:"";position:absolute;inset:0;translate:12px 12px;background:var(--surface);clip-path:polygon(0 0,calc(100% - 22px) 0,100% 22px,100% 100%,0 100%)}
+:root[data-theme=light] .dm-block::before{background:var(--violet-soft)}
+.dm-block-face{position:absolute;inset:0;background:var(--violet);clip-path:polygon(0 0,calc(100% - 22px) 0,100% 22px,100% 100%,0 100%);overflow:hidden}
+.dm-block-face::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(-60deg,transparent 0 12px,rgba(255,255,255,.1) 12px 13px);
+  -webkit-mask:linear-gradient(135deg,transparent 35%,#000);mask:linear-gradient(135deg,transparent 35%,#000)}
+.dm-ic{position:absolute;left:14%;bottom:14%;width:42%;height:auto;color:#fff;overflow:visible}
+.dm-panel .dm-block,.dm-sheet .dm-block{width:56px;margin:0 8px 8px 0}
+.dm-panel .dm-block::before,.dm-sheet .dm-block::before{translate:8px 8px;clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%)}
+.dm-panel .dm-block-face,.dm-sheet .dm-block-face{clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%)}
+/* an empty result is not an error: the block is outlined, not filled */
+.dm-empty .dm-block-face{background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--violet)}
+.dm-empty .dm-block-face::after{display:none}
+.dm-empty .dm-ic{color:var(--violet-text)}
+.dm-copy-col{min-width:0;display:grid;gap:0;align-content:start}
+.dm-kick{display:flex;align-items:center;gap:var(--s-3);color:var(--text-2);font-size:var(--fs-body);line-height:var(--lh-snug);margin:0 0 var(--s-3)}
+.dm-kick > i{width:10px;height:10px;background:var(--violet);flex:none}
+.dm-title{font-size:var(--fs-h2);line-height:var(--lh-tight);font-weight:500;letter-spacing:-.015em;text-wrap:balance}
+.dm-page .dm-title{font-size:clamp(24px,calc(16px + 1.2vw),32px);letter-spacing:-.025em}
+.dm-panel .dm-title,.dm-sheet .dm-title{font-size:var(--fs-h3);line-height:var(--lh-snug);letter-spacing:-.005em}
+.dm-title:focus{outline:none}/* takes focus only so the state is read; it is not a control */
+.dm-title:focus-visible{outline:none;animation:none}
+.dm-text{margin-top:var(--s-3);color:var(--text-2);font-size:var(--fs-ui);line-height:var(--lh-body);max-width:52ch}
+.dm-page .dm-text{font-size:var(--fs-lede)}
+.dm-acts{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s-2) var(--s-5);margin-top:var(--s-5)}
+.dm-acts:empty{display:none}
+.dm-acts .btn.lg{width:auto;min-width:144px;margin:0}
+.dm-link{position:relative;display:inline-flex;align-items:center;min-height:var(--tap);padding:0;border:0;background:none;color:var(--text);font:inherit;font-size:var(--fs-body);cursor:pointer;text-decoration:none}
+.dm-link > span{border-bottom:1px solid var(--violet);padding-bottom:2px}
+@media (hover:hover){.dm-link:hover{color:var(--violet-text)}}
+.dm-wait{display:flex;align-items:center;gap:var(--s-3);margin-top:var(--s-4);color:var(--text-2);font-size:var(--fs-meta)}
+.dm-wait::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--dm-amber);flex:none}
+@media (prefers-reduced-motion:no-preference){.dm-wait::before{animation:dm-breathe 2.4s var(--ease-standard,ease) infinite}}
+@keyframes dm-breathe{0%,100%{opacity:1}50%{opacity:.35}}
+.dm-ref{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s-1) var(--s-3);margin-top:var(--s-5);padding-top:var(--s-3);border-top:1px solid var(--line);
+  color:var(--muted);font-size:var(--fs-meta);line-height:var(--lh-snug);min-width:0}
+.dm-code{font-family:var(--num);font-variant-numeric:tabular-nums;color:var(--text-2);font-size:var(--fs-meta);overflow-wrap:anywhere}
+.dm-copy{position:relative;display:inline-grid;place-items:center;width:var(--tap);height:var(--tap);margin:-12px 0;padding:0;border:0;border-radius:var(--r-chip);background:transparent;color:var(--text-2);cursor:pointer}
+.dm-copy svg{width:16px;height:16px}
+.dm-copy .ok{display:none}.dm-copy.is-done .ok{display:block}.dm-copy.is-done .cp{display:none}
+@media (hover:hover){.dm-copy:hover{color:var(--violet-text);background:var(--violet-soft)}}
+.dm-copied{color:var(--violet-text);font-size:var(--fs-meta)}
+/* the state enters like the rest of the page: the block wipes in on the diagonal, the copy rises */
+@media (prefers-reduced-motion:no-preference){
+  .dm-state .dm-block-face{animation:dm-wipe var(--dur-4,.52s) var(--ease-decel,ease) 60ms both}
+  .dm-state .dm-copy-col{animation:dm-rise var(--dur-4,.52s) var(--ease-decel,ease) 120ms both}
+}
+@keyframes dm-wipe{from{clip-path:polygon(0 0,0 0,0 0)}}
+@keyframes dm-rise{from{opacity:0;transform:translateY(8px)}}
+
+/* a list that failed or came back empty still holds the space its rows had */
+.dm-region-min{min-height:240px}
+
+/* =================================================================================================
+   OFFLINE BAR: slim, at the foot of the screen, above the content and below sheets. The assistant ball lifts above it.
+   ================================================================================================= */
+.dm-bar{position:fixed;left:0;right:0;bottom:0;z-index:35;display:flex;align-items:center;gap:var(--s-3);min-height:40px;
+  padding:var(--s-2) var(--dm-gut-r) calc(var(--s-2) + env(safe-area-inset-bottom)) var(--dm-gut-l);
+  background:var(--surface);border-top:1px solid var(--line);color:var(--text);font-size:var(--fs-body);line-height:var(--lh-snug)}
+.dm-bar[hidden]{display:none}
+.dm-bar > i{width:8px;height:8px;flex:none;background:var(--dm-amber);clip-path:polygon(0 0,100% 0,100% 100%,3px 100%,0 calc(100% - 3px))}
+.dm-bar[data-state=on] > i{background:var(--pos)}
+@media (prefers-reduced-motion:no-preference){.dm-bar{animation:dm-up var(--dur-3,.32s) var(--ease-decel,ease) both}}
+@keyframes dm-up{from{transform:translateY(100%)}}
+
+/* =================================================================================================
+   FRESHNESS NOTE: a cached load says where its data came from, then that it is up to date. Bottom left, clear of the
+   assistant ball; it leaves by itself.
+   ================================================================================================= */
+.dm-toast{position:fixed;left:var(--dm-gut-l);bottom:calc(max(var(--s-4),env(safe-area-inset-bottom)) + 10px + var(--dm-lift,0px));z-index:34;
+  display:flex;align-items:center;gap:var(--s-2);max-width:calc(100vw - var(--dm-gut-l) - var(--dm-gut-r) - 72px);min-height:36px;padding:var(--s-2) var(--s-3);
+  background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:var(--r-card);box-shadow:0 10px 24px -14px rgba(0,0,0,.6);
+  font-size:var(--fs-meta);line-height:var(--lh-snug);transition:opacity var(--dur-2,.2s) var(--ease-standard,ease),translate var(--dur-2,.2s) var(--ease-standard,ease)}
+:root[data-theme=light] .dm-toast{box-shadow:0 10px 24px -14px rgba(23,23,28,.35)}
+.dm-toast[hidden]{display:none}
+.dm-toast > i{width:8px;height:8px;flex:none;background:var(--pos);clip-path:polygon(0 0,100% 0,100% 100%,3px 100%,0 calc(100% - 3px))}
+.dm-toast.is-busy > i{background:var(--violet)}
+@media (prefers-reduced-motion:no-preference){.dm-toast.is-busy > i{animation:dm-breathe 1.2s var(--ease-standard,ease) infinite}.dm-toast:not([hidden]){animation:dm-rise var(--dur-3,.32s) var(--ease-decel,ease) both}}
+.dm-toast.is-out{opacity:0;translate:0 6px}
+html.dm-is-offline{--dm-lift:48px}
+@media (max-width:600px){html.dm-is-offline{--dm-lift:68px}}
+@media (max-width:340px){html.dm-is-offline{--dm-lift:86px}}
+@media (min-width:1101px){.dm-toast{max-width:420px}}
+
+/* the tool pages end with room for the assistant ball, so the last row or button is never under it */
+#main > .page,#main > .wrap{padding-bottom:calc(var(--s-8) + 48px)}
+@media (max-width:600px){#main > .page,#main > .wrap{padding-bottom:calc(var(--s-7) + 56px)}}
+
+/* ================================== RESPONSIVE ================================== */
+@media (max-width:600px){
+  .dm-state{grid-template-columns:minmax(0,1fr);gap:var(--s-4);padding:var(--s-5) var(--s-4)}
+  .dm-page{padding:var(--s-6) var(--s-4);min-height:0}
+  .dm-block{width:64px;margin:0 10px 10px 0}
+  .dm-block::before{translate:10px 10px}
+  .dm-block::before,.dm-block-face{clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%)}
+  .dm-panel .dm-block,.dm-sheet .dm-block{width:48px}
+  .dm-acts{gap:var(--s-2) var(--s-4)}
+}
+@media (max-width:340px){.dm-acts .btn.lg{width:100%}}
+
+@media (prefers-reduced-motion:reduce){
+  .sk::after,.dm-skz::after,.dm-dim::after,.dm-skchip::before{display:none}
+  .dm-dim > :not(.dm-keep){transition:none}
+}
+@media (forced-colors:active){
+  .sk,.dm-skchip{background:GrayText!important}
+  .dm-block-face{background:CanvasText}.dm-ic{color:Canvas}
+  .dm-bar,.dm-toast,.dm-state{border:1px solid CanvasText}
+}
+
+/* a sheet body that loads after its pinned bar: no box of its own, so the sheet's grid and gaps hold as before */
+.dm-body{display:contents}
+/* a region that holds a skeleton: the skeleton takes the region's own grid, so every placeholder sits where its content will */
+.dm-region{position:relative}
+.dm-skel.dm-inh{display:grid;grid-template-columns:inherit;gap:inherit;align-content:start;align-items:inherit;grid-column:1/-1;min-width:0}
+.dm-skel .pick,.dm-skp{pointer-events:none}
+.dm-pagebox[hidden],.dm-region[hidden]{display:none}
+/* an error inside a panel uses the panel's own ground */
+.panel-c > .dm-state{background:none;padding:var(--s-3) 0 0}
+/* a section a page state hides stays hidden whatever its own display (the KPI grid, the filter bar) */
+#main [hidden]{display:none!important}
+#list > .dm-skel > .list-label{grid-column:1/-1}

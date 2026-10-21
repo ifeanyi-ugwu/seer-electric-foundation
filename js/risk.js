@@ -4,9 +4,15 @@ var h=U.h,HZ=["30 days","90 days","180 days","12 months"],HS=["30d","90d","180d"
 var P=[["Protocol A","Lending"],["Protocol B","Lending"],["Protocol C","DEX"],["Protocol D","Bridge"],["Protocol E","Liquid staking"],["Protocol F","Yield vault"],["Protocol G","DEX"],["Protocol H","Bridge"]],
  base={exploit:[.8,1.4,.9,4.2,1.8,3.1,1.2,5.6],depeg:[.5,.9,.3,1.1,2.4,1.6,.4,1.9],oracle:[.7,1.1,.6,.9,.8,1.9,.5,1.4]};
 var st={type:"exploit",sel:[0,3],sort:0},phone=matchMedia("(max-width:600px)");
+/* st.type is the type the person picked; shown is the one whose estimates are on screen (the last that loaded) */
+var shown="exploit",tst={state:"ok",err:null};
+/* loads go through js/demo.js (delay, errors, offline, cache); without it they resolve at once, as before */
+var DM=window.SeerDemo;
+function slot(){return DM?DM.slot():{run:function(o){o.apply({data:o.producer(),fromCache:false,empty:false},{sync:true,shown:false})},cancel:function(){}}}
+var pageSlot=slot(),typeSlot=slot(),pageState="ok";
 function val(t,i,z){return +(base[t][i]*[.22,.55,.8,1.15][z]*(1+((i*7+z*3)%5-2)*.04)).toFixed(1)}
-function draw(animate){var target=document.getElementById("root"),root=h("div"),t=st.type,all=[],ph=phone.matches,sec=h("section",{class:"stack","aria-label":"Risk by protocol and horizon"});P.forEach(function(_,i){HZ.forEach(function(_,z){all.push(val(t,i,z))})});var mx=Math.max.apply(null,all);
- sec.appendChild(h("div",{class:"head"},[h("div",{class:"seg",role:"group","aria-label":"Risk type"},TYPES.map(function(x){return h("button",{type:"button","aria-pressed":String(t===x[0]),onclick:function(){st.type=x[0];draw()}},[h("span",{class:"rlabel",text:x[1]}),h("span",{class:"rlabel-s",text:x[2]})])})),
+function draw(animate){if(pageState!=="ok")return;var target=document.getElementById("root"),root=h("div"),t=shown,all=[],tl=tst.state==="loading",ph=phone.matches,sec=h("section",{class:"stack","aria-label":"Risk by protocol and horizon"});P.forEach(function(_,i){HZ.forEach(function(_,z){all.push(val(t,i,z))})});var mx=Math.max.apply(null,all);
+ sec.appendChild(h("div",{class:"head"},[h("div",{class:"seg",role:"group","aria-label":"Risk type"},TYPES.map(function(x){return h("button",{type:"button","aria-pressed":String(st.type===x[0]),onclick:function(){if(st.type===x[0])return;st.type=x[0];draw(false);loadType()}},[h("span",{class:"rlabel",text:x[1]}),h("span",{class:"rlabel-s",text:x[2]})])})),
   h("span",{class:"muted",text:"Market-estimated probability of a loss event within each horizon"})]));
  var rows=P.map(function(p,i){return i}).sort(function(a,b){return val(t,b,st.sort)-val(t,a,st.sort)});
  var head=h("tr",{},[h("th",{scope:"col",text:"Protocol"})].concat(HZ.map(function(z,k){return h("th",{scope:"col",class:"r","aria-sort":st.sort===k?"descending":"none"},[h("button",{type:"button",text:z+(st.sort===k?" ↓":""),onclick:function(){st.sort=k;draw()}})])}),[h("th",{scope:"col",class:"r",text:"Compare"})]));
@@ -15,8 +21,10 @@ function draw(animate){var target=document.getElementById("root"),root=h("div"),
     From 601px the heatmap stays a table: reading down a column is the comparison. */
  if(ph)sec.appendChild(h("div",{class:"sortbar narrow-only","data-key":"sortbar"},[h("label",{for:"risk-sort",text:"Sort by risk at"}),
   h("select",{class:"field",id:"risk-sort",onchange:function(e){st.sort=+e.target.value;draw()}},HZ.map(function(z,k){return h("option",{value:String(k),text:z,selected:st.sort===k?"selected":null})}))]));
- sec.appendChild(h("div",{class:"tbl heat"+(ph?" rtbl":""),"data-key":"heat"},[U.roles(h("table",{},[h("thead",{},[head]),body]))]));
- sec.appendChild(h("p",{class:"note",text:"Darker cell = higher estimated risk. Compare up to three protocols."}));
+ /* a type that failed to load: only the heatmap says so (the chart keeps the type it shows, named in its title) */
+ if(tst.state==="error")sec.appendChild(DM.errorView(tst.err,{level:"panel",hl:"h2",subject:"the "+TYPES.filter(function(x){return x[0]===st.type})[0][1].toLowerCase()+" estimates",retry:function(){DM.holdFocus(document.querySelector("#root > section"));loadType()}}));
+ else{sec.appendChild(h("div",{class:"tbl heat"+(ph?" rtbl":"")+(tl?" dm-dim":""),"data-key":"heat","aria-busy":tl?"true":null},[U.roles(h("table",{},[h("thead",{},[head]),body]))]));
+ sec.appendChild(h("p",{class:"note",text:"Darker cell = higher estimated risk. Compare up to three protocols."}))}
  root.appendChild(sec);
  /* compare chart */
  /* Drawn at the panel's pixel width (no viewBox scaling) so every label stays 11px. */
@@ -27,7 +35,7 @@ function draw(animate){var target=document.getElementById("root"),root=h("div"),
   var v2=U.svg("text",{"data-key":"t"+k+"-"+i,"data-tween":"x y",x:x+(bw-3)/2,y:H-B-bh-4,"text-anchor":"middle","font-size":"11",fill:"var(--text)",class:"num"});v2.textContent=v.toFixed(1);s.appendChild(v2)});
   var lb=U.svg("text",{"data-key":"z"+k,x:L+k*gw+gw/2,y:H-10,"text-anchor":"middle","font-size":"12",fill:"var(--text-2)"});lb.textContent=nar?HS[k]:z;s.appendChild(lb)});
  var leg=h("div",{class:"legend"},st.sel.map(function(i,j){return h("span",{"data-key":"l"+i},[h("i",{style:"width:12px;height:12px;display:inline-block;background:"+FILL[j]+(j===2?";opacity:.6":"")}),P[i][0]])}));
- root.appendChild(h("div",{class:"panel-c chart-panel"},[h("h2",{text:"Side by side: "+TYPES.filter(function(x){return x[0]===t})[0][1]}),st.sel.length?leg:h("p",{class:"note",text:"Pick protocols above to compare."}),st.sel.length?s:null,
+ root.appendChild(h("div",{class:"panel-c chart-panel"+(tl?" dm-dim":""),"aria-busy":tl?"true":null},[h("h2",{class:"dm-keep",text:"Side by side: "+TYPES.filter(function(x){return x[0]===t})[0][1]}),st.sel.length?leg:h("p",{class:"note",text:"Pick protocols above to compare."}),st.sel.length?s:null,
   h("div",{class:"notice",text:"These are market estimates, not guarantees or advice. A market price is one input to a risk decision."})]));
  U.patch(target,root,{flip:".heat tbody tr",animate:animate!==false});
  var ss=document.getElementById("risk-sort");if(ss&&ss.value!==String(st.sort))ss.value=String(st.sort)}
@@ -36,9 +44,44 @@ function draw(animate){var target=document.getElementById("root"),root=h("div"),
 var padK=null,pad=16;
 function chartW(){var w=document.getElementById("root").clientWidth,k=U.narrow.matches+":"+phone.matches;
  if(k!==padK){padK=k;pad=parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--pad-panel"))||16}return w-2*pad}
-draw();
+function reveal(){if(window.Motion){Motion.reveal("#root .head, #root > .panel-c",{onIn:Motion.dataIn});Motion.reveal(".heat tbody tr",{rise:8,onIn:Motion.dataIn})}}
+/* switching the risk type: the seg answers at once; the heatmap and the chart dim under a sweep until the estimates arrive */
+function loadType(){var t=st.type;
+ typeSlot.run({key:"risk:matrix:"+t,producer:function(){return base[t]},scope:"page",label:"Loading risk estimates",
+  show:function(){tst={state:"loading",err:null};draw(false)},
+  apply:function(){shown=t;tst={state:"ok",err:null};draw()},
+  fail:function(e){tst={state:"error",err:e};draw();if(e.kind==="network")DM.onOnline(function(){if(tst.state==="error"&&st.type===t)loadType()})}})}
+/* ---------- the page's first load: type toggle, heatmap rows and the compare chart as placeholders; or one page-level state ---------- */
+var rootEl=document.getElementById("root"),pageEl=rootEl.parentNode,pageBox=h("div",{class:"dm-pagebox",hidden:""});if(DM)pageEl.insertBefore(pageBox,rootEl);
+function modal(){return[].some.call(document.querySelectorAll('[aria-modal="true"]'),function(n){return!n.closest("[inert]")})}
+function skPage(){var SK=DM.sk,B=DM.skBlock,ph=phone.matches,rows=[];
+ for(var i=0;i<P.length;i++)rows.push(h("tr",{class:"dm-skr",style:"--i:"+i},[h("td",{class:"c-p"},[h("b",{},[SK("10ch")]),h("span",{class:"muted"},[SK("7ch")])])].concat(
+  HZ.map(function(z,k){return h("td",{class:"r num h","data-label":HS[k]},[SK("4ch")])}),[h("td",{class:"c-c"},[B("sk-box","display:inline-block;vertical-align:middle;width:96px;height:var(--ctl-sm);border-radius:var(--r-chip)")])])));
+ var hr=h("tr",{},[h("th",{scope:"col",text:"Protocol"})].concat(HZ.map(function(z){return h("th",{scope:"col",class:"r",text:z})}),[h("th",{scope:"col",class:"r",text:"Compare"})]));
+ var H=chartW()<520?220:260;
+ return[h("section",{class:"stack"},[h("div",{class:"head"},[B("sk-box","height:var(--ctl);width:420px;max-width:100%;border-radius:999px"),h("span",{class:"muted"},[SK("40ch")])]),
+   ph?h("div",{class:"sortbar narrow-only"},[h("label",{text:"Sort by risk at"}),B("sk-box","height:var(--ctl);flex:1 1 auto;border-radius:999px")]):null,
+   h("div",{class:"tbl heat"+(ph?" rtbl":"")},[h("table",{},[h("thead",{},[hr]),h("tbody",{},rows)])]),
+   h("p",{class:"note",text:"Darker cell = higher estimated risk. Compare up to three protocols."})]),
+  h("div",{class:"panel-c chart-panel"},[h("h2",{},[SK("40%")]),h("div",{class:"legend"},[SK("10ch"),SK("10ch")]),B("sk-box","height:"+H+"px"),
+   h("div",{class:"notice",text:"These are market estimates, not guarantees or advice. A market price is one input to a risk decision."})])]}
+function load(o){o=o||{};typeSlot.cancel();
+ pageSlot.run({key:"risk:matrix:"+st.type,producer:function(){return base[st.type]},scope:"page",force:o.force,initial:true,busy:pageEl,label:"Loading risk estimates",
+  show:function(){pageState="loading";rootEl.hidden=false;pageBox.hidden=true;DM.skel(rootEl,skPage())},
+  apply:function(res,info){tst={state:"ok",err:null};shown=st.type;
+   if(res.empty||!res.data||!res.data.length){pageState="empty";rootEl.hidden=true;pageBox.hidden=false;U.clear(rootEl);
+    DM.renderEmpty(pageBox,{level:"page",title:"No risk markets yet",text:"No protocol has an open risk market right now. Estimates appear here as soon as one opens.",
+     action:{text:"Check again",onclick:function(){DM.holdFocus(pageEl);load({retried:true})}},secondary:{text:"Open the explorer",href:"app.html"},focus:o.retried&&!modal()});return}
+   pageState="ok";rootEl.hidden=false;pageBox.hidden=true;U.clear(pageBox);
+   if(info.shown)DM.crossOut(rootEl);else if(o.replay)U.clear(rootEl);
+   draw();reveal();if(o.retried&&!modal())DM.focusFirst(rootEl)},
+  fail:function(e){pageState="error";rootEl.hidden=true;pageBox.hidden=false;U.clear(rootEl);
+   DM.renderError(pageBox,e,{level:"page",subject:"the risk estimates",retry:function(){DM.holdFocus(pageEl);load({retried:true})},back:{text:"Back to home",href:"index.html"},focus:!modal()});
+   if(e.kind==="network")DM.onOnline(function(){if(pageState==="error")load()})}})}
 phone.addEventListener("change",function(){draw(false)});
-if(window.Motion){Motion.ready();Motion.reveal("#root .head, #root > .panel-c",{onIn:Motion.dataIn});Motion.reveal(".heat tbody tr",{rise:8,onIn:Motion.dataIn})}
+if(DM){DM.page({name:"risk",replay:function(o){load({force:o.force,replay:true})}});load()}
+else draw();
+if(window.Motion){Motion.ready();if(!DM)reveal()}
 var lw=document.getElementById("root").clientWidth,rt;
 window.addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(function(){var w=document.getElementById("root").clientWidth;if(w!==lw){lw=w;draw(false)}},150)});
 })();

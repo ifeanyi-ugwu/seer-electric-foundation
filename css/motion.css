@@ -78,28 +78,48 @@
 /* =================================================================================================
    SCROLL: smooth anchors (JS drives a spring; this is the fallback), thin scrollbars, inertia-aware bits
    ================================================================================================= */
-html{scroll-padding-top:var(--m-hdr,88px)}
+html{scroll-padding-top:var(--m-hdr,88px)}/* js/motion.js writes the pinned header's condensed height plus 12px */
 @media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
 .tbl,.tbl-wrap,.panel,.shell-products{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--text) 22%,transparent) transparent}
 .tbl:hover,.tbl-wrap:hover,.panel:hover{scrollbar-color:color-mix(in srgb,var(--violet) 70%,transparent) transparent}
 .shell-products{scrollbar-width:none}
 .tbl,.tbl-wrap{overscroll-behavior-x:contain}
 .panel{overscroll-behavior:contain}
-.m-sentinel{position:absolute;top:24px;left:0;width:1px;height:1px;pointer-events:none;visibility:hidden}
 
-/* ---------- shell header: condenses after 24px without changing its layout height (CLS 0) ---------- */
+/* =================================================================================================
+   PAGE HEADERS: pinned on every page and size, and condensed the way the sheets' pinned bar is (js/motion.js pinHead;
+   the state pages carry the same pattern in css/states.css and js/states.js). One passive scroll listener per page.
+     .m-scrolled  the page has moved: the hairline and a soft shadow fade in (opacity only)
+     .m-cond      past 24px (back below 12px): the ground and hairline rise by --hd-rc, the content by --hd-d and the
+                  logo settles to .85 from its left edge, all transforms on the settle spring
+     .m-tuck      two-row headers only (phones, small tablets): scrolling down past the header's height tucks the
+                  secondary row under the core row (it rises by --hd-n and is clipped by as much, so it rolls up
+                  under an edge that travels with the ground, which rises by --hd-rt); scrolling up 12px, reaching
+                  the top or focus inside the row brings it back
+   js/motion.js measures --hd-d, --hd-rc, --hd-rt and --hd-n from the header's own rows, so the layout box (and the
+   page below) never moves: CLS 0. The visible height goes to --hdr-h on the root for sticky table heads.
+   ================================================================================================= */
 .shell-bar{background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;border-bottom:0;pointer-events:none}
-.shell-bar::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-  background:color-mix(in srgb,var(--bg) 88%,transparent);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
-  box-shadow:inset 0 -1px 0 var(--line);
-  transition:transform var(--spring-gentle-t) var(--spring-gentle),background-color var(--dur-3) var(--ease-standard),box-shadow var(--dur-3) var(--ease-standard)}
-.shell-in{position:relative;transition:transform var(--spring-gentle-t) var(--spring-gentle)}
+.shell-bar::before,.shell-bar::after{content:"";position:absolute;left:0;right:0;z-index:-1;
+  transition:transform var(--spring-settle-t) var(--spring-settle),opacity var(--dur-2) var(--ease-standard)}
+.shell-bar::before{top:0;bottom:0;pointer-events:auto;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  -webkit-backdrop-filter:blur(14px) saturate(1.2);backdrop-filter:blur(14px) saturate(1.2);box-shadow:inset 0 -1px 0 var(--line)}
+.shell-bar::after,.m-nav-fixed .topnav::after{bottom:0;height:1px;pointer-events:none;opacity:0;
+  background:color-mix(in srgb,var(--text) 14%,transparent);box-shadow:0 8px 18px -6px rgba(0,0,0,.55)}
+:root[data-theme=light] .shell-bar::after,:root[data-theme=light] .m-nav-fixed .topnav::after{box-shadow:0 8px 18px -8px rgba(23,23,28,.18)}
+.shell-in,.shell-brand img,.shell-products{transition:transform var(--spring-settle-t) var(--spring-settle),clip-path var(--spring-settle-t) var(--spring-settle)}
+.shell-in{position:relative}
 .shell-in > *{pointer-events:auto}
-.shell-bar.is-condensed::before{transform:translateY(-12px);background:color-mix(in srgb,var(--bg) 86%,transparent);
-  -webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);
-  box-shadow:inset 0 -1px 0 color-mix(in srgb,var(--text) 14%,transparent),0 10px 24px -18px rgba(0,0,0,.55)}
-.shell-bar.is-condensed .shell-in{transform:translateY(-6px)}
-@media (max-width:800px){.shell-bar.is-condensed::before{transform:none}.shell-bar.is-condensed .shell-in{transform:none}}
+.shell-brand img{transform-origin:0 50%}
+/* the second row rests on an inset clip with 8px to spare (focus rings, the indicator), never on none, so the clip
+   interpolates with the lift instead of jumping */
+.shell-products,.m-nav-fixed .topnav > .nav-links{clip-path:inset(-8px)}
+.shell-bar.m-scrolled::after{opacity:1}
+.shell-bar.m-cond::before,.shell-bar.m-cond::after{transform:translateY(calc(var(--hd-rc,0px) * -1))}
+.shell-bar.m-tuck::before,.shell-bar.m-tuck::after{transform:translateY(calc(var(--hd-rt,0px) * -1))}
+.shell-bar.m-cond .shell-in{transform:translateY(calc(var(--hd-d,0px) * -1))}
+.shell-bar.m-cond .shell-brand img{transform:scale(.85)}
+.shell-bar.m-tuck .shell-products{transform:translateY(calc(var(--hd-n,0px) * -1));clip-path:inset(var(--hd-n,0px) -8px -8px -8px);pointer-events:none}
 
 /* product nav: active indicator (springs from the previous product on page change) + gliding hover pill */
 .shell-products.m-ind-host{position:relative}
@@ -111,17 +131,25 @@ html{scroll-padding-top:var(--m-hdr,88px)}
 .m-ind-on.shell-products a[aria-current=page]{background:transparent;box-shadow:none}
 .m-hov-on.shell-products a:hover{background:transparent}
 
-/* ---------- landing nav: fixed + condensing (JS adds .m-nav-fixed after measuring; layout is identical) ---------- */
+/* ---------- landing nav: fixed (JS adds .m-nav-fixed after measuring, and the hero keeps its height in --m-nav-h),
+   transparent over the hero until the page moves, then the same states as the tool header: the Documents and Blog
+   row is the one that tucks on phones ---------- */
 .m-nav-fixed .hero{z-index:3;padding-top:var(--m-nav-h,84px)}
 .m-nav-fixed .topnav{position:fixed;top:0;left:0;right:0;z-index:30;pointer-events:none}
-.m-nav-fixed .topnav > *{pointer-events:auto;transition:transform var(--spring-gentle-t) var(--spring-gentle),opacity var(--dur-2) var(--ease-standard),visibility var(--dur-2)}
-.m-nav-fixed .topnav::before{content:"";position:absolute;top:0;bottom:0;left:calc(50% - 50vw);width:100vw;z-index:-1;pointer-events:none;opacity:0;
-  background:color-mix(in srgb,var(--bg) 86%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3);
-  box-shadow:inset 0 -1px 0 var(--line),0 10px 24px -18px rgba(0,0,0,.5);
-  transition:opacity var(--dur-3) var(--ease-standard),transform var(--spring-gentle-t) var(--spring-gentle)}
-.m-nav-fixed .topnav.is-condensed::before{opacity:1;transform:translateY(calc(var(--m-cut,20px) * -1))}
-.m-nav-fixed .topnav.is-condensed > *{transform:translateY(calc(var(--m-shift,10px) * -1))}
-.m-nav-fixed .topnav.is-wrapped.is-condensed .nav-links{opacity:0;visibility:hidden}
+.m-nav-fixed .topnav > *,.m-nav-fixed .topnav .brand svg{pointer-events:auto;
+  transition:transform var(--spring-settle-t) var(--spring-settle),clip-path var(--spring-settle-t) var(--spring-settle)}
+.m-nav-fixed .topnav .brand svg{transform-origin:0 50%}
+.m-nav-fixed .topnav::before,.m-nav-fixed .topnav::after{content:"";position:absolute;left:calc(50% - 50vw);width:100vw;z-index:-1;
+  transition:transform var(--spring-settle-t) var(--spring-settle),opacity var(--dur-2) var(--ease-standard)}
+.m-nav-fixed .topnav::before{top:0;bottom:0;pointer-events:none;opacity:0;
+  background:color-mix(in srgb,var(--bg) 86%,transparent);-webkit-backdrop-filter:blur(18px) saturate(1.3);backdrop-filter:blur(18px) saturate(1.3)}
+.m-nav-fixed .topnav.m-scrolled::before{opacity:1;pointer-events:auto}
+.m-nav-fixed .topnav.m-scrolled::after{opacity:1}
+.m-nav-fixed .topnav.m-cond::before,.m-nav-fixed .topnav.m-cond::after{transform:translateY(calc(var(--hd-rc,0px) * -1))}
+.m-nav-fixed .topnav.m-tuck::before,.m-nav-fixed .topnav.m-tuck::after{transform:translateY(calc(var(--hd-rt,0px) * -1))}
+.m-nav-fixed .topnav.m-cond > *{transform:translateY(calc(var(--hd-d,0px) * -1))}
+.m-nav-fixed .topnav.m-cond .brand svg{transform:scale(.85)}
+.m-nav-fixed .topnav.m-tuck > .nav-links{transform:translateY(calc((var(--hd-d,0px) + var(--hd-n,0px)) * -1));clip-path:inset(var(--hd-n,0px) -8px -8px -8px);pointer-events:none}
 .home .skip{z-index:40}
 
 /* landing scroll progress: a 2px violet line that follows the scroll with a little inertia (spring in JS) */

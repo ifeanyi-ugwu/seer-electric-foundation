@@ -4,6 +4,10 @@ var h=U.h,r=U.rng(42),A=["Open","Modular","Private","Verifiable","Composable","L
 var D=[];for(var i=0;i<100;i++){var sc=Math.min(9.6,Math.max(2.4,4+r()*4.5+(r()-.5)*2)),w=.5+r()*1.4,av=Math.round((5+r()*120)*1e3*(r()>.5?1.6:.5)),hv=Math.round((5+r()*70)*1e3*(r()>.5?1.5:.6));
  D.push({id:i+1,name:A[Math.floor(r()*A.length)]+" "+N[Math.floor(r()*N.length)],s:+sc.toFixed(1),lo:+Math.max(0,sc-w).toFixed(1),hi:+Math.min(10,sc+w).toFixed(1),av:av,hv:hv,at:Math.round(3+r()*40),ht:Math.round(2+r()*30),ch:+((r()-.5)*1.2).toFixed(1)})}
 var st={q:"",f:"all",sort:"s",dir:-1,n:25,sel:null};
+/* loads go through js/demo.js (delay, errors, offline, cache); without it they resolve at once, as before */
+var DM=window.SeerDemo;
+function slot(){return DM?DM.slot():{run:function(o){o.apply({data:o.producer(),fromCache:false,empty:false},{sync:true,shown:false})},cancel:function(){}}}
+var pageSlot=slot(),selSlot=slot(),moreSlot=slot(),pageState="ok",det={id:0,state:"ok",err:null},moreErr=null;
 var TOT=D.reduce(function(a,d){return{av:a.av+d.av,hv:a.hv+d.hv}},{av:0,hv:0}),BEST=D.reduce(function(a,d){return d.s>a?d.s:a},0);
 function ag(d){return d.av/(d.av+d.hv)}
 /* derived once: the agent share, the lower-cased name for search and the name's rank in collation order (a
@@ -22,7 +26,13 @@ function dots(){var s=U.svg("svg",{class:"dotfield",viewBox:"0 0 300 300",width:
  D.forEach(function(d,i){var c=U.svg("circle",{cx:15+(i%10)*30,cy:15+Math.floor(i/10)*30,r:4+d.s*.8,fill:"var(--violet)","fill-opacity":(.18+d.s/10*.82).toFixed(2),tabindex:"0",role:"button","aria-label":"#"+d.id+" "+d.name+", forecast "+d.s});dotOn(c,st.sel===d);
   c.onclick=function(){choose(d)};c.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();choose(d)}};dotEls.push(c);s.appendChild(c)});return s}
 /* selecting updates in place; the dot for the choice ripples so the eye finds it in the field */
-function choose(d){st.sel=d;render();if(window.Motion)Motion.ripple(dotEls[d.id-1])}
+function choose(d){st.sel=d;loadSel(d);if(window.Motion)Motion.ripple(dotEls[d.id-1])}
+/* a selection's details: the readout (or the sheet's body) shows placeholders at once while they load */
+function loadSel(d){det={id:d.id,state:"ok",err:null};
+ selSlot.run({key:"deep:proposal:"+d.id,cacheLabel:"Deep proposal #"+d.id,producer:function(){return d},scope:"details",initial:true,label:"Loading proposal details",
+  show:function(){det={id:d.id,state:"loading",err:null};render()},
+  apply:function(res){det={id:d.id,state:res.empty?"empty":"ok",err:null};render()},
+  fail:function(e){det={id:d.id,state:"error",err:e};render()}})}
 function split(d){var p=Math.round(ag(d)*100);return h("span",{class:"split","aria-label":p+"% agent volume"},[h("span",{class:"split-trk"},[h("i",{class:"mini",style:"width:"+p+"%;background:var(--violet)"}),h("i",{class:"mini",style:"width:"+(100-p)+"%;background:var(--text-2);opacity:.5"})]),h("span",{class:"num muted",style:"margin-left:8px",text:p+"% agents"})])}
 function rowOn(tr,on){tr.classList.toggle("is-sel",on);if(on)tr.setAttribute("aria-current","true");else tr.removeAttribute("aria-current")}
 /* one row per proposal, built the first time it is shown and reused after that (its values never change) */
@@ -34,16 +44,21 @@ function row(d){var tr=rowEls.get(d.id);if(tr)return tr;
  if(st.sel===d)rowOn(tr,true);rowEls.set(d.id,tr);return tr}
 /* the selected proposal's readout. It repeats the row's score and range on purpose: a dot-field pick may sit in a
    row that is filtered out or not yet loaded, and the readout adds who is trading it. */
-function readout(d){return h("div",{class:"kpi k4"},[h("div",{},[h("small",{text:"Forecast score"}),h("b",{class:"num",text:d.s.toFixed(1)+" / 10"})]),h("div",{},[h("small",{text:"90% range"}),h("b",{class:"num",text:d.lo+" to "+d.hi})]),h("div",{},[h("small",{text:"Agent traders"}),h("b",{class:"num",text:String(d.at)})]),h("div",{},[h("small",{text:"Human traders"}),h("b",{class:"num",text:String(d.ht)})])])}
-function close(){var d=st.sel;st.sel=null;render();if(!d)return;var r=rowEls.get(d.id);if(!r||!r.isConnected||r.__out)r=dotEls[d.id-1];r.focus({preventScroll:true})}
+function readout(d,inSheet){var S=DM&&DM.sk,L=["Forecast score","90% range","Agent traders","Human traders"];
+ if(det.id===d.id&&det.state==="loading")return h("div",{class:"kpi k4","aria-busy":"true"},L.map(function(l){return h("div",{},[h("small",{text:l}),h("b",{class:"num"},[S(l==="90% range"?"9ch":"4ch")])])}));
+ if(det.id===d.id&&det.state==="error")return DM.errorView(det.err,{level:inSheet?"sheet":"panel",subject:"this proposal",retry:function(){DM.holdFocus(document.querySelector("#sheet-root .panel")||ui.side);loadSel(d)},
+  back:{text:"Back to the list",onclick:close},titles:{notfound:"This proposal no longer exists"},texts:{notfound:"It may have been withdrawn from the round. Go back to the list to pick another."}});
+ if(det.id===d.id&&det.state==="empty")return DM.emptyView({level:inSheet?"sheet":"panel",title:"No forecast yet",text:"Nobody has traded this proposal yet, so there is no score to show. Check again in a moment.",action:{text:"Check again",onclick:function(){loadSel(d)}}});
+ return h("div",{class:"kpi k4"},[h("div",{},[h("small",{text:"Forecast score"}),h("b",{class:"num",text:d.s.toFixed(1)+" / 10"})]),h("div",{},[h("small",{text:"90% range"}),h("b",{class:"num",text:d.lo+" to "+d.hi})]),h("div",{},[h("small",{text:"Agent traders"}),h("b",{class:"num",text:String(d.at)})]),h("div",{},[h("small",{text:"Human traders"}),h("b",{class:"num",text:String(d.ht)})])])}
+function close(){var d=st.sel;st.sel=null;selSlot.cancel();render();if(!d)return;var r=rowEls.get(d.id);if(!r||!r.isConnected||r.__out)r=dotEls[d.id-1];r.focus({preventScroll:true})}
 /* desktop: the readout sits beside the field. Tablet and phone: it opens in a sheet, and this panel keeps the hint. */
 function side(narrow){var inline=st.sel&&!narrow;return h("div",{class:"stack"},[h("div",{class:"kpi top"},[h("div",{},[h("small",{text:"Agent volume"}),h("b",{class:"num",text:U.money(TOT.av)})]),h("div",{},[h("small",{text:"Human volume"}),h("b",{class:"num",text:U.money(TOT.hv)})]),h("div",{},[h("small",{text:"Top forecast"}),h("b",{class:"num",text:BEST.toFixed(1)+" / 10"})])]),
   h("div",{class:"notice",text:"Evaluators still score every proposal. The market forecasts their scores; it does not choose winners."}),
-  inline?h("div",{class:"panel-c"},[h("div",{class:"line"},[h("h2",{text:"#"+st.sel.id+" "+st.sel.name}),h("button",{class:"btn soft",type:"button",text:"Clear",onclick:function(){st.sel=null;render()}})]),readout(st.sel)])
+  inline?h("div",{class:"panel-c"},[h("div",{class:"line"},[h("h2",{text:"#"+st.sel.id+" "+st.sel.name}),h("button",{class:"btn soft",type:"button",text:"Clear",onclick:function(){st.sel=null;selSlot.cancel();render()}})]),readout(st.sel)])
    :h("div",{class:"panel-c"},[h("h2",{text:"Select a proposal"}),h("p",{class:"note",text:"Pick a dot in the field or a proposal below to see its forecast score, 90% range and who is trading it."})])])}
 function head(l){return h("div",{class:"head"},[
- h("div",{class:"ctrls"},[h("input",{class:"field",type:"search",placeholder:"Search proposals",value:st.q,"aria-label":"Search proposals",oninput:function(e){st.q=e.target.value;st.n=25;render()}}),
-  h("div",{class:"seg",role:"group","aria-label":"Participation"},[["all","All"],["agent","Agent-led"],["human","Human-led"]].map(function(f){return h("button",{type:"button","aria-pressed":String(st.f===f[0]),text:f[1],onclick:function(){st.f=f[0];st.n=25;render()}})}))]),
+ h("div",{class:"ctrls"},[h("input",{class:"field",type:"search",placeholder:"Search proposals",value:st.q,"aria-label":"Search proposals",oninput:function(e){st.q=e.target.value;st.n=25;moreReset();render()}}),
+  h("div",{class:"seg",role:"group","aria-label":"Participation"},[["all","All"],["agent","Agent-led"],["human","Human-led"]].map(function(f){return h("button",{type:"button","aria-pressed":String(st.f===f[0]),text:f[1],onclick:function(){st.f=f[0];st.n=25;moreReset();render()}})}))]),
  h("span",{class:"muted",role:"status",text:"Showing "+Math.min(st.n,l.length)+" of "+l.length})])}
 var COLS=[["id","#"],["name","Proposal"],["s","Forecast score","r"],["lo","90% range","r"],["ag","Agent vs human volume"],["av","Agent vol.","r"],["hv","Human vol.","r"],["ch","7d change","r"]];
 function thText(c){return c[1]+(st.sort===c[0]?(st.dir>0?" ↑":" ↓"):"")}
@@ -86,15 +101,15 @@ function frame(){var target=document.getElementById("root"),root=h("div"),l=view
  var tr=h("tr");ui.th=COLS.map(function(c){var th=h("th",{scope:"col",class:c[2]||"","aria-sort":thSort(c)},[h("button",{type:"button",text:thText(c),onclick:function(){if(st.sort===c[0])st.dir*=-1;else{st.sort=c[0];st.dir=c[0]==="name"||c[0]==="id"?1:-1}render()}})]);tr.appendChild(th);return th});
  var body=h("tbody");l.slice(0,st.n).forEach(function(d){body.appendChild(row(d))});
  var tbl=h("div",{class:"tbl tall rtbl deep-tbl","data-key":"tbl"},[U.roles(h("table",{},[h("thead",{},[tr]),body]))]);
- ui.more=h("button",{class:"btn lg",type:"button",text:"Show 25 more",onclick:function(){st.n+=25;render()}});
+ ui.more=h("button",{class:"btn lg",type:"button",text:"Show 25 more",onclick:more});
  /* the filter bar belongs to the list, so it sits closer to the table than to the field above */
  var sec=h("section",{class:"stack list-sec","aria-label":"Proposals"},[head(l),sortbar(),tbl]);
  if(l.length>st.n)sec.appendChild(ui.more);
  root.appendChild(top);root.appendChild(sec);
  U.patch(target,root,{flip:"tbody tr"});
  U.sheet({open:false,onClose:close});
- ui.side=top.lastChild;ui.sec=sec;ui.head=sec.firstChild;ui.sortbar=sec.children[1];ui.tbody=body;shown=st.sel;sideK=st.sel&&!narrow?st.sel.id:0}
-function render(){var l=view(),narrow=U.narrow.matches,want=l.slice(0,st.n).map(row),more=l.length>st.n,sk=st.sel&&!narrow?st.sel.id:0;
+ ui.side=top.lastChild;ui.sec=sec;ui.head=sec.firstChild;ui.sortbar=sec.children[1];ui.tbody=body;shown=st.sel;sideK=st.sel&&!narrow?st.sel.id+":"+det.state:0}
+function render(){var l=view(),narrow=U.narrow.matches,want=l.slice(0,st.n).map(row),more=l.length>st.n&&!moreErr,sk=st.sel&&!narrow?st.sel.id+":"+det.state:0;
  /* the list first: its rows are measured before anything above them can change height, so every shift glides */
  U.patch(ui.sec,function(ctx){rows(ctx,want);var m=ui.more;
   if(more&&!m.isConnected){ui.sec.appendChild(m);ctx.added.push(m)}else if(!more&&m.isConnected)ctx.drop(m,ui.sec)},{flip:"tbody tr",lazy:!narrow});
@@ -105,12 +120,56 @@ function render(){var l=view(),narrow=U.narrow.matches,want=l.slice(0,st.n).map(
  ui.th.forEach(function(th,k){var c=COLS[k],b=th.firstChild,t=thText(c);if(th.getAttribute("aria-sort")!==thSort(c))th.setAttribute("aria-sort",thSort(c));if(b.textContent!==t)b.textContent=t});
  U.patch(ui.sortbar,sortbar());
  U.sheet({open:!!(st.sel&&narrow),label:st.sel?"#"+st.sel.id+" "+st.sel.name:"",badge:h("span",{class:"badge",text:"Proposal #"+(st.sel?st.sel.id:"")}),
-  title:st.sel?st.sel.name:"",kids:st.sel?[readout(st.sel)]:[],onClose:close,instant:!narrow});
+  title:st.sel?st.sel.name:"",kids:st.sel?[readout(st.sel,true)]:[],onClose:close,instant:!narrow});
  var ss=document.getElementById("deep-sort");if(ss&&ss.value!==st.sort)ss.value=st.sort}
-frame();
-U.narrow.addEventListener("change",function(){render()});
-if(window.Motion){Motion.ready();
+function reveal(){if(!window.Motion)return;
  Motion.reveal(".cols2 > .panel-c, .kpi.top > div, .cols2 .stack > .notice, .cols2 .stack > .panel-c, .list-sec > .head",{onIn:Motion.dataIn});
  /* table rows: only the ones visible in the scroll box stagger in; the rest are simply there */
  Motion.reveal([].slice.call(ui.tbody.children,0,14),{rise:8,onIn:Motion.dataIn})}
+
+/* ---------- Show 25 more: placeholder rows join the end of the list while the next page loads ---------- */
+function moreReset(){moreSlot.cancel();moreErr=null;if(ui.moreBox&&ui.moreBox.isConnected)ui.moreBox.remove();skRows(false);moreBusy(false)}
+function moreBusy(on){var m=ui.more;if(!m)return;if(on){m.setAttribute("aria-disabled","true");m.textContent="Loading 25 more"}else{m.removeAttribute("aria-disabled");m.textContent="Show 25 more"}}
+function skRows(on){var tb=ui.tbody;[].slice.call(tb.querySelectorAll(":scope > .dm-skr")).forEach(function(r){r.remove()});if(!on)return;
+ for(var i=0;i<4;i++)tb.appendChild(skRow(i,1e4+i))}
+function skRow(i,order){var S=DM.sk;return h("tr",{class:"dm-skr","aria-hidden":"true",style:"--i:"+i+(order?";order:"+order:"")},[h("td",{class:"num muted c-id"},[S("2ch")]),h("td",{class:"c-n"},[S([62,48,70,56,66,52,74,44,60,58][i%10]+"%")]),
+  h("td",{class:"r num c-s"},[S("3ch")]),h("td",{class:"r num muted c-r"},[S("9ch")]),h("td",{class:"c-ag"},[S("80%")]),h("td",{class:"r num c-av"},[S("5ch")]),h("td",{class:"r num c-hv"},[S("5ch")]),h("td",{class:"r num c-ch"},[S("4ch")])])}
+function more(){if(ui.more.getAttribute("aria-disabled")==="true")return;var n=st.n+25;
+ moreSlot.run({key:"deep:proposals?n="+n,cacheLabel:"Deep proposals, first "+n,producer:function(){return D},scope:"page",busy:ui.sec,label:"Loading 25 more proposals",
+  show:function(){skRows(true);moreBusy(true)},
+  apply:function(){moreBusy(false);skRows(false);moreErr=null;st.n=n;render()},
+  fail:function(e){moreBusy(false);skRows(false);moreErr=e;var f=document.activeElement===ui.more;
+   ui.moreBox=DM.errorView(e,{level:"panel",subject:"the next proposals",retry:function(){var b=ui.moreBox;moreErr=null;if(b)b.remove();render();ui.more.focus();more()}});
+   ui.sec.appendChild(ui.moreBox);render();if(f)DM.focusHead(ui.moreBox)}})}
+
+/* ---------- the page's first load: skeleton (dot field, tiles, filter bar, rows), then the page; or one page-level state ---------- */
+var rootEl=document.getElementById("root"),pageEl=rootEl.parentNode,pageBox=h("div",{class:"dm-pagebox",hidden:""});if(DM)pageEl.insertBefore(pageBox,rootEl);
+function modal(){return[].some.call(document.querySelectorAll('[aria-modal="true"]'),function(n){return!n.closest("[inert]")})}
+function skPage(){var S=DM.sk,B=DM.skBlock,narrow=U.narrow.matches,rows=[];for(var i=0;i<10;i++)rows.push(skRow(i));
+ var hr=h("tr",{},COLS.map(function(c){return h("th",{scope:"col",class:c[2]||"",text:c[1]})}));
+ return[h("div",{class:"cols2"},[h("div",{class:"panel-c"},[h("h2",{text:"Grant round · 100 proposals"}),B("sk-box","aspect-ratio:1"),h("p",{class:"note",text:"Bigger, brighter dot = higher forecast score."})]),
+   h("div",{class:"stack"},[h("div",{class:"kpi top"},["Agent volume","Human volume","Top forecast"].map(function(l){return h("div",{},[h("small",{text:l}),h("b",{class:"num"},[S("5ch")])])})),
+    h("div",{class:"notice",text:"Evaluators still score every proposal. The market forecasts their scores; it does not choose winners."}),
+    h("div",{class:"panel-c"},[h("h2",{text:"Select a proposal"}),h("p",{class:"note",text:"Pick a dot in the field or a proposal below to see its forecast score, 90% range and who is trading it."})])])]),
+  h("section",{class:"stack list-sec"},[h("div",{class:"head"},[h("div",{class:"ctrls"},[B("sk-box","height:var(--ctl);width:240px;max-width:100%;border-radius:999px"),B("sk-box","height:var(--ctl);width:260px;max-width:100%;border-radius:999px")]),h("span",{class:"muted"},[S("14ch")])]),
+   narrow?h("div",{class:"sortbar narrow-only"},[h("label",{text:"Sort by"}),B("sk-box","height:var(--ctl);flex:1 1 auto;max-width:320px;border-radius:999px"),B("sk-box","height:var(--ctl);width:120px;border-radius:var(--r-chip)")]):null,
+   h("div",{class:"tbl tall rtbl deep-tbl"},[h("table",{},[h("thead",{},[hr]),h("tbody",{},rows)])])])]}
+function load(o){o=o||{};selSlot.cancel();moreSlot.cancel();moreErr=null;
+ pageSlot.run({key:"deep:proposals",producer:function(){return D},scope:"page",force:o.force,initial:true,busy:pageEl,label:"Loading proposals",
+  show:function(){pageState="loading";rootEl.hidden=false;pageBox.hidden=true;U.sheet({open:false,onClose:close,instant:true});DM.skel(rootEl,skPage())},
+  apply:function(res,info){
+   if(res.empty||!res.data.length){pageState="empty";rootEl.hidden=true;pageBox.hidden=false;U.clear(rootEl);
+    DM.renderEmpty(pageBox,{level:"page",title:"No proposals yet",text:"This grant round has no proposals to forecast yet. They appear here as soon as the round opens.",
+     action:{text:"Check again",onclick:function(){DM.holdFocus(pageEl);load({retried:true})}},secondary:{text:"Open the explorer",href:"app.html"},focus:o.retried&&!modal()});return}
+   var was=pageState;pageState="ok";rootEl.hidden=false;pageBox.hidden=true;U.clear(pageBox);
+   if(info.shown)DM.crossOut(rootEl);else if(o.replay)U.clear(rootEl);
+   if(was!=="ok"||o.replay){dotEls=[];rowEls=new Map();ui={};st.n=25;st.sel=null}
+   frame();reveal();if(o.retried&&!modal())DM.focusFirst(rootEl)},
+  fail:function(e){pageState="error";rootEl.hidden=true;pageBox.hidden=false;U.clear(rootEl);U.sheet({open:false,onClose:close,instant:true});
+   DM.renderError(pageBox,e,{level:"page",subject:"the proposals",retry:function(){DM.holdFocus(pageEl);load({retried:true})},back:{text:"Back to home",href:"index.html"},focus:!modal()});
+   if(e.kind==="network")DM.onOnline(function(){if(pageState==="error")load()})}})}
+U.narrow.addEventListener("change",function(){if(pageState==="ok")render()});
+if(DM){DM.page({name:"deep",replay:function(o){load({force:o.force,replay:true})}});load()}
+else{frame()}
+if(window.Motion){Motion.ready();if(!DM)reveal()}
 })();

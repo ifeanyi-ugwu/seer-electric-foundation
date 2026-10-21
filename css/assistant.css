@@ -1,0 +1,199 @@
+/* Seer assistant (js/assistant.js): the floating ball and its panel, on all six pages. Linked after motion.css.
+   The ball: a 56px violet block with the Seer mark and the kit's cut corner, a slow breathing glow (paused in hidden
+   tabs and while the ball is away, absent under reduced motion), a status dot that becomes a small "Demo" tag while
+   any demo override is on. Bottom right, clear of the safe areas, at the page gutter; above the content (z 30) and
+   below every sheet (40+), and it steps away while another sheet is open.
+   The panel is a pinned-header sheet (U.sheet): a popover above the ball from 601px, a bottom sheet on phones. The
+   landing page does not load css/shell.css, so the panel's sheet and control styles are written here, scoped to
+   .as-sheet, with the same values as the tool pages. */
+
+:root{--as-r:max(var(--gut),env(safe-area-inset-right));--as-l:max(var(--gut),env(safe-area-inset-left));--as-b:max(var(--s-4),env(safe-area-inset-bottom));--as-size:56px}
+@media (min-width:601px){:root{--as-b:max(var(--s-5),env(safe-area-inset-bottom))}}
+
+/* ================================== THE BALL ================================== */
+.as-dock{position:fixed;right:var(--as-r);bottom:calc(var(--as-b) + var(--dm-lift,0px));z-index:30;width:var(--as-size);height:var(--as-size);
+  transition:transform var(--spring-gentle-t,.58s) var(--spring-gentle,ease) .16s,opacity var(--dur-2,.2s) var(--ease-standard,ease) .16s,visibility 0s linear 0s,bottom var(--dur-3,.32s) var(--ease-standard,ease)}
+.as-dock.as-away{opacity:0;transform:translateY(16px) scale(.9);visibility:hidden;pointer-events:none;
+  transition:transform var(--dur-2,.2s) var(--ease-accel,ease),opacity var(--dur-1,.12s) var(--ease-accel,ease),visibility 0s linear var(--dur-2,.2s)}
+.as-ball{position:relative;display:grid;place-items:center;width:100%;height:100%;padding:0;margin:0;border:0;background:none;color:#fff;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;filter:drop-shadow(0 10px 18px rgba(8,6,16,.5));transition:transform var(--spring-press-t,.26s) var(--spring-press,ease)}
+:root[data-theme=light] .as-ball{filter:drop-shadow(0 10px 16px rgba(60,30,120,.22))}
+.as-face{position:absolute;inset:0;display:grid;place-items:center;overflow:hidden;background:var(--violet);
+  clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,0 100%);transition:background-color var(--dur-2,.2s) var(--ease-standard,ease)}
+/* the error block's diagonal hatching, faint, toward the cut */
+.as-face::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(-60deg,transparent 0 9px,rgba(255,255,255,.09) 9px 10px);
+  -webkit-mask:linear-gradient(135deg,transparent 45%,#000);mask:linear-gradient(135deg,transparent 45%,#000)}
+.as-mark{position:relative;z-index:1;width:26px;height:26px;color:#fff}
+@media (hover:hover){.as-ball:hover .as-face{background:color-mix(in srgb,var(--violet) 84%,#fff)}}
+.as-ball:active{transform:scale(.94)}
+.as-ball:focus-visible{outline:2px solid var(--violet-text);outline-offset:4px;border-radius:2px}
+/* breathing glow: opacity and scale only, slow; paused when the tab is hidden, while the ball is away or its panel is open */
+.as-glow{position:absolute;inset:-12px;border-radius:50%;pointer-events:none;opacity:.45;
+  background:radial-gradient(closest-side,color-mix(in srgb,var(--violet) 60%,transparent),transparent)}
+@media (prefers-reduced-motion:no-preference){.as-glow{animation:as-breathe 4.8s var(--ease-standard,ease) infinite}}
+@keyframes as-breathe{0%,100%{opacity:.3;transform:scale(.9)}50%{opacity:.72;transform:scale(1.06)}}
+html.m-hidden .as-glow,.as-paused .as-glow,.as-away .as-glow,.as-open .as-glow{animation-play-state:paused}
+:root[data-theme=light] .as-glow{opacity:.35}
+/* status: a teal dot for "ready"; a small amber "Demo" tag while any demo override is on */
+.as-dot{position:absolute;top:-5px;left:-5px;z-index:2;display:grid;place-items:center;min-width:12px;height:12px;padding:0;border-radius:50%;
+  background:var(--pos);box-shadow:0 0 0 2px var(--bg)}
+.as-dot-t{display:none}
+.as-ball.is-demo .as-dot{height:18px;padding:0 6px;border-radius:3px;background:var(--neg);color:#16120a;font:600 11px/18px var(--font);letter-spacing:.02em;top:-9px;left:-8px}
+:root[data-theme=light] .as-ball.is-demo .as-dot{color:#fff}
+.as-ball.is-demo .as-dot-t{display:block}
+@media (prefers-reduced-motion:no-preference){.as-ball.is-demo .as-dot{animation:as-pop var(--spring-snappy-t,.31s) var(--spring-snappy,ease) both}}
+@keyframes as-pop{from{transform:scale(.6);opacity:0}}
+
+/* the landing ends with room for the ball, so the last footer link is never under it */
+.home .foot{padding-bottom:max(calc(var(--s-6) + 64px),env(safe-area-inset-bottom))}
+
+/* ================================== THE PANEL ================================== */
+.scrim.as-sheet-scrim{position:fixed;inset:0;z-index:42;background:rgba(6,5,12,.32)}
+:root[data-theme=light] .scrim.as-sheet-scrim{background:rgba(23,23,28,.14)}
+.panel.as-sheet{--ctl:44px;--ctl-sm:36px;--pad-panel:16px;--pp-t:16px;--pp-r:16px;--pp-b:0px;--pp-l:16px;
+  position:fixed;z-index:43;top:auto;left:auto;right:var(--as-r);bottom:calc(var(--as-b) + var(--as-size) + 12px + var(--dm-lift,0px));
+  width:min(400px,calc(100vw - var(--as-r) - var(--as-l)));height:min(640px,calc(100dvh - var(--as-b) - var(--as-size) - 40px));max-height:none;
+  display:grid;grid-template-rows:auto auto minmax(0,1fr);align-content:stretch;gap:0;padding:0;overflow:hidden;overscroll-behavior:contain;
+  background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:12px;box-shadow:0 28px 64px -28px rgba(0,0,0,.75);
+  font:500 13px/1.35 var(--font);transform:translate(var(--m-x,0px),var(--m-y,0px))}
+:root[data-theme=light] .panel.as-sheet{box-shadow:0 28px 64px -28px rgba(40,20,90,.35)}
+.as-sheet .panel-top{position:relative;top:auto;z-index:3;margin:0;padding:var(--pp-t) var(--pp-r) var(--s-3) var(--pp-l);pointer-events:auto}
+.as-sheet .panel-top::before{content:"";position:absolute;inset:0;z-index:-1;background:var(--bg)}
+.as-sheet .panel-top::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;z-index:-1;pointer-events:none;opacity:0;
+  background:color-mix(in srgb,var(--text) 14%,transparent);box-shadow:0 8px 18px -6px rgba(0,0,0,.55);transition:opacity var(--dur-2,.2s) var(--ease-standard,ease)}
+.as-sheet .panel-top.m-scrolled::after{opacity:1}
+.as-sheet .panel-top.m-cond::before,.as-sheet .panel-top.m-cond::after,.as-sheet .panel-top.m-cond .pt-in,.as-sheet .panel-top.m-cond .pt-title{transform:none}
+.as-sheet .panel-grip{position:absolute;left:0;top:0;width:3px;height:40px;background:var(--violet);pointer-events:none}
+.as-sheet .pt-in{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"t x";align-items:center;gap:var(--s-2) var(--s-3)}
+.as-sheet .pt-title{grid-area:t;min-width:0;font-size:var(--fs-h3);line-height:var(--lh-snug);font-weight:500;letter-spacing:-.005em;display:flex;align-items:center;gap:var(--s-2)}
+.as-sheet .pt-title::before{content:"";width:8px;height:8px;flex:none;background:var(--violet)}
+.as-sheet .pt-in > .btn{grid-area:x}
+
+/* ---------- controls, as on the tool pages (shell.css), scoped so the landing gets them too ---------- */
+.as-sheet .btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:var(--s-1);min-height:var(--ctl-sm);padding:0 var(--s-3);
+  border:0;border-radius:var(--r-chip);background:var(--violet);color:#fff;font:inherit;font-size:var(--fs-meta);white-space:nowrap;cursor:pointer}
+.as-sheet .btn.soft{background:var(--violet-soft);color:var(--violet-text)}
+@media (hover:hover){.as-sheet .btn:hover{background:color-mix(in srgb,var(--violet) 82%,#000)}.as-sheet .btn.soft:hover{background:var(--violet-soft);box-shadow:inset 0 0 0 1px var(--violet)}}
+.as-sheet .btn[aria-disabled=true]{cursor:not-allowed;opacity:.55}
+.as-sheet .btn[aria-disabled=true]:hover{box-shadow:none}
+.as-sheet .seg{display:flex;align-items:stretch;height:var(--ctl);max-width:100%;padding:var(--s-1);gap:2px;background:var(--card);border-radius:999px;box-shadow:inset 0 0 0 1px var(--line)}
+.as-sheet .seg button{position:relative;flex:1 1 0;min-width:0;border:0;background:transparent;color:var(--text-2);font:inherit;font-size:var(--fs-body);padding:0 var(--s-2);border-radius:999px;cursor:pointer;white-space:nowrap}
+@media (hover:hover){.as-sheet .seg button:hover{color:var(--text)}}
+.as-sheet .seg button[aria-pressed=true]{background:var(--violet);color:#fff}
+.as-sheet .m-ind-on > button[aria-pressed=true]{background:transparent}
+.as-sheet .field{height:var(--ctl);min-height:var(--ctl);min-width:0;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:999px;padding:0 var(--s-4);font:inherit;font-size:var(--fs-body)}
+.as-sheet .field::placeholder{color:var(--muted)}
+.as-sheet select.field{-webkit-appearance:none;appearance:none;cursor:pointer;padding-right:44px;width:100%;background:var(--chev) right 16px center/12px 12px no-repeat var(--card)}
+.as-sheet .sel-wrap{display:grid;grid-template-columns:minmax(0,1fr);align-items:center;min-width:0;width:100%;color:var(--text-2)}
+.as-sheet .sel-wrap > select.field{grid-area:1/1;width:100%;background-image:none}
+.as-sheet .sel-wrap::after{content:"";grid-area:1/1;justify-self:end;width:12px;height:12px;margin-right:16px;pointer-events:none;background:currentColor;
+  -webkit-mask:var(--chev) center/12px 12px no-repeat;mask:var(--chev) center/12px 12px no-repeat}
+.as-sheet .chip{position:relative;display:inline-flex;align-items:center;min-height:var(--ctl-sm);border:1px solid var(--line);background:transparent;color:var(--text-2);padding:var(--s-1) var(--s-3);
+  border-radius:999px;font:inherit;font-size:var(--fs-body);line-height:var(--lh-snug);cursor:pointer;text-align:left}
+@media (hover:hover){.as-sheet .chip:hover{border-color:var(--violet);color:var(--text)}}
+.as-sheet .chip[aria-disabled=true]{opacity:.55;cursor:default}
+.as-sheet :where(a,button,input,select,summary,[tabindex]):focus-visible{outline:2px solid var(--violet-text);outline-offset:2px}
+.as-sheet .as-log:focus-visible{outline-offset:-2px}
+/* every target in the panel has a 44px hit area, without making the small ones look oversized */
+.as-sheet .seg button::after,.as-sheet .chip::after,.as-sheet .btn::after{content:"";position:absolute;left:0;right:0;top:50%;height:var(--tap);min-height:100%;transform:translateY(-50%)}
+.as-sr,.as-sheet .dm-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+
+/* ---------- tabs and the open pane ---------- */
+.as-tabbar{padding:0 var(--s-4) var(--s-3);background:var(--bg)}
+.as-body{min-height:0;display:grid}
+.as-pane{min-height:0;display:grid;align-content:stretch}
+.as-scroll{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--text) 22%,transparent) transparent}
+.as-note{display:flex;align-items:center;gap:var(--s-2);color:var(--muted);font-size:var(--fs-meta);line-height:var(--lh-snug)}
+.as-note > i{width:8px;height:8px;flex:none;background:var(--violet)}
+
+/* ---------- Ask: a log of messages that scrolls, follow-up questions, and the composer pinned at the foot ---------- */
+.as-ask{grid-template-rows:auto minmax(0,1fr) auto auto}
+.as-askbar{display:flex;align-items:center;justify-content:space-between;gap:var(--s-3);min-height:32px;padding:0 var(--s-4) var(--s-2)}
+.as-clear{position:relative;padding:0;border:0;background:none;color:var(--violet-text);font:inherit;font-size:var(--fs-meta);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.as-clear::after{content:"";position:absolute;left:-6px;right:-6px;top:50%;height:var(--tap);transform:translateY(-50%)}
+.as-log{display:flex;flex-direction:column;gap:var(--s-3);padding:var(--s-2) var(--s-4) var(--s-4)}
+.as-msg{position:relative;max-width:88%;padding:var(--s-3) var(--s-3);font-size:var(--fs-ui);line-height:var(--lh-body);border-radius:var(--r-card)}
+.as-msg .as-txt{text-wrap:pretty;overflow-wrap:anywhere}
+.as-bot{align-self:flex-start;background:var(--card);border-top-left-radius:2px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+.as-bot::before{content:"";position:absolute;left:0;top:0;width:2px;height:16px;background:var(--violet)}
+.as-me{align-self:flex-end;background:var(--violet-soft);color:var(--text);border-bottom-right-radius:2px}
+.as-go{display:inline-flex;align-items:center;gap:var(--s-2);min-height:var(--tap);margin:var(--s-1) 0 calc(var(--s-2) * -1);color:var(--violet-text);font-size:var(--fs-body);text-decoration:none}
+.as-go > span{border-bottom:1px solid var(--violet);padding-bottom:1px}
+.as-go svg{transition:transform var(--dur-2,.2s) var(--ease-standard,ease)}
+@media (hover:hover){.as-go:hover svg{transform:translateX(3px)}}
+.as-typing{display:flex;gap:6px;align-items:center;min-height:40px}
+.as-typing i{width:8px;height:8px;background:var(--violet);clip-path:polygon(0 0,100% 0,100% 100%,3px 100%,0 calc(100% - 3px))}
+@media (prefers-reduced-motion:no-preference){.as-typing i{animation:as-step 1.1s var(--ease-standard,ease) infinite both}.as-typing i:nth-child(2){animation-delay:.15s}.as-typing i:nth-child(3){animation-delay:.3s}
+  .as-msg:not(.as-typing){animation:as-in var(--spring-settle-t,.33s) var(--spring-settle,ease) both}}
+@keyframes as-step{0%,70%,100%{opacity:.3;transform:none}30%{opacity:1;transform:translateY(-3px)}}
+@keyframes as-in{from{opacity:0;translate:0 6px}}
+.as-sugg{display:flex;flex-wrap:wrap;gap:var(--s-2)}
+.as-ask > .as-sugg{padding:0 var(--s-4) var(--s-3)}
+.as-compose{display:flex;gap:var(--s-2);align-items:center;padding:var(--s-3) var(--s-4) calc(var(--s-3) + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--bg)}
+.as-compose .as-q{flex:1 1 auto;width:100%}
+.as-sheet .btn.as-send{flex:none;width:var(--ctl);height:var(--ctl);padding:0;background:var(--violet);border-radius:0;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+.as-send svg{width:18px;height:18px}
+
+/* ---------- Demo: grouped controls ---------- */
+.as-demo > .as-scroll{display:grid;align-content:start;gap:var(--s-4);padding:var(--s-1) var(--s-4) var(--s-5)}
+.as-demo-note{color:var(--text-2);padding:var(--s-2) var(--s-3);background:var(--card);border-radius:var(--r-card);align-items:flex-start}
+.as-demo-note > i{margin-top:4px}
+.as-group{display:grid;gap:var(--s-3);padding-top:var(--s-4);border-top:1px solid var(--line);min-width:0}
+.as-gh{font-size:var(--fs-ui);font-weight:500;line-height:var(--lh-snug);display:flex;align-items:center;gap:var(--s-2)}
+.as-gh::before{content:"";width:8px;height:8px;flex:none;background:var(--violet)}
+.as-field{display:grid;gap:var(--s-2);min-width:0}
+.as-lbl{color:var(--text-2);font-size:var(--fs-meta);padding:0}
+.as-help{color:var(--muted);font-size:var(--fs-meta);line-height:var(--lh-snug);margin-top:calc(var(--s-1) * -1)}
+.as-sheet .btn.as-wide{width:100%;min-height:var(--tap);font-size:var(--fs-body)}
+.as-scope{border:0;margin:0;padding:0;min-width:0;display:flex;flex-wrap:wrap;gap:0 var(--s-4)}
+.as-scope legend{margin-bottom:var(--s-1);float:left;width:100%}
+.as-check{display:inline-flex;align-items:center;gap:var(--s-2);min-height:var(--tap);color:var(--text);font-size:var(--fs-body);cursor:pointer}
+.as-check input{width:18px;height:18px;margin:0;flex:none;accent-color:var(--violet)}
+.as-swrow{display:grid;gap:var(--s-1)}
+.as-switch{display:flex;align-items:center;justify-content:space-between;gap:var(--s-3);width:100%;min-height:var(--tap);padding:0;border:0;background:none;color:var(--text);font:inherit;font-size:var(--fs-ui);cursor:pointer;text-align:left}
+.as-track{position:relative;flex:none;width:44px;height:26px;border-radius:999px;background:var(--surface);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--text) 22%,transparent);
+  transition:background-color var(--dur-2,.2s) var(--ease-standard,ease)}
+.as-track i{position:absolute;left:4px;top:4px;width:18px;height:18px;border-radius:50%;background:var(--text-2);transition:transform var(--spring-snappy-t,.31s) var(--spring-snappy,ease),background-color var(--dur-2,.2s) var(--ease-standard,ease)}
+.as-switch[aria-checked=true] .as-track{background:var(--violet);box-shadow:none}
+.as-switch[aria-checked=true] .as-track i{transform:translateX(18px);background:#fff}
+.as-live{color:var(--text-2);font-size:var(--fs-meta);font-family:var(--num);font-variant-numeric:tabular-nums}
+.as-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s-2)}
+.as-sheet .as-two .btn{min-height:var(--tap);font-size:var(--fs-body);white-space:normal;line-height:1.2}
+.as-entries summary{display:flex;align-items:center;min-height:var(--tap);color:var(--text-2);font-size:var(--fs-meta);cursor:pointer}
+.as-entries ul{list-style:none;padding:0;margin:0;display:grid}
+.as-entries li{display:flex;justify-content:space-between;gap:var(--s-3);padding:var(--s-2) 0;border-top:1px solid var(--line);font-size:var(--fs-meta);color:var(--text-2)}
+.as-entries li .muted{color:var(--muted);flex:none}
+.as-reset{padding-top:var(--s-4);border-top:1px solid var(--line)}
+.as-links{list-style:none;padding:0;margin:0;display:grid}
+.as-link{display:flex;align-items:center;justify-content:space-between;gap:var(--s-3);min-height:var(--tap);color:var(--text);font-size:var(--fs-body);text-decoration:none;border-bottom:1px solid var(--line)}
+.as-link svg{flex:none;color:var(--muted);transition:transform var(--dur-2,.2s) var(--ease-standard,ease)}
+@media (hover:hover){.as-link:hover{color:var(--violet-text)}.as-link:hover svg{transform:translateX(3px);color:var(--violet-text)}}
+
+/* ================================== PHONE: a bottom sheet ================================== */
+@media (max-width:600px){
+  .scrim.as-sheet-scrim{background:rgba(0,0,0,.5)}
+  .panel.as-sheet{--pp-t:24px;left:0;right:0;bottom:0;width:100%;height:min(88dvh,calc(100dvh - max(48px,env(safe-area-inset-top) + 16px)));
+    border-left:0;border-right:0;border-bottom:0;border-radius:12px 12px 0 0}
+  .as-sheet .panel-top{touch-action:none;padding-left:max(var(--s-4),env(safe-area-inset-left));padding-right:max(var(--s-4),env(safe-area-inset-right))}
+  .as-sheet .panel-grip{left:50%;top:10px;width:40px;height:4px;margin-left:-20px;border-radius:2px}
+  .as-tabbar,.as-askbar,.as-log,.as-ask > .as-sugg,.as-compose,.as-demo > .as-scroll{padding-left:max(var(--s-4),env(safe-area-inset-left));padding-right:max(var(--s-4),env(safe-area-inset-right))}
+  .as-msg{max-width:94%}
+}
+/* a 280px cover screen: two-up buttons stack, the scope checks take a row each */
+@media (max-width:340px){
+  .as-two{grid-template-columns:minmax(0,1fr)}
+  .as-sheet .seg button{font-size:var(--fs-meta);padding:0 var(--s-1)}
+}
+/* short landscape: the popover takes what height there is */
+@media (max-height:520px) and (min-width:601px){.panel.as-sheet{height:calc(100dvh - var(--as-b) - var(--as-size) - 24px)}}
+
+@media (prefers-reduced-motion:reduce){
+  .as-dock,.as-dock.as-away,.as-ball,.as-face,.as-track,.as-track i{transition:none!important}
+  .as-glow{animation:none!important;opacity:.4}
+}
+@media (forced-colors:active){
+  .as-face{background:ButtonText}.as-mark{color:ButtonFace}
+  .as-dot{background:Highlight}
+  .as-track{border:1px solid ButtonText}.as-switch[aria-checked=true] .as-track{background:Highlight}
+  .as-bot,.as-me{border:1px solid CanvasText}
+}

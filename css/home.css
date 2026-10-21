@@ -42,7 +42,9 @@ p{text-wrap:pretty}
 .slabs{position:absolute;left:0;top:0;width:100%;height:auto;aspect-ratio:1440/600;min-height:62%;z-index:-1}
 .s-lo{stop-color:var(--slab-lo)}.s-hi{stop-color:var(--slab-hi)}
 
-.topnav{display:flex;align-items:center;gap:32px;padding-block:24px;width:100%}
+.topnav{display:flex;align-items:center;gap:32px;padding-block:calc(24px + env(safe-area-inset-top,0px)) 24px;width:100%}
+/* short landscape phones: a slimmer nav, so the pinned bar holds less of the screen (56px once condensed) */
+@media (max-height:500px) and (orientation:landscape){.topnav{padding-block:calc(12px + env(safe-area-inset-top,0px)) 12px}}
 .brand{display:inline-flex;align-items:center;min-height:var(--tap);color:var(--text);line-height:0}
 .brand svg{height:24px;width:auto}
 .brand .brand-m{display:none}
@@ -317,7 +319,7 @@ circle.g-on{fill:var(--violet)}
   .foot-brand{grid-column:1/-1}
 }
 @media (max-width:600px){
-  .topnav{gap:var(--s-4);padding-block:var(--s-4) var(--s-2);flex-wrap:wrap}
+  .topnav{gap:var(--s-4);padding-block:calc(var(--s-4) + env(safe-area-inset-top,0px)) var(--s-2);flex-wrap:wrap}
   .nav-links{order:3;width:100%;gap:var(--s-5)}
   .hero{min-height:0}
   .hero-body{padding-block:var(--s-2) var(--s-7)}

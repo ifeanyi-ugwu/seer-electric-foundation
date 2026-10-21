@@ -1,7 +1,14 @@
 (function(){
   SeerShell.mount({product:"app",cta:"Connect wallet"});
-  var M=window.MARKETS,TYPES=["Categorical","Multi-categorical","Scalar","Multi-scalar","Conditional"],W=window.SeerWallet;
+  var ALL=window.MARKETS,M=ALL,TYPES=["Categorical","Multi-categorical","Scalar","Multi-scalar","Conditional"],W=window.SeerWallet;
   var st={cat:"All",type:"",status:"",q:"",sort:"vol",view:"grid"};
+  /* the filters the list was last loaded with (category, status, type, sort are a server query; search is local) */
+  var qs={cat:"All",type:"",status:"",sort:"vol"};
+  function snap(){return{cat:st.cat,type:st.type,status:st.status,sort:st.sort}}
+  /* data loads go through js/demo.js (delay, errors, offline, cache); without it they resolve at once, as before */
+  var DM=window.SeerDemo;
+  function slot(){return DM?DM.slot():{run:function(o){o.apply({data:o.producer(),fromCache:false,empty:false},{sync:true,shown:false})},cancel:function(){}}}
+  var pageSlot=slot(),listSlot=slot(),detSlot=slot(),pageState="ok",listErr=null,listEmpty=false;
   function h(tag,attrs,kids){var n=document.createElement(tag);for(var k in attrs||{}){if(attrs[k]==null)continue;if(k==="text")n.textContent=attrs[k];else if(k==="class")n.className=attrs[k];else if(k.slice(0,2)==="on")n[k]=attrs[k];else n.setAttribute(k,attrs[k])}
     (kids||[]).forEach(function(c){if(c!=null)n.appendChild(typeof c==="string"?document.createTextNode(c):c)});return n}
   function money(v){if(v>=1e9)return"$"+(v/1e9).toFixed(1)+"B";if(v>=1e6)return"$"+(v/1e6).toFixed(v>=1e8?0:1).replace(/\.0$/,"")+"M";if(v>=1e3)return"$"+Math.round(v/1e3)+"K";return"$"+v}
@@ -10,19 +17,19 @@
   function sfmt(v,u){return u==="$"?"$"+v:u&&/^[A-Za-z]/.test(u)?v+" "+u:v+(u||"")}
   function lead(m){if(!m.outs)return null;return m.outs.slice().sort(function(a,b){return b[1]-a[1]})[0]}
   function matches(m){
-    if(st.cat!=="All"&&m.cat!==st.cat)return false;if(st.type&&m.type!==st.type)return false;if(st.status&&m.status!==st.status)return false;
+    if(qs.cat!=="All"&&m.cat!==qs.cat)return false;if(qs.type&&m.type!==qs.type)return false;if(qs.status&&m.status!==qs.status)return false;
     if(st.q){var s=(m.q+" "+m.cat+" "+m.type+" "+(m.outs||[]).map(function(o){return o[0]}).join(" ")).toLowerCase();if(s.indexOf(st.q.toLowerCase())<0)return false}return true}
   /* Re-renders morph into the existing DOM (js/motion.js) so focus, caret and scroll never reset. */
   function patch(el,next,o){if(window.Motion)return Motion.patch(el,next,o);el.textContent="";while(next.firstChild)el.appendChild(next.firstChild)}
   /* markets created in this session lead the list, newest first, in every sort; the rest follow the sort */
-  function sorted(l){l.sort(function(a,b){return st.sort==="name"?a.q.localeCompare(b.q):b[st.sort]-a[st.sort]});
+  function sorted(l){l.sort(function(a,b){return qs.sort==="name"?a.q.localeCompare(b.q):b[qs.sort]-a[qs.sort]});
     return l.filter(function(m){return m.isNew}).sort(function(a,b){return b.isNew-a.isNew}).concat(l.filter(function(m){return!m.isNew}))}
 
   /* markets created earlier in this session (sessionStorage, so they survive a reload or a trip to another page) */
   var NEWKEY="seer-new-markets";
   function stored(){try{var v=JSON.parse(sessionStorage.getItem(NEWKEY)||"[]");return Array.isArray(v)?v:[]}catch(e){return[]}}
   function store(l){try{sessionStorage.setItem(NEWKEY,JSON.stringify(l))}catch(e){}}
-  stored().slice().reverse().forEach(function(m){if(m&&m.id&&!M.some(function(x){return x.id===m.id}))M.unshift(m)});
+  stored().slice().reverse().forEach(function(m){if(m&&m.id&&!ALL.some(function(x){return x.id===m.id}))ALL.unshift(m)});
 
   function stats(){var open=M.filter(function(m){return m.status==="Open"||m.status==="Live"}).length;
     var vol=M.reduce(function(a,m){return a+m.vol},0);var liq=M.reduce(function(a,m){return a+m.liq},0);
@@ -33,12 +40,12 @@
 
   function cats(){var el=document.getElementById("cats"),f=h("div"),sel=document.getElementById("cat-m"),all=["All"].concat(M.map(function(m){return m.cat}).filter(function(c,i,a){return a.indexOf(c)===i}));
     all.forEach(function(c){
-      f.appendChild(h("button",{class:"tab",type:"button","data-key":c,"aria-pressed":String(st.cat===c),text:c,onclick:function(){st.cat=c;cats();render()}}))});patch(el,f);
+      f.appendChild(h("button",{class:"tab",type:"button","data-key":c,"aria-pressed":String(st.cat===c),text:c,onclick:function(){st.cat=c;cats();refilter()}}))});patch(el,f);
     /* phones: the same category state as a select, so the long tab row never scrolls sideways */
     if(sel){if(sel.options.length!==all.length){U.clear(sel);all.forEach(function(c){sel.appendChild(h("option",{value:c,text:c==="All"?"All categories":c}))})}if(sel.value!==st.cat)sel.value=st.cat}}
   function types(){var el=document.getElementById("types"),f=h("div");
     [""].concat(TYPES).forEach(function(t){var n=M.filter(function(m){return!t||m.type===t}).length;
-      f.appendChild(h("button",{class:"chip",type:"button","data-key":t||"all","aria-pressed":String(st.type===t),text:t?t+" · "+n:"All types",onclick:function(){st.type=t;types();render()}}))});patch(el,f)}
+      f.appendChild(h("button",{class:"chip",type:"button","data-key":t||"all","aria-pressed":String(st.type===t),text:t?t+" · "+n:"All types",onclick:function(){st.type=t;types();refilter()}}))});patch(el,f)}
 
   function cardBody(m){
     var body=[];
@@ -79,6 +86,12 @@
     t.appendChild(tb);w.appendChild(roles(t));return f}
 
   function render(){var list=sorted(M.filter(matches)),out=document.getElementById("out"),f=h("div");
+    /* a filtered load that failed or came back empty says so in the list, with its next action; the filters stay usable */
+    if(listErr||listEmpty){document.getElementById("count").textContent="";
+      f.appendChild(listErr?DM.errorView(listErr,{level:"panel",hl:"h2",subject:"the markets",retry:function(){DM.holdFocus(out);refilter()}})
+        :DM.emptyView({level:"panel",hl:"h2",title:"No markets here yet",text:"Nothing has been created for this selection yet. Clear the filters to see every market, or create the first one.",
+          action:{text:"Clear filters",onclick:clearFilters},secondary:{text:"Create a market",onclick:function(){cmOpen()}}}));
+      patch(out,f);return}
     document.getElementById("count").textContent=list.length===M.length?M.length+" markets":list.length+" of "+M.length+" markets";
     if(!list.length)f.appendChild(h("div",{class:"empty",text:"No markets match these filters."}));
     else if(st.view==="table")f.appendChild(table(list));else{var g=h("div",{class:"mgrid"});list.forEach(function(m){g.appendChild(card(m))});f.appendChild(g)}
@@ -87,7 +100,7 @@
   /* detail panel + trade ticket */
   var lastFocus=null,flow=null,redrawTicket=null;
   function closePanel(){var r=document.getElementById("panel-root"),p=r.querySelector(".panel"),s=r.querySelector(".scrim");document.removeEventListener("keydown",esc);
-    if(flow)flow.reset();flow=null;redrawTicket=null;
+    detSlot.cancel();if(flow)flow.reset();flow=null;redrawTicket=null;
     var clear=function(){if(!p||p.isConnected)r.textContent=""};
     if(window.Motion&&p)Motion.exit([p,s],clear);else{clear();if(window.Motion&&Motion.sheetOff)Motion.sheetOff()}if(lastFocus)lastFocus.focus()}
   /* Escape closes; Tab and Shift+Tab stay inside the open panel. While the wallet sheet is open above it, it waits. */
@@ -102,7 +115,30 @@
     var a=document.createElementNS(NS,"path");a.setAttribute("class","m-area");a.setAttribute("d",d+" L300 64 L0 64 Z");a.setAttribute("fill","var(--violet)");a.setAttribute("fill-opacity",".12");s.appendChild(a);
     var p=document.createElementNS(NS,"path");p.setAttribute("class","m-line");p.setAttribute("d",d);p.setAttribute("fill","none");p.setAttribute("stroke","var(--violet)");p.setAttribute("stroke-width","2");p.setAttribute("vector-effect","non-scaling-stroke");s.appendChild(p);
     var box=h("div",{class:"spark-box"},[h("div",{class:"spark-head"},[h("span",{text:"Price history"}),h("span",{text:"Leading: "+name})]),s]);return box}
-  function openPanel(m){lastFocus=document.activeElement;var root=document.getElementById("panel-root");root.textContent="";
+  /* the sheet's body while its details load: the real tiles' labels, outcome rows, the price chart and the ticket, as placeholders */
+  function skDetail(m){var S=DM.sk,n=m.outs?Math.min(m.outs.length,4):0,k=[];
+    k.push(h("div",{class:"kv"},["Volume","Liquidity","Closes","Status"].map(function(l){return h("div",{},[h("small",{text:l}),h("b",{},[S("56%")])])})));
+    if(n){k.push(h("div",{class:"olist"},m.outs.slice(0,n).map(function(o,i){return h("div",{class:"orow"},[h("span",{},[S([62,48,56,40][i]+"%")]),S("3ch")])})))}
+    else k.push(h("div",{class:"mcard static"},[h("div",{class:"sk-q"},[DM.skBlock("sk-pfp"),h("span",{class:"sk-stack"},[DM.skBlock("sk-line","--w:80%")])]),DM.skBlock("sk-box","height:64px")]));
+    if(m.outs)k.push(h("div",{class:"spark-box"},[h("div",{class:"spark-head"},[S("9ch"),S("12ch")]),DM.skBlock("sk-box","height:64px;margin-top:8px;border-radius:4px")]));
+    k.push(h("div",{class:"ticket"},[DM.skBlock("sk-box","height:var(--ctl);width:200px;max-width:100%;border-radius:999px"),h("div",{class:"field-grp"},[h("label",{},[S("10ch")]),DM.skBlock("sk-box","height:var(--ctl);border-radius:999px")]),
+      h("div",{class:"line"},[S("12ch"),S("5ch")]),h("div",{class:"line"},[S("6ch"),S("5ch")]),DM.skBlock("sk-box","height:var(--tap)")]));
+    return h("div",{class:"dm-skel"},k)}
+  function openPanel(m){lastFocus=document.activeElement;var root=document.getElementById("panel-root");root.textContent="";detSlot.cancel();
+    /* the pinned bar (badge, the title we already know, Close) shows at once; the body loads below it */
+    var body=h("div",{class:"dm-body"}),p=h("div",{class:"panel",role:"dialog","aria-modal":"true","aria-label":m.q},[U.sheetTop(h("span",{class:"badge",text:m.isNew?"New · "+m.type:m.type}),m.q,closePanel),body]);
+    root.appendChild(h("div",{class:"scrim",onclick:closePanel}));root.appendChild(p);document.addEventListener("keydown",esc);p.querySelector(".panel-top button").focus();
+    if(window.Motion){Motion.scan(p);if(Motion.panelIn)Motion.panelIn(root)}
+    function load(){detSlot.run({key:"app:market:"+m.id,cacheLabel:"Market: "+m.q,producer:function(){return m},scope:"details",initial:true,busy:p,label:"Loading market details",
+      show:function(){U.clear(body);body.appendChild(skDetail(m))},
+      apply:function(res,info){if(!p.isConnected)return;U.clear(body);
+        if(res.empty){body.appendChild(DM.emptyView({level:"sheet",title:"No details yet",text:"This market has no details to show yet. Check again in a moment.",action:{text:"Check again",onclick:function(){DM.holdFocus(p);load()}}}));return}
+        fill(info)},
+      fail:function(e){if(!p.isConnected)return;U.clear(body);
+        body.appendChild(DM.errorView(e,{level:"sheet",subject:"the market details",retry:function(){DM.holdFocus(p);load()},back:{text:"Back to markets",onclick:closePanel},
+          titles:{notfound:"This market no longer exists"},texts:{notfound:"It may have been removed after it resolved. Go back to the list to find another market."}}))}})}
+    load();
+    function fill(info){
     var pick=0,side="Yes",amt=50;
     var price=function(){return m.outs?(side==="Yes"?m.outs[pick][1]:1-m.outs[pick][1]):.5};
     var tk=h("div",{class:"ticket","data-tx":"app"});
@@ -139,13 +175,11 @@
     if(m.outs){list=h("div",{class:"olist"},[]);var draw=function(){var f=h("div");m.outs.forEach(function(o,i){f.appendChild(h("button",{type:"button",class:"orow sel","data-key":"o"+i,"aria-pressed":String(pick===i),onclick:function(){pick=i;if(fl.step!=="form")fl.reset();draw();drawTicket()}},[h("span",{text:o[0]}),h("span",{class:"num",text:pc(o[1])})]))});patch(list,f)};draw()}
     else{list=h("div",{class:"mcard static"},cardBody(m))}
     var ld=lead(m);
-    var p=h("div",{class:"panel",role:"dialog","aria-modal":"true","aria-label":m.q},[
-      U.sheetTop(h("span",{class:"badge",text:m.isNew?"New · "+m.type:m.type}),m.q,closePanel),
-      h("div",{class:"kv"},[h("div",{},[h("small",{text:"Volume"}),h("b",{class:"num",text:money(m.vol)})]),h("div",{},[h("small",{text:"Liquidity"}),h("b",{class:"num",text:money(m.liq)})]),h("div",{},[h("small",{text:"Closes"}),h("b",{text:m.close||"Not set"})]),h("div",{},[h("small",{text:"Status"}),h("b",{text:m.status})])]),
-      list,ld?spark(m.id*37,ld[1],ld[0]):null,tk]);
+    [h("div",{class:"kv"},[h("div",{},[h("small",{text:"Volume"}),h("b",{class:"num",text:money(m.vol)})]),h("div",{},[h("small",{text:"Liquidity"}),h("b",{class:"num",text:money(m.liq)})]),h("div",{},[h("small",{text:"Closes"}),h("b",{text:m.close||"Not set"})]),h("div",{},[h("small",{text:"Status"}),h("b",{text:m.status})])]),
+      list,ld?spark(m.id*37,ld[1],ld[0]):null,tk].forEach(function(n){if(n)body.appendChild(n)});
     drawTicket();
-    root.appendChild(h("div",{class:"scrim",onclick:closePanel}));root.appendChild(p);document.addEventListener("keydown",esc);p.querySelector(".panel-top button").focus();
-    if(window.Motion){Motion.scan(p);if(Motion.panelIn)Motion.panelIn(root);Motion.stagger(p.querySelectorAll(".pt-title, .kv > div, .sel, .mcard.static, .spark-box, .ticket"),140,35);if(ld)Motion.draw(p.querySelector(".spark"),{delay:320})}}
+    /* the same entrance whether the details were at hand or had to load; a load after a skeleton starts at once */
+    if(window.Motion){Motion.scan(p);var late=info&&info.shown;Motion.stagger(p.querySelectorAll((late?"":".pt-title, ")+".kv > div, .sel, .mcard.static, .spark-box, .ticket"),late?0:140,35);if(ld)Motion.draw(p.querySelector(".spark"),{delay:late?180:320})}}}
 
   /* ======================= create a market =======================
      A sheet with the real form, a live preview drawn by the explorer's own card, and the wallet pattern on its action:
@@ -269,8 +303,12 @@
   /* closing: a market created in the sheet joins the explorer; "View in explorer" also takes you to it */
   function cmClose(view){cflow.reset();U.sheet({open:false,onClose:function(){}});
     if(!pending.length){if(cmFocus&&cmFocus.isConnected)cmFocus.focus();return}
-    var add=pending.splice(0),first=add[0];add.slice().reverse().forEach(function(m){M.unshift(m)});
-    if(!matches(first)){st.cat="All";st.type="";st.status="";st.q="";document.getElementById("q").value="";document.getElementById("status").value=""}
+    var add=pending.splice(0),first=add[0];add.slice().reverse().forEach(function(m){M.unshift(m);if(M!==ALL)ALL.unshift(m)});
+    /* the first market of an empty explorer brings the explorer back */
+    if(pageState==="empty"){pageState="ok";sections(true)}
+    if(pageState!=="ok"){if(cmFocus&&cmFocus.isConnected)cmFocus.focus();return}
+    if(!matches(first)||listErr||listEmpty){st.cat="All";st.type="";st.status="";st.q="";qs=snap();listErr=null;listEmpty=false;listSlot.cancel();document.getElementById("out").classList.remove("dm-dim");
+      document.getElementById("q").value="";document.getElementById("status").value=""}
     stats();cats();types();
     var show=function(){render();var c=document.querySelector('#out [data-key="m'+first.id+'"], #out [data-key="r'+first.id+'"]');if(!c)return;
       if(window.Motion){Motion.anim(c,[{boxShadow:"0 0 0 2px var(--violet)"},{boxShadow:"0 0 0 2px transparent"}],{duration:1600,easing:Motion.E.standard,delay:420});Motion.pop(c.querySelectorAll(".badge.new"),260)}
@@ -285,12 +323,76 @@
   W.subscribe(function(){if(redrawTicket)redrawTicket();if(cm&&document.querySelector("#sheet-root .cm-sheet"))cmDraw()});
 
   document.getElementById("q").oninput=function(e){st.q=e.target.value;render()};
-  document.getElementById("cat-m").onchange=function(e){st.cat=e.target.value;cats();render()};
-  document.getElementById("status").onchange=function(e){st.status=e.target.value;render()};
-  document.getElementById("sort").onchange=function(e){st.sort=e.target.value;render()};
-  function view(v){st.view=v;document.getElementById("vg").setAttribute("aria-pressed",String(v==="grid"));document.getElementById("vt").setAttribute("aria-pressed",String(v==="table"));render()}
+  document.getElementById("cat-m").onchange=function(e){st.cat=e.target.value;cats();refilter()};
+  document.getElementById("status").onchange=function(e){st.status=e.target.value;refilter()};
+  document.getElementById("sort").onchange=function(e){st.sort=e.target.value;refilter()};
+  function view(v){st.view=v;document.getElementById("vg").setAttribute("aria-pressed",String(v==="grid"));document.getElementById("vt").setAttribute("aria-pressed",String(v==="table"));if(pageState==="ok"&&!pageSlot.pending)render()}
   document.getElementById("vg").onclick=function(){view("grid")};document.getElementById("vt").onclick=function(){view("table")};
-  stats();cats();types();render();
+
+  /* ======================= loading =======================
+     The page's markets load once (skeleton, error or empty state in place of the list), then a category, status,
+     type or sort change is a new query for the list alone: what is on screen dims under a sweep until the answer
+     arrives, and a newer query always wins. Search filters the loaded markets at once. */
+  var wrap=document.querySelector("#main > .wrap"),statsEl=document.getElementById("stats"),filtersEl=wrap.querySelector(".filters"),toolbarEl=wrap.querySelector(".toolbar"),
+      countEl=document.getElementById("count"),outEl=document.getElementById("out"),catsEl=document.getElementById("cats"),typesEl=document.getElementById("types");
+  var pageBox=h("div",{class:"dm-pagebox",hidden:""});wrap.insertBefore(pageBox,wrap.firstChild);
+  function sections(on){[statsEl,filtersEl,countEl,outEl].forEach(function(n){n.hidden=!on});pageBox.hidden=on;if(on)U.clear(pageBox)}
+  function skeleton(){var S=DM.sk;sections(true);
+    /* the tiles keep their keys, so the real ones morph into these and only the figures change */
+    U.clear(statsEl);["Open or live","Total volume","Liquidity"].forEach(function(l){statsEl.appendChild(h("div",{class:"dm-skel","data-key":l},[h("small",{text:l}),h("b",{class:"num"},[S(l==="Open or live"?"2ch":"5ch")])]))});
+    U.clear(catsEl);["All","Politics","Sports","Business","Crypto","Pop Culture","Elections","Weather","Science"].forEach(function(c,i){catsEl.appendChild(h("span",{class:"tab dm-skchip","aria-hidden":"true",style:"--sk-d:"+i*40+"ms",text:c}))});
+    U.clear(typesEl);["All types"].concat(TYPES.map(function(t){return t+" · 00"})).forEach(function(c,i){typesEl.appendChild(h("span",{class:"chip dm-skchip","aria-hidden":"true",style:"--sk-d:"+i*40+"ms",text:c}))});
+    toolbarEl.classList.add("dm-skz");filtersEl.inert=true;
+    countEl.textContent="";countEl.appendChild(S("9ch"));
+    U.clear(outEl);outEl.appendChild(skList(st.view==="table"))}
+  /* placeholder cards (or table rows) in the list's own layout */
+  function skList(table){var S=DM.sk,f=h("div",{class:"dm-skel"});
+    if(table){var tb=h("tbody");for(var i=0;i<8;i++)tb.appendChild(h("tr",{class:"dm-skr",style:"--i:"+i},[h("td",{class:"mq c-q"},[S([70,54,82,60,66,48,74,58][i]+"%")]),h("td",{class:"c-ty"},[S("10ch")]),h("td",{class:"num c-lo"},[S("80%")]),
+        h("td",{class:"r num c-vo"},[S("5ch")]),h("td",{class:"r num c-li"},[S("5ch")]),h("td",{class:"c-cl"},[S("6ch")]),h("td",{class:"c-st"},[S("5ch")])]));
+      var hd=h("tr");["Market","Type","Leading outcome","Volume","Liquidity","Closes","Status"].forEach(function(c,k){hd.appendChild(h("th",{scope:"col",class:k===3||k===4?"r":"",text:c}))});
+      f.appendChild(h("div",{class:"tbl-wrap rtbl app-tbl","aria-hidden":"true"},[h("table",{},[h("thead",{},[hd]),tb])]));return f}
+    var g=h("div",{class:"mgrid","aria-hidden":"true"});
+    [[92,58,3],[84,0,2],[96,70,3],[78,0,2],[88,52,3],[74,0,2],[90,64,2],[80,0,3]].forEach(function(c,i){
+      g.appendChild(h("div",{class:"mcard static dm-skc",style:"--i:"+i},[h("div",{class:"sk-q"},[DM.skBlock("sk-pfp"),h("span",{class:"sk-stack"},[DM.skBlock("sk-line lg","--w:"+c[0]+"%;height:14px")].concat(c[1]?[DM.skBlock("sk-line","--w:"+c[1]+"%;height:14px")]:[]))])].concat(
+        [0,1,2].slice(0,c[2]).map(function(k){return h("div",{class:"sk-row"},[DM.skBlock("sk-line","--w:"+[42,30,48][k]+"%"),DM.skBlock("sk-pill")])}),
+        [h("div",{class:"sk-foot"},[DM.skBlock("sk-line","--w:38%"),DM.skBlock("sk-pill")])])))});
+    f.appendChild(g);return f}
+  function unskeleton(){toolbarEl.classList.remove("dm-skz");filtersEl.inert=false}
+  function filtered(){return st.cat!=="All"||st.type||st.status||st.q}
+  function clearFilters(){st.cat="All";st.type="";st.status="";st.q="";document.getElementById("q").value="";document.getElementById("status").value="";
+    cats();types();if(pageState==="ok")refilter();else load({initial:true})}
+  function modal(){return[].some.call(document.querySelectorAll('[aria-modal="true"]'),function(n){return!n.closest("[inert]")})}
+  function load(o){o=o||{};listSlot.cancel();outEl.classList.remove("dm-dim");
+    pageSlot.run({key:"app:markets",producer:function(){return ALL},scope:"page",force:o.force,initial:true,busy:wrap,label:"Loading markets",
+      empty:function(){return ALL.filter(function(m){return m.isNew})},
+      show:skeleton,
+      apply:function(res,info){unskeleton();M=res.data;qs=snap();listErr=null;listEmpty=false;
+        if(!M.length){pageState="empty";sections(false);
+          DM.renderEmpty(pageBox,{level:"page",kind:"Nothing here yet",title:"No markets yet",text:"Markets appear here as soon as someone creates one. Start the first one, it takes a minute.",
+            action:{text:"Create a market",onclick:function(){cmOpen()}},secondary:filtered()?{text:"Clear filters",onclick:clearFilters}:null,focus:o.retried&&!modal()});return}
+        pageState="ok";sections(true);
+        if(o.retried&&!modal())DM.focusFirst(wrap);
+        if(!info.shown){U.clear(statsEl);U.clear(catsEl);U.clear(typesEl);U.clear(outEl)}
+        stats();cats();types();render();
+        if(!window.Motion)return;
+        /* after a skeleton the tiles morph in place and count up; the cards cross over (js/motion.js) and the rest
+           reveal as they scroll in, exactly as on a first load */
+        if(info.shown)Motion.countIn(statsEl.querySelectorAll("b"),80);else Motion.reveal("#stats > div",{onIn:Motion.dataIn});
+        Motion.reveal("#cats, .toolbar, #types, #count",{rise:8});Motion.reveal("#out .mcard, #out tbody tr")},
+      fail:function(e,info){unskeleton();pageState="error";sections(false);
+        DM.renderError(pageBox,e,{level:"page",subject:"the markets",retry:function(){DM.holdFocus(wrap);load({initial:true,retried:true})},
+          back:{text:"Back to home",href:"index.html"},focus:!modal()});
+        if(e.kind==="network")DM.onOnline(retryOnline)}})}
+  function retryOnline(){if(pageState==="error")load({initial:true})}
+  function refilter(){if(pageState!=="ok"){return}
+    var q=snap(),key="app:markets?"+[q.cat,q.status,q.type,q.sort].join("|");
+    listSlot.run({key:key,cacheLabel:"Explorer markets, filtered",producer:function(){return ALL},scope:"page",busy:outEl,label:"Loading markets",empty:function(){return[]},
+      show:function(){outEl.classList.add("dm-dim")},
+      apply:function(res){outEl.classList.remove("dm-dim");qs=q;listErr=null;listEmpty=!!res.empty;render()},
+      fail:function(e){outEl.classList.remove("dm-dim");qs=q;listErr=e;listEmpty=false;render();if(e.kind==="network")DM.onOnline(refilter)}})}
+  if(!DM){stats();cats();types();render()}
+  else{DM.page({name:"app",replay:function(o){if(document.querySelector("#panel-root .panel"))closePanel();if(document.querySelector("#sheet-root .cm-sheet"))cmClose(false);load({initial:true,force:o.force})}});
+    load({initial:true})}
   if(window.Motion){Motion.ready();
-    Motion.reveal("#stats > div",{onIn:Motion.dataIn});Motion.reveal("#cats, .toolbar, #types, #count",{rise:8});Motion.reveal("#out .mcard, #out tbody tr")}
+    if(!DM){Motion.reveal("#stats > div",{onIn:Motion.dataIn});Motion.reveal("#cats, .toolbar, #types, #count",{rise:8});Motion.reveal("#out .mcard, #out tbody tr")}}
 })();

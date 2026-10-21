@@ -439,12 +439,56 @@ function navInd(){var nav=doc.querySelector(".shell-products");if(!nav||nav.__in
     nav.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a");if(!a||a===cur)return;
       try{sessionStorage.setItem("m-nav",JSON.stringify({l:cur.offsetLeft,w:cur.offsetWidth,s:nav.scrollLeft,t:Date.now(),h:location.pathname}))}catch(x){}})}}
 
-/* ---------- header: condense after 24px; expose its height for scroll-padding ---------- */
-function condense(bar){if(!bar||bar.__cd)return;bar.__cd=1;
-  var s=doc.createElement("div");s.className="m-sentinel";s.setAttribute("aria-hidden","true");doc.body.insertBefore(s,doc.body.firstChild);
-  if("IntersectionObserver" in window)new IntersectionObserver(function(es){bar.classList.toggle("is-condensed",!es[es.length-1].isIntersecting)}).observe(s);
-  function hv(){root.style.scrollPaddingTop=(bar.offsetHeight-(bar.__cut||0)+16)+"px"}
-  hv();if(window.ResizeObserver)new ResizeObserver(hv).observe(bar)}
+/* ---------- page header: pinned, condensing like the sheet bar, the secondary row tucked while scrolling down ----------
+   The same states and thresholds as sheetHead: .m-scrolled as soon as the page moves, .m-cond past 24px (back below
+   12px). Headers with a second row (the product nav on phones, the landing's Documents and Blog row) add .m-tuck:
+   16px of scrolling down, once past the header's own height, tucks that row under the core row; 12px back up, the
+   top of the page, or focus inside the row brings it back, and it never tucks while it holds focus. The scroll
+   position is clamped to the scrollable range, so a rubber-band bounce reads as no movement. Everything the CSS
+   moves is measured here from the layout (offsets ignore transforms): the content rises by --hd-d (half the top
+   padding, at most 10px), the ground by --hd-rc so the bottom padding matches the condensed top one, or by --hd-rt
+   to just below the core row when tucked; --hd-n (the difference) lifts and clips the second row so its bottom edge
+   travels with the ground. Classes and the root's --hdr-h (the visible height, for sticky table heads) change only
+   when a threshold is crossed; scroll-padding-top holds the condensed height with the second row showing, plus 12px,
+   so focus and anchors never land under it. o: {core, row2} selectors inside the bar; spacer, the element that holds
+   the fixed bar's place in the flow (kept at the bar's height). */
+var HD_ON=24,HD_OFF=12,HD_DOWN=16,HD_UP=12,satProbe=null;
+function sat(){if(!satProbe){satProbe=doc.createElement("div");satProbe.setAttribute("aria-hidden","true");
+    satProbe.style.cssText="position:absolute;top:0;left:0;width:0;visibility:hidden;pointer-events:none;height:env(safe-area-inset-top,0px)";doc.body.appendChild(satProbe)}
+  return satProbe.offsetHeight}
+function offIn(el,bar){var y=0;while(el&&el!==bar){y+=el.offsetTop;el=el.offsetParent}return y}
+var HD=null;
+function pinHead(bar,o){if(!bar||bar.__ph)return;bar.__ph=1;o=o||{};
+  var core=[].slice.call(bar.querySelectorAll(o.core||":scope > *")),row2=o.row2?bar.querySelector(o.row2):null,
+      g={H:0,rc:0,rt:0,rows:false},st={s:null,c:null,t:null},last=-1,acc=0,q=0,hv=null;
+  function measure(){var H=bar.offsetHeight,top=1e9,bot=0,all=0,i,el,t,b;if(!H)return;
+    for(i=0;i<core.length;i++){el=core[i];if(!el.offsetHeight)continue;t=offIn(el,bar);b=t+el.offsetHeight;top=Math.min(top,t);bot=Math.max(bot,b)}
+    if(top>H)return;all=bot;
+    var r2=row2&&row2.offsetHeight?offIn(row2,bar):-1,rows=r2>=bot-1;if(r2>=0)all=Math.max(all,r2+row2.offsetHeight);
+    var pad=Math.max(0,top-sat()),d=Math.max(2,Math.min(10,Math.round(pad/2))),pc=pad-d,
+        rc=Math.max(0,Math.round(H-(all-d+pc))),rt=rows?Math.max(rc,Math.round(H-(bot-d+pc))):rc;
+    g={H:H,rc:rc,rt:rt,rows:rows};
+    bar.style.setProperty("--hd-d",d+"px");bar.style.setProperty("--hd-rc",rc+"px");bar.style.setProperty("--hd-rt",rt+"px");bar.style.setProperty("--hd-n",(rt-rc)+"px");
+    if(o.spacer&&o.spacer.offsetHeight!==H)o.spacer.style.minHeight=H+"px";
+    root.style.scrollPaddingTop=(H-rc+12)+"px";last=-1;upd();show(true)}
+  function focusIn(){var a=doc.activeElement;return!!(row2&&a&&row2.contains(a))}
+  function show(force){var h=g.H-(st.t?g.rt:st.c?g.rc:0);if(force||h!==hv){hv=h;root.style.setProperty("--hdr-h",h+"px")}}
+  function upd(){q=0;var max=Math.max(0,root.scrollHeight-innerHeight),y=Math.max(0,Math.min(scrollY,max)),dy=last<0?0:y-last;last=y;
+    var s=y>0,c=st.c?y>HD_OFF:y>HD_ON,t=!!st.t;
+    if(!g.rows||y<=HD_OFF){t=false;acc=0}
+    else if(dy){acc=(acc>0)===(dy>0)?acc+dy:dy;if(acc>HD_DOWN&&y>g.H)t=true;else if(acc<-HD_UP)t=false}
+    if(t&&focusIn())t=false;
+    if(s!==st.s){st.s=s;bar.classList.toggle("m-scrolled",s)}
+    if(c!==st.c){st.c=c;bar.classList.toggle("m-cond",c)}
+    if(t!==st.t){st.t=t;bar.classList.toggle("m-tuck",t)}
+    show()}
+  addEventListener("scroll",function(){if(!q)q=requestAnimationFrame(upd)},{passive:true});
+  /* keyboard focus moving into a tucked row brings it back at once */
+  if(row2)row2.addEventListener("focusin",function(){acc=0;if(st.t){st.t=false;bar.classList.remove("m-tuck");show()}});
+  measure();if(window.ResizeObserver)new ResizeObserver(measure).observe(bar);
+  /* anchors: the header height to clear at a destination (scrolling down past the header tucks its second row) */
+  HD=function(y){return(y>Math.max(scrollY,g.H)&&g.rows?g.H-g.rt:y>HD_ON?g.H-g.rc:g.H)+12}}
+M.pinHead=pinHead;
 
 /* ---------- press, hover lift, tilt: delegated, so re-rendered controls need no setup ---------- */
 var PRESS=".btn,.chip,.tab,.pick,.sel,.mcard,.pill,.btn-v,.btn-w,.app,.shell-products a,.shell-icon,.theme-toggle,.seg > button,th button,.rtbl tr[tabindex],input[type=checkbox]";
@@ -590,7 +634,8 @@ M.scrollTo=function(y,done){if(!SP||reduced()){scrollTo(0,y);if(done)done();retu
   SP.drive("scroll",{y:y},"glide",{init:{y:scrollY},apply:function(v){scrollTo({top:v.y,left:0,behavior:"instant"})},done:function(){off();if(done)done()},eps:.5})};
 function anchors(){doc.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest('a[href^="#"]');if(!a||reduced()||!SP||e.defaultPrevented)return;
   var id=a.getAttribute("href").slice(1),t=id&&doc.getElementById(id);if(!t)return;e.preventDefault();
-  var pad=parseFloat(getComputedStyle(root).scrollPaddingTop)||0,y=t.getBoundingClientRect().top+scrollY-pad;y=Math.max(0,Math.min(y,root.scrollHeight-innerHeight));
+  var top=t.getBoundingClientRect().top+scrollY,pad=parseFloat(getComputedStyle(root).scrollPaddingTop)||0,y=top-pad;
+  if(HD)y=top-HD(top-HD(top));y=Math.max(0,Math.min(y,root.scrollHeight-innerHeight));
   try{history.pushState(null,"","#"+id)}catch(x){}
   M.scrollTo(y,function(){if(!t.hasAttribute("tabindex"))t.setAttribute("tabindex","-1");t.focus({preventScroll:true})})})}
 
@@ -602,13 +647,10 @@ function leave(){if("CSSViewTransitionRule" in window)return;
 
 /* ---------- landing ---------- */
 function landingNav(){var nav=doc.querySelector(".home .topnav");if(!nav)return;
-  function measure(){var h=nav.offsetHeight,links=nav.querySelector(".nav-links"),end=nav.querySelector(".nav-end"),brand=nav.querySelector(".brand");
-    var wrapped=!!(links&&brand&&links.offsetTop>brand.offsetTop+8),cut=20,shift=10;
-    if(wrapped&&end){cut=Math.max(0,h-(end.offsetTop+end.offsetHeight+12));shift=0}
-    /* variables live on the nav/hero, not :root, so updating them never restyles the whole document */
-    nav.classList.toggle("is-wrapped",wrapped);if(hero)hero.style.setProperty("--m-nav-h",h+"px");nav.style.setProperty("--m-cut",cut+"px");nav.style.setProperty("--m-shift",shift+"px");nav.__cut=cut}
+  /* the hero keeps the fixed nav's height as its top padding (a variable on the hero, not :root, so it never restyles the document) */
+  function measure(){if(hero)hero.style.setProperty("--m-nav-h",nav.offsetHeight+"px")}
   var hero=nav.closest(".hero");root.classList.add("m-nav-fixed");measure();if(window.ResizeObserver)new ResizeObserver(measure).observe(nav);
-  condense(nav)}
+  pinHead(nav,{core:".brand,.nav-end",row2:".nav-links"})}
 function progress(){var bar=doc.createElement("div");bar.className="m-progress";bar.setAttribute("aria-hidden","true");bar.appendChild(doc.createElement("i"));doc.body.appendChild(bar);
   var i=bar.firstChild,q=0,set=function(p){i.style.transform="scaleX("+p.toFixed(4)+")"};
   function upd(){q=0;var max=root.scrollHeight-innerHeight,p=max>0?Math.min(1,Math.max(0,scrollY/max)):0;
@@ -637,7 +679,7 @@ function landing(){try{sessionStorage.setItem("seer-hero","1")}catch(e){}
   requestAnimationFrame(function(){landingNav();progress();parallaxFallback();pauseOff(".dots,.hero");phys();focusRing();anchors();leave()})}
 
 /* ---------- product pages: called by each page script after its first render ---------- */
-M.ready=function(){requestAnimationFrame(function(){navInd();condense(doc.querySelector(".shell-bar"));scan(doc);phys();focusRing();anchors();leave()})};
+M.ready=function(){requestAnimationFrame(function(){navInd();pinHead(doc.querySelector(".shell-bar"),{core:".shell-brand,.shell-end",row2:".shell-products",spacer:doc.getElementById("shell")});scan(doc);phys();focusRing();anchors();leave()})};
 M.frame=function(f){requestAnimationFrame(f)};
 
 if(doc.body&&doc.body.classList.contains("home"))landing();

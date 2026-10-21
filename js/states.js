@@ -41,6 +41,28 @@
       pseudoElement:retreat?"::view-transition-old(root)":"::view-transition-new(root)",fill:"both"})},done);
     vt.finished.then(done,done)})}
 
+  /* ---------- header: pinned at the top at every size (css/states.css) and condensed the way the site's headers are
+     (js/motion.js pinHead), self-contained here: .m-scrolled as soon as the page moves, .m-cond past 24px and back
+     below 12px. The amounts are measured from the layout: the content rises by half its top padding (at most 10px)
+     and the ground so far that the bottom padding matches the condensed top one. One passive scroll listener, read
+     once per frame; classes change only when a threshold is crossed. The stage's top padding holds the fixed header's
+     place and is kept equal to its height. Focus and anchors stop below the condensed bar
+     (scroll-padding-top), and --hdr-h holds its visible height, as on the tool pages. ---------- */
+  var hd=$(".st-top");
+  if(hd){var hs=null,hc=null,hq=0,hH=0,hrc=0,sat=d.createElement("div");
+    sat.setAttribute("aria-hidden","true");sat.style.cssText="position:absolute;top:0;left:0;width:0;visibility:hidden;pointer-events:none;height:env(safe-area-inset-top,0px)";body.appendChild(sat);
+    var hv=function(){root.style.setProperty("--hdr-h",(hH-(hc?hrc:0))+"px")};
+    var hm=function(){var H=hd.offsetHeight,top=1e9,bot=0;
+      Array.prototype.forEach.call(hd.children,function(c){if(!c.offsetHeight)return;top=Math.min(top,c.offsetTop);bot=Math.max(bot,c.offsetTop+c.offsetHeight)});
+      if(!H||top>H)return;var pad=Math.max(0,top-sat.offsetHeight),dd=Math.max(2,Math.min(10,Math.round(pad/2)));
+      hH=H;hrc=Math.max(0,Math.round(H-(bot-dd+pad-dd)));hd.style.setProperty("--hd-d",dd+"px");hd.style.setProperty("--hd-rc",hrc+"px");
+      var sp=hd.parentNode;if(parseFloat(getComputedStyle(sp).paddingTop)!==H)sp.style.paddingTop=H+"px";
+      root.style.scrollPaddingTop=(H-hrc+12)+"px";hv()};
+    var hu=function(){hq=0;var max=Math.max(0,root.scrollHeight-innerHeight),y=Math.max(0,Math.min(window.pageYOffset,max)),s=y>0,c=hc?y>12:y>24;
+      if(s!==hs){hs=s;hd.classList.toggle("m-scrolled",s)}if(c!==hc){hc=c;hd.classList.toggle("m-cond",c);hv()}};
+    addEventListener("scroll",function(){if(!hq)hq=requestAnimationFrame(hu)},{passive:true});
+    hm();hu();if(window.ResizeObserver)new ResizeObserver(hm).observe(hd);else addEventListener("resize",hm)}
+
   /* ---------- in-page links: the 404 page sets <base href> to the site root, which would send "#main" to the
      home page. Point fragment links at this document instead. ---------- */
   Array.prototype.forEach.call(d.querySelectorAll('a[href^="#"]'),function(a){a.setAttribute("href",location.href.split("#")[0]+a.getAttribute("href"))});
