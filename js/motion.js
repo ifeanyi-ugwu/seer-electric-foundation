@@ -502,7 +502,7 @@ M.theme=function(apply,btn){if(reduced()){apply();return}
     var back=root.dataset.theme!=="light",c0="circle(0px at "+x+"px "+y+"px)",c1="circle("+R+"px at "+x+"px "+y+"px)";
     root.classList.add("m-vt-theme");if(back)root.classList.add("m-vt-back");
     try{vt=doc.startViewTransition(apply)}catch(e){root.classList.remove("m-vt-theme","m-vt-back");apply();return}
-    vt.ready.then(function(){root.animate({clipPath:back?[c1,c0]:[c0,c1]},{duration:D.l,easing:back?E.accel:E.decel,fill:"forwards",pseudoElement:back?"::view-transition-old(root)":"::view-transition-new(root)"})}).catch(function(){});
+    vt.ready.then(function(){root.animate({clipPath:back?[c1,c0]:[c0,c1]},{duration:D.l,easing:E.decel,fill:"forwards",pseudoElement:back?"::view-transition-old(root)":"::view-transition-new(root)"})}).catch(function(){});
     vt.finished.then(done,done);function done(){root.classList.remove("m-vt-theme","m-vt-back")}return}
   root.classList.add("m-theming");apply();setTimeout(function(){root.classList.remove("m-theming")},D.m+60)};
 
