@@ -550,26 +550,29 @@ M.exit=function(els,done){els=els.filter(Boolean);M.sheetOff();if(reduced()||!el
     var a=el.animate(kf,{duration:dur,easing:E.accel,fill:"forwards"});a.onfinish=a.oncancel=function(){if(--n===0)done()}})};
 
 /* ---------- theme: the icon turns on a spring, then a circular reveal from the toggle; colour cross-fade fallback ---------- */
+/* Darkness is the absence of light, so light leads: going to light, light radiates out of the toggle; going to dark, the light is
+   withdrawn into the toggle and the dark is what is left behind. Set LIGHT_LEADS to false for the old "dark spreads out" version. */
+var LIGHT_LEADS=true;
 M.theme=function(apply,btn){if(reduced()){apply();return}
-  var svg=btn&&btn.querySelector&&btn.querySelector("svg"),toLight=root.dataset.theme!=="light",keep=null;
-  /* the icon turns on its own spring; going to light it gets a springier curve so it turns, overshoots a touch and rests about when the dark has closed into it */
+  var svg=btn&&btn.querySelector&&btn.querySelector("svg"),toLight=root.dataset.theme!=="light",keep=null,
+      retreat=LIGHT_LEADS?!toLight:toLight; /* the retreating layer is the old view, shrinking into the toggle */
+  /* the icon turns on its own spring; on the retreating direction it gets a springier curve so it turns, overshoots a touch and rests about when the layer has closed into it */
   if(svg&&SP){var full=btn.classList.contains("theme-toggle")?180:90,from=toLight?0:full,to=toLight?full:0;
-    drive(svg,{r:to},toLight?{k:380,c:23}:"snappy",{init:{r:from},eps:.2})}
+    drive(svg,{r:to},retreat?{k:380,c:23}:"snappy",{init:{r:from},eps:.2})}
   if(doc.startViewTransition&&btn&&btn.getBoundingClientRect){var r=btn.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,
       R=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y)),vt,c0="circle(0px at "+x+"px "+y+"px)",c1="circle("+R+"px at "+x+"px "+y+"px)",
-      dur=toLight?Math.round(D.l*1.3):D.l;
-    /* to dark: the new theme spreads out of the toggle. To light: the dark is pulled back into it, so the toggle reads as where the dark lives */
-    root.classList.add("m-vt-theme");if(toLight)root.classList.add("m-vt-back");
-    /* the toggle gets its own layer above both themes, so its icon stays visible while the dark pulls back over it */
+      dur=retreat?Math.round(D.l*1.3):D.l;
+    root.classList.add("m-vt-theme");if(retreat)root.classList.add("m-vt-back");
+    /* the toggle gets its own layer above both themes, so its icon stays visible while the old view closes over it */
     btn.style.viewTransitionName="m-theme-toggle";
-    if(toLight){/* keep the toggle in its dark-theme colours while the dark closes in, so the turn reads on the dark */
+    if(retreat){/* keep the toggle in the colours of the view that is closing in, so the turn reads against it */
       var cs=getComputedStyle(btn);keep={c:cs.color,b:cs.borderColor,g:cs.backgroundColor};
       btn.style.color=keep.c;btn.style.borderColor=keep.b;btn.style.backgroundColor=keep.g}
     var released=0;function release(){if(released||!keep)return;released=1;btn.style.transition="color 180ms,border-color 180ms,background-color 180ms";
       btn.style.color=btn.style.borderColor=btn.style.backgroundColor="";setTimeout(function(){btn.style.transition=""},300)}
     try{vt=doc.startViewTransition(apply)}catch(e){root.classList.remove("m-vt-theme","m-vt-back");btn.style.viewTransitionName="";release();apply();return}
-    if(toLight)setTimeout(release,Math.round(dur*.64));
-    vt.ready.then(function(){root.animate({clipPath:toLight?[c1,c0]:[c0,c1]},{duration:dur,easing:E.decel,fill:"forwards",pseudoElement:toLight?"::view-transition-old(root)":"::view-transition-new(root)"})}).catch(function(){});
+    if(retreat)setTimeout(release,Math.round(dur*.64));
+    vt.ready.then(function(){root.animate({clipPath:retreat?[c1,c0]:[c0,c1]},{duration:dur,easing:E.decel,fill:"forwards",pseudoElement:retreat?"::view-transition-old(root)":"::view-transition-new(root)"})}).catch(function(){});
     vt.finished.then(done,done);function done(){root.classList.remove("m-vt-theme","m-vt-back");btn.style.viewTransitionName="";release()}return}
   root.classList.add("m-theming");apply();setTimeout(function(){root.classList.remove("m-theming")},D.m+60)};
 

@@ -23,15 +23,22 @@
     if(reduced()){go();return}
     if(!d.startViewTransition){root.classList.add("st-xfade");go();setTimeout(function(){root.classList.remove("st-xfade")},360);return}
     var r=tg.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,R=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y)),
-      toDark=next==="dark",c0="circle(0px at "+x+"px "+y+"px)",c1="circle("+R+"px at "+x+"px "+y+"px)",vt;
-    /* to dark: the new theme spreads out of the toggle. To light: the dark is pulled back into it. */
-    root.classList.add("st-vt");if(!toDark)root.classList.add("st-vt-back");
-    function done(){root.classList.remove("st-vt","st-vt-back")}
+      retreat=next==="dark",dur=retreat?676:520,c0="circle(0px at "+x+"px "+y+"px)",c1="circle("+R+"px at "+x+"px "+y+"px)",vt,keep=null,released=0;
+    /* darkness is the absence of light, so light leads: to light, the new theme radiates out of the toggle; to dark, the light is
+       withdrawn into the toggle and the dark is what is left behind */
+    root.classList.add("st-vt");if(retreat)root.classList.add("st-vt-back");
+    /* the toggle rides above both themes, in the colours of the view that is closing in, so its turn reads against it */
+    tg.style.viewTransitionName="st-toggle";
+    if(retreat){var cs=getComputedStyle(tg);keep=1;tg.style.color=cs.color;tg.style.borderColor=cs.borderColor;tg.style.backgroundColor=cs.backgroundColor}
+    function release(){if(released||!keep)return;released=1;tg.style.transition="color 180ms,border-color 180ms,background-color 180ms";
+      tg.style.color=tg.style.borderColor=tg.style.backgroundColor="";setTimeout(function(){tg.style.transition=""},300)}
+    function done(){root.classList.remove("st-vt","st-vt-back");tg.style.viewTransitionName="";release()}
     try{vt=d.startViewTransition(go)}catch(e){done();go();return}
     /* safety: if the browser never gets to the update (a stalled capture), skip the transition and switch anyway */
     setTimeout(function(){if(!did){try{vt.skipTransition()}catch(e){}go();done()}},500);
-    vt.ready.then(function(){root.animate({clipPath:toDark?[c0,c1]:[c1,c0]},{duration:toDark?520:420,easing:toDark?"cubic-bezier(.05,.7,.1,1)":"cubic-bezier(.3,0,.8,.15)",
-      pseudoElement:toDark?"::view-transition-new(root)":"::view-transition-old(root)",fill:"both"})},done);
+    if(retreat)setTimeout(release,Math.round(dur*.64));
+    vt.ready.then(function(){root.animate({clipPath:retreat?[c1,c0]:[c0,c1]},{duration:dur,easing:"cubic-bezier(.05,.7,.1,1)",
+      pseudoElement:retreat?"::view-transition-old(root)":"::view-transition-new(root)",fill:"both"})},done);
     vt.finished.then(done,done)})}
 
   /* ---------- in-page links: the 404 page sets <base href> to the site root, which would send "#main" to the
