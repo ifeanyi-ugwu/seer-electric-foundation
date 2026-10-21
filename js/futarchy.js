@@ -64,20 +64,25 @@ function skDetail(){var S=DM.sk,B=DM.skBlock;
 
 function list(){var root=document.getElementById("list"),el=h("div");
  el.appendChild(h("div",{class:"muted list-label",text:"Active proposals · "+P.length}));
- P.forEach(function(p){var d=delta(p);el.appendChild(h("button",{class:"pick",type:"button","data-key":"p"+p.id,"aria-pressed":String(p===sel),onclick:function(){if(sel===p)return;flow.reset();sel=p;list();loadProposal()}},[
+ P.forEach(function(p){var d=delta(p);el.appendChild(h("button",{class:"pick",type:"button","data-key":"p"+p.id,"aria-pressed":String(p===sel),onclick:function(){if(sel===p)return;flow.reset();sel=p;list();headFocus=U.narrow.matches;loadProposal();toDetail()}},[
   h("b",{text:"#"+p.id+" "+p.t}),h("span",{class:"muted",text:p.metric}),
   h("div",{class:"line"},[h("span",{class:"num "+(d.good?"pos":"neg"),text:d.arrow+d.text+(d.good?" · better":" · worse")}),h("span",{class:"muted num",text:"vote ends in "+p.vote.end})])]))});U.patch(root,el)}
+/* on a tablet or phone the detail sits below the list, so choosing a proposal scrolls its heading into view and focuses it once the detail has drawn */
+var headFocus=false;
+function toDetail(){if(!U.narrow.matches)return;var d=document.querySelector("#detail .dhead");if(!d)return;
+ var y=d.getBoundingClientRect().top+scrollY-(parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)||0);y=Math.max(0,Math.min(y,document.documentElement.scrollHeight-innerHeight));
+ if(window.Motion&&!Motion.reduced())Motion.scrollTo(y);else scrollTo(0,y)}
 function detail(animate){var p=view.p,d=delta(p),root=document.getElementById("detail"),el=h("div");
  /* a proposal that failed to load: its title (known from the list) and the error, in place of the panels */
  if(det.state==="error"){
-  el.appendChild(h("div",{class:"dhead"},[h("span",{class:"badge",text:"Conditional market · Proposal #"+sel.id}),h("h2",{text:sel.t})]));
+  el.appendChild(h("div",{class:"dhead"},[h("span",{class:"badge",text:"Conditional market · Proposal #"+sel.id}),h("h2",{text:sel.t,tabindex:"-1"})]));
   el.appendChild(DM.errorView(det.err,{level:"panel",subject:"this proposal",retry:function(){DM.holdFocus(root);loadProposal()},
    back:{text:"Back to the first proposal",onclick:function(){flow.reset();sel=P[0];list();loadProposal()}},titles:{notfound:"This proposal no longer exists"},
    texts:{notfound:"It may have been withdrawn by the DAO. Pick another proposal from the list."}}));
-  U.patch(root,el,{animate:animate!==false});return}
+  U.patch(root,el,{animate:animate!==false});focusHead();return}
  /* Each figure has one home: pass/fail values in the fork, the change under pass in the fork and the list,
     the reading in the notice, the price of a branch in the ticket. */
- var head=h("div",{class:"dhead"},[h("span",{class:"badge",text:"Conditional market · Proposal #"+p.id}),h("h2",{text:p.t})]);
+ var head=h("div",{class:"dhead"},[h("span",{class:"badge",text:"Conditional market · Proposal #"+p.id}),h("h2",{text:p.t,tabindex:"-1"})]);
  var fork=U.svg("svg",{class:"fork-lines",viewBox:"0 0 200 40",preserveAspectRatio:"none","aria-hidden":"true"});
  fork.appendChild(U.svg("path",{d:"M100 0V12C100 24 50 22 50 40",stroke:"var(--pos)","vector-effect":"non-scaling-stroke"}));
  fork.appendChild(U.svg("path",{d:"M100 0V12C100 24 150 22 150 40",stroke:"var(--neg)","stroke-dasharray":"5 4","vector-effect":"non-scaling-stroke"}));
@@ -108,7 +113,8 @@ function detail(animate){var p=view.p,d=delta(p),root=document.getElementById("d
   t.appendChild(h("div",{class:"field-grp t-b"},[W.amountLabel("amt","Amount (USDC)"),inp,W.amountErr("amt",err)]));
   var pb=W.placeBtn({extra:true,onPlace:place});pb.classList.add("t-b");t.appendChild(pb);
   t.appendChild(W.hint({extra:"If the other branch happens, this trade is refunded.",cls:"t-b",after:focusPlace}))}
- [head,two,ch,t].forEach(function(n){el.appendChild(n)});U.patch(root,el,{animate:animate!==false})}
+ [head,two,ch,t].forEach(function(n){el.appendChild(n)});U.patch(root,el,{animate:animate!==false});focusHead()}
+function focusHead(){if(!headFocus)return;headFocus=false;var n=document.querySelector("#detail .dhead h2");if(n)n.focus({preventScroll:true})}
 /* the chart is drawn at its panel's content width so labels stay 11px at every size */
 function chartW(){var r=document.getElementById("detail"),cs=getComputedStyle(document.documentElement),pad=parseFloat(cs.getPropertyValue("--pad-panel"))||16;return(r.clientWidth||600)-2*pad}
 

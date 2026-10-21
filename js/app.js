@@ -119,7 +119,7 @@
           action:{text:"Clear filters",onclick:clearFilters},secondary:{text:"Create a market",onclick:function(){cmOpen()}}}));
       patch(out,f);return}
     document.getElementById("count").textContent=list.length===M.length?M.length+" markets":list.length+" of "+M.length+" markets";
-    if(!list.length)f.appendChild(h("div",{class:"empty",text:"No markets match these filters."}));
+    if(!list.length)f.appendChild(h("div",{class:"empty"},["No markets match these filters. ",h("button",{class:"wl-link",type:"button",text:"Clear filters",onclick:function(){clearFilters();countEl.setAttribute("tabindex","-1");countEl.focus({preventScroll:true})}})]));
     else if(st.view==="table")f.appendChild(table(list));else{var g=h("div",{class:"mgrid"});list.forEach(function(m){g.appendChild(card(m))});f.appendChild(g)}
     patch(out,f,{flip:".mcard, tbody tr"})}
 
