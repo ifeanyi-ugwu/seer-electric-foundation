@@ -227,4 +227,4 @@ html.dm-is-offline{--dm-lift:48px}
 .panel-c > .dm-state{background:none;padding:var(--s-3) 0 0}
 /* a section a page state hides stays hidden whatever its own display (the KPI grid, the filter bar) */
 #main [hidden]{display:none!important}
-#list > .dm-skel > .list-label{grid-column:1/-1}
+#list > .dm-skel > :is(.list-label,:first-child){grid-column:1/-1}

@@ -33,6 +33,11 @@
 .mk{display:inline-block;width:9px;height:9px;flex:none}
 .mk.pass{background:var(--pos);border-radius:50%}.mk.fail{background:var(--neg)}
 .fork-meta{display:grid;grid-template-columns:1fr 1fr;gap:var(--s-2) var(--s-5);margin-top:var(--s-4)}
+.fork-meta .res{grid-column:1/-1}
+.fork-meta .res .num{text-align:right}
+/* Active and Decided: the switch spans the list */
+#list > .seg{display:flex;grid-column:1/-1}
+#list > .seg button{flex:1 1 0}
 .fork-meta div{display:flex;justify-content:space-between;gap:var(--s-2);font-size:var(--fs-meta);color:var(--text-2);border-top:1px solid var(--line);padding-top:var(--s-2)}
 .votes{display:grid;gap:var(--s-3);margin-top:var(--s-4)}
 .vote-bar{height:8px;background:var(--surface);overflow:hidden;margin-top:var(--s-1)}
