@@ -588,7 +588,7 @@ function dragSheet(p){if(p.__drag)return;p.__drag=1;var y0=0,on=false,off=false,
     if(e.cancelable)e.preventDefault();var v=rub(d);applyVars({y:v},p);hist.push([e.timeStamp,y]);if(hist.length>6)hist.shift()},{passive:false});
   function end(){if(!on)return;on=false;p.classList.remove("m-drag");var cur=p.__mv?+p.__mv.y||0:0,v=0;
     if(hist.length>1){var a=hist[0],b=hist[hist.length-1];v=(b[1]-a[1])/Math.max(1,b[0]-a[0])*1000}
-    if(v>500||(cur>p.offsetHeight*.35&&v>-200)){p.__vel=Math.max(v,600);var btn=p.querySelector(".panel-top button");if(btn)btn.click()}
+    if(v>500||(cur>p.offsetHeight*.35&&v>-200)){p.__vel=Math.max(v,600);var btn=p.querySelector(".panel-top .pt-x")||p.querySelector(".panel-top button");if(btn)btn.click()}
     else{drive(p,{y:0},"gentle",{eps:.3});var sp=SP.get(p,"y");if(sp)sp.v=v}}
   p.addEventListener("touchend",end,{passive:true});p.addEventListener("touchcancel",end,{passive:true})}
 M.exit=function(els,done){els=els.filter(Boolean);M.sheetOff();if(reduced()||!els.length||!els[0].animate){done();return}

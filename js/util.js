@@ -40,9 +40,9 @@ U.trap=function(e,panel){if(e.key!=="Tab"||!panel)return;var f=[].filter.call(pa
 /* The pinned top bar of every detail sheet: grab handle (phones), badge or kicker, title and Close. It sticks to the
    top of the sheet while the body scrolls (css/shell.css); js/motion.js adds the hairline and the condense.
    Without a badge the title sits beside Close; with one, the badge does and the title takes the full width below. */
-U.sheetTop=function(badge,title,onClose){var h=U.h;
+U.sheetTop=function(badge,title,onClose,extra){var h=U.h,x=h("button",{class:"btn soft pt-x",type:"button",text:"Close",onclick:onClose});
  return h("div",{class:"panel-top"},[h("span",{class:"panel-grip","aria-hidden":"true"}),
-  h("div",{class:"pt-in"+(badge?" has-k":"")},[badge||null,title!=null?h("h2",{class:"pt-title",text:title}):null,h("button",{class:"btn soft",type:"button",text:"Close",onclick:onClose})])])};
+  h("div",{class:"pt-in"+(badge?" has-k":"")},[badge||null,title!=null?h("h2",{class:"pt-title",text:title}):null,extra?h("div",{class:"pt-acts"},[extra,x]):x])])};
 /* U.sheet({open,label,badge,title,kids,onClose,instant,root,cls,focus}): one detail sheet per root, at body level
    (outside the query containers, so position:fixed is relative to the viewport). Side sheet on tablets, bottom sheet
    on phones (css/shell.css). It morphs in place like the page, so controls inside keep focus while values change.
@@ -70,8 +70,27 @@ U.sheet=function(o){var R=o.root||"sheet-root",root=document.getElementById(R),h
  U.patch(root,f,{animate:!!cur});
  var k=function(e){if(e.defaultPrevented||U.covered(R))return;if(e.key==="Escape"){e.preventDefault();o.onClose()}else U.trap(e,root.querySelector(".panel"))};
  U._keys[R]=k;document.addEventListener("keydown",k);
- if(!cur){var fo=o.focus&&root.querySelector(o.focus);(fo||root.querySelector(".panel-top button")).focus({preventScroll:true});
+ if(!cur){var fo=o.focus&&root.querySelector(o.focus);(fo||root.querySelector(".panel-top .pt-x")).focus({preventScroll:true});
   if(window.Motion){Motion.scan(root);if(Motion.panelIn)Motion.panelIn(root);Motion.stagger(root.querySelectorAll(".pt-title, .panel > :not(.panel-top)"),140,40)}}};
 /* the wallet sheet sits above every other sheet: while it is open, the ones below ignore Escape and Tab */
 U.covered=function(R){return R!=="wallet-root"&&!!document.querySelector("#wallet-root .panel")};
 U.openPanel=function(){return document.querySelector("#sheet-root .panel, #panel-root .panel, #wallet-root .panel")};
+
+/* A concept note: one short line at the foot of the screen for a control that exists in the live product and is outside this concept.
+   U.concept(text, opener): one at a time, announced once through the page's polite live region, gone after 5 seconds, on Escape or on its
+   Close button. Focus stays where it is; Close returns it to opener. While a sheet is open on a narrow screen the sheet is lifted by the
+   note's height (html.cn-on, --cn-h in css/demo.css), so the note sits below the sheet and covers none of it. */
+U.concept=function(text,opener){var h=U.h,doc=document,root=doc.documentElement;
+ var old=doc.getElementById("concept-note");if(old&&old.__end)old.__end(true);
+ var n,t=0,done=false,key=function(e){if(e.key==="Escape"&&!e.defaultPrevented){e.preventDefault();end()}};
+ function end(quick,back){if(done)return;done=true;clearTimeout(t);n.removeAttribute("id");doc.removeEventListener("keydown",key,true);root.classList.remove("cn-on");root.style.removeProperty("--cn-h");
+  var gone=function(){if(n.parentNode)n.remove()};
+  if(quick||(window.Motion&&Motion.reduced())||(window.matchMedia&&matchMedia("(prefers-reduced-motion:reduce)").matches))gone();else{n.classList.add("is-out");setTimeout(gone,200)}
+  if(back&&opener&&opener.isConnected)opener.focus({preventScroll:true})}
+ var x=h("button",{class:"btn soft cn-x",type:"button","aria-label":"Close note",onclick:function(){end(false,true)}}),ic=U.svg("svg",{viewBox:"0 0 16 16",width:"16",height:"16","aria-hidden":"true",focusable:"false",fill:"none",stroke:"currentColor","stroke-width":"1.6","stroke-linecap":"round"});
+ ic.appendChild(U.svg("path",{d:"M4 4l8 8M12 4l-8 8"}));x.appendChild(ic);
+ n=h("div",{class:"concept-note",id:"concept-note"},[h("span",{class:"cn-t",text:text}),x]);n.__end=end;
+ doc.body.appendChild(n);doc.addEventListener("keydown",key,true);
+ if(U.openPanel()&&matchMedia("(max-width:760px)").matches){root.classList.add("cn-on");root.style.setProperty("--cn-h",Math.ceil(innerHeight-n.offsetTop+8)+"px")}
+ var D=window.SeerDemo,W=window.SeerWallet;(D&&D.announce||W&&W.announce||function(){})(text);
+ t=setTimeout(function(){end()},5000)};

@@ -6,7 +6,7 @@
    API: state (snapshot), subscribe(fn) / onChange(fn) (returns an unsubscribe), connect(kind), disconnect(),
    spend(amount, meta), credit(amount, meta), log(entry), openConnect({from, after}), openAccount(), mount(slot), announce(text),
    money(n), amountError(n, tried), maxBtn(inputId), amountLabel(id, text), flow(options) (the review, sign and result steps of a ticket or form),
-   positions(mid, product), holdLines(mid, product), redeem(options) (positions and Redeem for tickets and the wallet sheet).
+   positions(mid, product), holdLines(mid, product), redeem(options) (positions and Redeem for tickets and the wallet sheet), copyText(text, cb, back).
    Needs js/util.js (U.h, U.sheet). js/motion.js is optional (count motion, step entrances). */
 (function(){
 "use strict";
@@ -211,6 +211,9 @@ function accountBody(){var a=S.act.slice(0,3);
       ws.copied==="fail"?h("p",{class:"note",text:"Copying is blocked here. Select the address and copy it by hand."}):null]),
     h("div",{class:"wl-bal-tile"},[h("small",{text:"Balance"}),h("b",{class:"num",text:money(S.bal)+" USDC"})]),
     posSection(),
+    /* Rewards exist in the live product and are outside this concept: the control names that instead of leading nowhere */
+    h("div",{class:"wl-rew","data-key":"wl-rew"},[h("b",{text:"Rewards"}),
+      link("View rewards",function(e){U.concept("Not part of this concept. In the product this lists trading and liquidity rewards.",e.currentTarget)})]),
     h("section",{class:"wl-acts-sec","aria-labelledby":"wl-act-h"},[h("h3",{class:"wl-sub",id:"wl-act-h",text:"Recent activity"}),
       a.length?h("ol",{class:"wl-act"},a.map(function(x,i){var ok=x.status==="Confirmed";return h("li",{"data-key":"a"+(S.act.length-i)},[
         h("span",{class:"wl-act-t"},[h("b",{text:x.type}),h("span",{class:"wl-st "+(ok?"ok":"no"),text:x.status})]),
@@ -227,6 +230,7 @@ function copyText(text,cb,back){
   cb(legacy())}
 function copy(){copyText(S.addr,function(ok){if(!ws)return;ws.copied=ok?"ok":"fail";sheet();if(ok)announce("Address copied.");
   clearTimeout(ws.ct);ws.ct=setTimeout(function(){if(ws&&ws.copied){ws.copied=null;sheet()}},2200)},doc.querySelector("#wallet-root .wl-copy"))}
+W.copyText=copyText;
 /* the same Copy button outside the wallet sheet (the market address): the label reads "Copied" for a moment */
 W.copyBtn=function(text,name){var b=h("button",{class:"btn soft wl-copy",type:"button","aria-label":"Copy "+name,text:"Copy"}),t=0;
   b.onclick=function(){copyText(text,function(ok){clearTimeout(t);b.textContent=ok?"Copied":"Not copied";b.setAttribute("aria-label",ok?"Copied":"Not copied, copying is blocked here");

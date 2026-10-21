@@ -96,6 +96,9 @@
 .wl-act-m{grid-area:m;color:var(--text-2);font-size:var(--fs-meta);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
 .wl-act-t b{min-width:0;overflow-wrap:anywhere}
 .wl-more{margin-top:var(--s-3)}
+.wl-rew{display:flex;align-items:center;justify-content:space-between;gap:var(--s-3);min-height:var(--tap);background:var(--card);border-radius:var(--r-card);padding:var(--s-2) var(--s-4)}
+.wl-rew b{font-weight:500;font-size:var(--fs-body)}
+.wl-rew .wl-link{font-size:var(--fs-body)}
 .wl-st{font-size:var(--fs-cap);line-height:16px;padding:0 6px;border-radius:var(--r-chip)}
 .wl-st.ok{background:color-mix(in srgb,var(--pos) 16%,transparent);color:var(--pos)}
 .wl-st.no{background:color-mix(in srgb,var(--neg) 16%,transparent);color:var(--neg)}

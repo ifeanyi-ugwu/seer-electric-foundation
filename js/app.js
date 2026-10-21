@@ -36,6 +36,7 @@
     var d=h("details",{class:"panel-c rules","data-key":"rules",open:U.narrow.matches?null:""},[h("summary",{text:"Rules and resolution"}),
       h("dl",{class:"tx-sum"},[row("Resolves by",rs.state==="disputed"?(rs.source||"Reality.eth")+", now in Kleros arbitration":(rs.source||"Reality.eth")+", with Kleros arbitration if disputed","tx-q"),
         row("Answer",a,"tx-q"),
+        row("Collateral","USDC","tx-q"),
         row("Market address",[h("span",{class:"num",text:W.short(addr)}),W.copyBtn(addr,"market address")],"rules-addr")]),
       h("p",{class:"note",text:rs.rules+" If the question cannot be answered, it resolves Invalid and holders are refunded pro rata."})]);return d}
   /* a scalar value with its unit: "$" leads, a word follows after a space, a symbol follows directly */
@@ -155,7 +156,7 @@
   function openPanel(m,init){lastFocus=document.activeElement;var root=document.getElementById("panel-root");root.textContent="";detSlot.cancel();
     /* the pinned bar (badge, the title we already know, Close) shows at once; the body loads below it */
     var body=h("div",{class:"dm-body"}),p=h("div",{class:"panel",role:"dialog","aria-modal":"true","aria-label":m.q},[U.sheetTop(h("span",{class:"badge",text:m.isNew?"New · "+m.type:m.type}),m.q,closePanel),body]);
-    root.appendChild(h("div",{class:"scrim",onclick:closePanel}));root.appendChild(p);document.addEventListener("keydown",esc);p.querySelector(".panel-top button").focus();
+    root.appendChild(h("div",{class:"scrim",onclick:closePanel}));root.appendChild(p);document.addEventListener("keydown",esc);p.querySelector(".panel-top .pt-x").focus();
     if(window.Motion){Motion.scan(p);if(Motion.panelIn)Motion.panelIn(root)}
     function load(){detSlot.run({key:"app:market:"+m.id,cacheLabel:"Market: "+m.q,producer:function(){return m},scope:"details",initial:true,busy:p,label:"Loading market details",
       show:function(){U.clear(body);body.appendChild(skDetail(m))},

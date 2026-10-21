@@ -171,6 +171,25 @@ html.dm-is-offline{--dm-lift:48px}
 @media (max-width:340px){html.dm-is-offline{--dm-lift:86px}}
 @media (min-width:1101px){.dm-toast{max-width:420px}}
 
+/* =================================================================================================
+   CONCEPT NOTE (U.concept in js/util.js): a control of the live product that this concept does not build says so here. Cut-corner block
+   in the offline bar's language, above sheets, one at a time. Up to 760px a sheet that is open is lifted by the note's height (--cn-h),
+   so the note sits below the sheet; from 761px the note stays left of the side sheet.
+   ================================================================================================= */
+.concept-note{position:fixed;left:var(--dm-gut-l);right:var(--dm-gut-r);bottom:calc(max(var(--s-3),env(safe-area-inset-bottom)) + var(--dm-lift,0px));z-index:60;
+  display:flex;align-items:flex-start;gap:var(--s-2);max-width:420px;padding:var(--s-3) var(--s-2) var(--s-3) var(--s-4);
+  background:var(--surface);color:var(--text);box-shadow:inset 0 0 0 1px var(--line),inset 3px 0 0 var(--violet);
+  clip-path:polygon(0 0,calc(100% - var(--cut,12px)) 0,100% var(--cut,12px),100% 100%,0 100%);
+  font-size:var(--fs-meta);line-height:var(--lh-snug);transition:opacity var(--dur-2,.2s) var(--ease-standard,ease),translate var(--dur-2,.2s) var(--ease-standard,ease)}
+.concept-note .cn-t{flex:1 1 auto;min-width:0;padding-top:var(--s-2);padding-bottom:var(--s-2);overflow-wrap:anywhere}
+.concept-note .cn-x{flex:none;width:var(--ctl-sm);padding:0}
+.concept-note.is-out{opacity:0;translate:0 6px}
+@media (prefers-reduced-motion:no-preference){.concept-note{animation:dm-rise var(--dur-3,.32s) var(--ease-decel,ease) both}}
+@media (min-width:761px){.concept-note{max-width:min(420px,calc(100vw - 440px - var(--dm-gut-l) - var(--s-4)))}}
+@media (max-width:760px){html.cn-on .panel{bottom:var(--cn-h,0px)}}
+@media (max-width:600px){html.cn-on .panel{max-height:calc(100dvh - max(48px,env(safe-area-inset-top) + 16px) - var(--cn-h,0px))}}
+@media (forced-colors:active){.concept-note{border:1px solid CanvasText}}
+
 /* the tool pages end with room for the assistant ball, so the last row or button is never under it */
 #main > .page,#main > .wrap{padding-bottom:calc(var(--s-8) + 48px)}
 @media (max-width:600px){#main > .page,#main > .wrap{padding-bottom:calc(var(--s-7) + 56px)}}
