@@ -1,6 +1,6 @@
 (function(){
 SeerShell.mount({product:"deep",cta:"Connect wallet"});
-var h=U.h,r=U.rng(42),A=["Open","Modular","Private","Verifiable","Composable","Lightweight","Cross-chain","Community","Resilient","Adaptive"],N=["indexer","wallet kit","oracle feed","audit tooling","education hub","bridge monitor","data commons","rollup toolkit","identity layer","dev grants portal"];
+var h=U.h,W=window.SeerWallet,r=U.rng(42),A=["Open","Modular","Private","Verifiable","Composable","Lightweight","Cross-chain","Community","Resilient","Adaptive"],N=["indexer","wallet kit","oracle feed","audit tooling","education hub","bridge monitor","data commons","rollup toolkit","identity layer","dev grants portal"];
 var D=[];for(var i=0;i<100;i++){var sc=Math.min(9.6,Math.max(2.4,4+r()*4.5+(r()-.5)*2)),w=.5+r()*1.4,av=Math.round((5+r()*120)*1e3*(r()>.5?1.6:.5)),hv=Math.round((5+r()*70)*1e3*(r()>.5?1.5:.6));
  D.push({id:i+1,name:A[Math.floor(r()*A.length)]+" "+N[Math.floor(r()*N.length)],s:+sc.toFixed(1),lo:+Math.max(0,sc-w).toFixed(1),hi:+Math.min(10,sc+w).toFixed(1),av:av,hv:hv,at:Math.round(3+r()*40),ht:Math.round(2+r()*30),ch:+((r()-.5)*1.2).toFixed(1)})}
 var st={q:"",f:"all",sort:"s",dir:-1,n:25,sel:null};
@@ -26,7 +26,7 @@ function dots(){var s=U.svg("svg",{class:"dotfield",viewBox:"0 0 300 300",width:
  D.forEach(function(d,i){var c=U.svg("circle",{cx:15+(i%10)*30,cy:15+Math.floor(i/10)*30,r:4+d.s*.8,fill:"var(--violet)","fill-opacity":(.18+d.s/10*.82).toFixed(2),tabindex:"0",role:"button","aria-label":"#"+d.id+" "+d.name+", forecast "+d.s});dotOn(c,st.sel===d);
   c.onclick=function(){choose(d)};c.onkeydown=function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();choose(d)}};dotEls.push(c);s.appendChild(c)});return s}
 /* selecting updates in place; the dot for the choice ripples so the eye finds it in the field */
-function choose(d){st.sel=d;loadSel(d);if(window.Motion)Motion.ripple(dotEls[d.id-1])}
+function choose(d){if(st.sel!==d)flow.reset();st.sel=d;loadSel(d);if(window.Motion)Motion.ripple(dotEls[d.id-1])}
 /* a selection's details: the readout (or the sheet's body) shows placeholders at once while they load */
 function loadSel(d){det={id:d.id,state:"ok",err:null};
  selSlot.run({key:"deep:proposal:"+d.id,cacheLabel:"Deep proposal #"+d.id,producer:function(){return d},scope:"details",initial:true,label:"Loading proposal details",
@@ -50,11 +50,11 @@ function readout(d,inSheet){var S=DM&&DM.sk,L=["Forecast score","90% range","Age
   back:{text:"Back to the list",onclick:close},titles:{notfound:"This proposal no longer exists"},texts:{notfound:"It may have been withdrawn from the round. Go back to the list to pick another."}});
  if(det.id===d.id&&det.state==="empty")return DM.emptyView({level:inSheet?"sheet":"panel",title:"No forecast yet",text:"Nobody has traded this proposal yet, so there is no score to show. Check again in a moment.",action:{text:"Check again",onclick:function(){loadSel(d)}}});
  return h("div",{class:"kpi k4"},[h("div",{},[h("small",{text:"Forecast score"}),h("b",{class:"num",text:d.s.toFixed(1)+" / 10"})]),h("div",{},[h("small",{text:"90% range"}),h("b",{class:"num",text:d.lo+" to "+d.hi})]),h("div",{},[h("small",{text:"Agent traders"}),h("b",{class:"num",text:String(d.at)})]),h("div",{},[h("small",{text:"Human traders"}),h("b",{class:"num",text:String(d.ht)})])])}
-function close(){var d=st.sel;st.sel=null;selSlot.cancel();render();if(!d)return;var r=rowEls.get(d.id);if(!r||!r.isConnected||r.__out)r=dotEls[d.id-1];r.focus({preventScroll:true})}
+function close(){var d=st.sel;st.sel=null;selSlot.cancel();flow.reset();render();if(!d)return;var r=rowEls.get(d.id);if(!r||!r.isConnected||r.__out)r=dotEls[d.id-1];r.focus({preventScroll:true})}
 /* desktop: the readout sits beside the field. Tablet and phone: it opens in a sheet, and this panel keeps the hint. */
 function side(narrow){var inline=st.sel&&!narrow;return h("div",{class:"stack"},[h("div",{class:"kpi top"},[h("div",{},[h("small",{text:"Agent volume"}),h("b",{class:"num",text:U.money(TOT.av)})]),h("div",{},[h("small",{text:"Human volume"}),h("b",{class:"num",text:U.money(TOT.hv)})]),h("div",{},[h("small",{text:"Top forecast"}),h("b",{class:"num",text:BEST.toFixed(1)+" / 10"})])]),
   h("div",{class:"notice",text:"Evaluators still score every proposal. The market forecasts their scores; it does not choose winners."}),
-  inline?h("div",{class:"panel-c"},[h("div",{class:"line"},[h("h2",{text:"#"+st.sel.id+" "+st.sel.name}),h("button",{class:"btn soft",type:"button",text:"Clear",onclick:function(){st.sel=null;selSlot.cancel();render()}})]),readout(st.sel)])
+  inline?h("div",{class:"panel-c"},[h("div",{class:"line"},[h("h2",{text:"#"+st.sel.id+" "+st.sel.name}),h("button",{class:"btn soft",type:"button",text:"Clear",onclick:function(){st.sel=null;selSlot.cancel();flow.reset();render()}})]),readout(st.sel)].concat(tradable(st.sel)?[ticketNode()]:[]))
    :h("div",{class:"panel-c"},[h("h2",{text:"Select a proposal"}),h("p",{class:"note",text:"Pick a dot in the field or a proposal below to see its forecast score, 90% range and who is trading it."})])])}
 function head(l){return h("div",{class:"head"},[
  h("div",{class:"ctrls"},[h("input",{class:"field",type:"search",placeholder:"Search proposals",value:st.q,"aria-label":"Search proposals",oninput:function(e){st.q=e.target.value;st.n=25;moreReset();render()}}),
@@ -120,12 +120,42 @@ function render(){var l=view(),narrow=U.narrow.matches,want=l.slice(0,st.n).map(
  ui.th.forEach(function(th,k){var c=COLS[k],b=th.firstChild,t=thText(c);if(th.getAttribute("aria-sort")!==thSort(c))th.setAttribute("aria-sort",thSort(c));if(b.textContent!==t)b.textContent=t});
  U.patch(ui.sortbar,sortbar());
  U.sheet({open:!!(st.sel&&narrow),label:st.sel?"#"+st.sel.id+" "+st.sel.name:"",badge:h("span",{class:"badge",text:"Proposal #"+(st.sel?st.sel.id:"")}),
-  title:st.sel?st.sel.name:"",kids:st.sel?[readout(st.sel,true)]:[],onClose:close,instant:!narrow});
+  title:st.sel?st.sel.name:"",kids:st.sel?[readout(st.sel,true)].concat(tradable(st.sel)?[ticketNode()]:[]):[],onClose:close,instant:!narrow});
  var ss=document.getElementById("deep-sort");if(ss&&ss.value!==st.sort)ss.value=st.sort}
 function reveal(){if(!window.Motion)return;
  Motion.reveal(".cols2 > .panel-c, .kpi.top > div, .cols2 .stack > .notice, .cols2 .stack > .panel-c, .list-sec > .head",{onIn:Motion.dataIn});
  /* table rows: only the ones visible in the scroll box stagger in; the rest are simply there */
  Motion.reveal([].slice.call(ui.tbody.children,0,14),{rise:8,onIn:Motion.dataIn})}
+
+/* ---------- the ticket: trade the selected proposal's score ----------
+   The score runs 0 to 10. A long share costs score/10 and pays $1.00 at 10; a short share costs 1 minus that and pays $1.00 at 0.
+   The ticket is one node, inline in the side panel on desktop and in the sheet on tablet and phone. It redraws itself on its own
+   (typing, side, wallet, flow step), so the table and the dot field are never touched. */
+var tside="Long",tamt=50,flow=W.flow({box:function(){return document.querySelector('[data-tx="deep"]')},onChange:function(){drawTicket()}});
+function tradable(d){return det.id!==d.id||det.state==="ok"}
+function tprice(d){return tside==="Long"?d.s/10:1-d.s/10}
+function focusPlace(){var b=document.querySelector('[data-tx="deep"] [data-tx-place]');if(b)b.focus()}
+function place(){var d=st.sel,p=tprice(d),a=tamt,s=a/p,sd=tside,name="#"+d.id+" "+d.name;
+ flow.place(a,function(){return{amount:a,meta:{type:"Trade",market:"Grant round",mid:d.id,product:"deep",outcome:name,side:sd,shares:s,price:p,status:"Open"},
+  rows:[["Proposal",name,"tx-q"],["Side",sd],["Amount",W.money(a)+" USDC","tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(s)],["Network fee","Free in demo","tx-free"]],
+  note:"Pays $1.00 per share at "+(sd==="Long"?"10":"0")+".",
+  done:"You bought "+U.shares(s)+" "+sd.toLowerCase()+" shares on the score of proposal #"+d.id+"."}},"deep-amt")}
+function ticketKids(){var d=st.sel,p=tprice(d),ks=[h("h3",{class:"wl-sub","data-key":"tk-h",text:"Trade this score"})];
+ if(flow.step!=="form"){ks.push(flow.view());return ks}
+ var err=W.amountError(tamt,flow.tried),at=W.amountAttrs("deep-amt",err);
+ ks.push(h("div",{class:"seg",role:"group","aria-label":"Side"},["Long","Short"].map(function(s){return h("button",{type:"button","aria-pressed":String(tside===s),text:s,onclick:function(){tside=s;drawTicket()}})})));
+ W.holdLines(d.id,"deep").forEach(function(n){ks.push(n)});
+ var inp=h("input",{class:"field",type:"number",min:"1",value:String(tamt),id:"deep-amt","aria-label":"Amount in USDC","aria-invalid":at["aria-invalid"],"aria-describedby":at["aria-describedby"],
+  oninput:function(e){tamt=Number(e.target.value)||0;var n=document.querySelector('[data-tx="deep"] [data-k="shares"]'),t=U.shares(Math.max(0,tamt)/p);
+   if(n){if(window.Motion)Motion.num(n,t);else n.textContent=t}W.amountLive(e.target,tamt,flow)}});
+ ks.push(h("div",{class:"field-grp"},[W.amountLabel("deep-amt","Amount (USDC)"),inp,W.amountErr("deep-amt",err)]));
+ ks.push(h("div",{class:"line"},[h("span",{text:"Price per share"}),h("span",{class:"num","data-k":"price",text:"$"+p.toFixed(2)})]));
+ ks.push(h("div",{class:"line"},[h("span",{text:"Shares"}),h("span",{class:"num","data-k":"shares",text:U.shares(Math.max(0,tamt)/p)})]));
+ ks.push(h("div",{class:"line"},[h("span",{text:"Pays $1.00 per share at "+(tside==="Long"?"10":"0")})]));
+ ks.push(W.placeBtn({onPlace:place}));
+ var hn=W.hint({after:focusPlace});if(hn)ks.push(hn);return ks}
+function ticketNode(){return h("div",{class:"ticket","data-tx":"deep","data-key":"tk",style:flow.style()},ticketKids())}
+function drawTicket(){var box=flow.o.box();if(!box||!st.sel)return;box.style.minHeight=flow.style()?flow.hold+"px":"";U.patch(box,h("div",{},ticketKids()))}
 
 /* ---------- Show 25 more: placeholder rows join the end of the list while the next page loads ---------- */
 function moreReset(){moreSlot.cancel();moreErr=null;if(ui.moreBox&&ui.moreBox.isConnected)ui.moreBox.remove();skRows(false);moreBusy(false)}
@@ -169,6 +199,7 @@ function load(o){o=o||{};selSlot.cancel();moreSlot.cancel();moreErr=null;
    DM.renderError(pageBox,e,{level:"page",subject:"the proposals",retry:function(){DM.holdFocus(pageEl);load({retried:true})},back:{text:"Back to home",href:"index.html"},focus:!modal()});
    if(e.kind==="network")DM.onOnline(function(){if(pageState==="error")load()})}})}
 U.narrow.addEventListener("change",function(){if(pageState==="ok")render()});
+W.subscribe(function(){if(pageState==="ok")drawTicket()});
 if(DM){DM.page({name:"deep",replay:function(o){load({force:o.force,replay:true})}});load()}
 else{frame()}
 if(window.Motion){Motion.ready();if(!DM)reveal()}

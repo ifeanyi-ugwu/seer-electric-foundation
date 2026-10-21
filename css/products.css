@@ -63,6 +63,8 @@
 .cols2{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:var(--gap-block);align-items:start}
 .cols2 > .panel-c .note{margin-top:var(--s-3)}
 .more-btn{margin-top:var(--s-3)}
+/* the ticket sits under the readout in the side panel, set off by a rule; in a sheet it is a card of its own (css/app.css) */
+.cols2 .panel-c > .ticket{margin-top:var(--s-4);padding-top:var(--s-4);border-top:1px solid var(--line)}
 /* up to 100 rows: a row that is off screen skips style, layout and paint until it scrolls near (a sort or a resize
    then only lays out what can be seen); the size it last had stands in for it */
 .deep-tbl tbody tr{content-visibility:auto;contain-intrinsic-size:auto 42.5px}
