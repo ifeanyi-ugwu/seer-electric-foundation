@@ -69,6 +69,8 @@ No table or toolbar scrolls sideways at any width. The header stays pinned at ev
 | Light hero card meta text is `#44444E` | Keeps 4.5:1 under the dim layer. |
 | Theme change: light leads. Going to light, light radiates out of the toggle; going to dark, the light is withdrawn into the toggle and the dark is what is left behind | Going to dark withdraws the light, so no dark is shone into the page. The toggle reads as where the light lives. A one-line switch (`LIGHT_LEADS` in `js/motion.js`) sets the direction. Browsers without view transitions get a short cross-fade, and reduced motion is instant. |
 | The emerging hero card keeps its shadow off until it has cleared the front card | The shadow would otherwise leak around the front card in light mode. |
+| The landing plays its full entrance (slabs sliding along their cut, hero copy, cards, dots) on the first view in a tab and on every reload, and a short fade when the page is reached by a link or by Back and Forward | A reload asks for the page again, so it is shown again. Moving between pages is not a new arrival, so it settles quickly. The reload is read from the navigation entry, with `performance.navigation` as the fallback, and without session storage every view plays the full entrance. |
+| The slabs carry one light sweep every 14s and no fade in and out | A change of opacity across slabs this large is too small to see. A band of light travelling along the cut reads as the same slabs catching light, and at its peak it keeps the violet headline above 3:1 in the dark theme and 4:1 in the light theme. |
 | Detail sheets pin their top bar (handle, badge, title, Close) while the body scrolls; a hairline and shadow fade in on scroll, and after 24px it condenses by transform only | Close and the title stay reachable, and nothing below the bar moves. |
 | On phones the sheet's violet tick is centred and serves as the grab handle; a drag from the bar always moves the sheet, and a drag in the body moves it only when pulling down from the top | Dragging never fights scrolling the sheet body. |
 | The dropdown chevron turns 180 degrees while a menu is open, on the snappy spring, via a wrapper drawn by `js/motion.js`, CSS `:open` with a JS fallback, and the native select kept | The arrow shows state, and keyboard and screen-reader behaviour stay native. |
@@ -183,7 +185,7 @@ Every spring is interruptible. A new target keeps the current position and veloc
 
 ### Tokens
 
-Durations are 120, 200, 320, 520 and 900ms. Stagger is 40ms, up to 8 steps. Distances are 8, 12 and 16px, lift is 2 to 3px and tilt is 4deg. Entrances decelerate and finish within about 750ms per surface, and the landing hero is the one longer sequence. Exits accelerate and take 60 to 70% of the entrance time.
+Durations are 120, 200, 320, 520 and 900ms. Stagger is 40ms, up to 8 steps. Distances are 8, 12 and 16px, lift is 2 to 3px and tilt is 4deg. Entrances decelerate and finish within about 750ms per surface, and the landing hero is the one longer sequence. It plays on the first view in a tab and on a reload; arriving by a link or by Back and Forward gives a short fade. Exits accelerate and take 60 to 70% of the entrance time.
 
 ### Entrance and exit
 
@@ -199,7 +201,7 @@ Numbers count on a critically damped curve and keep their own format. Changed va
 
 ### Ambient
 
-Ambient motion is slow, small and phase-offset: the hero slabs breathe over 14s, the dot matrix shimmers over 7s, the hero cards tilt over 13s and the LIVE marker pulses over 2.4s. All of it pauses offscreen and in hidden tabs, and none of it runs under reduced motion.
+Ambient motion is slow, small and phase-offset: the hero slabs catch one light sweep every 14s, the dot matrix shimmers over 7s, the hero cards tilt over 13s and the LIVE marker pulses over 2.4s. The sweep is a gradient wash in the theme's violet at low opacity, kept low enough that no text loses contrast. It crosses the slabs along their cut angle in 1.2s, once, and then the slabs rest until the next mark. All of it pauses offscreen and in hidden tabs, and none of it runs under reduced motion.
 
 The page-head mark has one ping every 12s while the head is on screen: a single part moves for under a second and settles. The pings start 500ms apart from product to product, so no two products ping on the same beat.
 

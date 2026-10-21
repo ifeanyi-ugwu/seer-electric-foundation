@@ -8,7 +8,7 @@
   --dot-dim-ink:#3A3350; --dot-dim-paper:#CFC6E8;   /* kit dim dots for the hero cards: dark card, light card */
   --muted-paper:#44444e;            /* meta on the light card: stays above 4.5:1 even under the veil */
   --hero-bg:var(--ink);
-  --slab-lo:rgba(255,255,255,.012); --slab-hi:rgba(160,140,255,.075);
+  --slab-lo:rgba(255,255,255,.012); --slab-hi:rgba(160,140,255,.075); --slab-sweep:rgba(160,140,255,.06);
   --paper:color-mix(in srgb,var(--violet) 12%,#fff); --paper-text:#2b2640;
   --wrap:1280px;
   --sec:clamp(64px,9vw,128px);      /* section spacing: 64 on phones up to 128 on desktop */
@@ -16,7 +16,7 @@
 }
 :root[data-theme=light]{
   --hero-bg:color-mix(in srgb,var(--violet) 9%,#f1f1f8);
-  --slab-lo:rgba(255,255,255,.12); --slab-hi:rgba(255,255,255,.85);
+  --slab-lo:rgba(255,255,255,.12); --slab-hi:rgba(255,255,255,.85); --slab-sweep:color-mix(in srgb,var(--violet) 13%,transparent);
   --paper:#fff; --dot-off:rgba(23,23,28,.14);
 }
 
@@ -40,7 +40,8 @@ p{text-wrap:pretty}
   min-height:min(100svh,860px);display:flex;flex-direction:column}
 :root:not([data-theme=light]) .hero{--text:#ededf2}
 .slabs{position:absolute;left:0;top:0;width:100%;height:auto;aspect-ratio:1440/600;min-height:62%;z-index:-1}
-.s-lo{stop-color:var(--slab-lo)}.s-hi{stop-color:var(--slab-hi)}
+.s-lo{stop-color:var(--slab-lo)}.s-hi{stop-color:var(--slab-hi)}.s-sw{stop-color:var(--slab-sweep)}
+.slab-sweep{opacity:0}
 
 .topnav{display:flex;align-items:center;gap:32px;padding-block:calc(24px + env(safe-area-inset-top,0px)) 24px;width:100%}
 /* short landscape phones: a slimmer nav, so the pinned bar holds less of the screen (56px once condensed) */

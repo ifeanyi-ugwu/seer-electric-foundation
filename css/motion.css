@@ -181,7 +181,9 @@ html{scroll-padding-top:var(--m-hdr,88px)}/* js/motion.js writes the pinned head
 @keyframes m-wash2{from{background-color:var(--violet-soft);box-shadow:0 0 0 3px var(--violet-soft)}to{background-color:transparent;box-shadow:0 0 0 3px transparent}}
 @keyframes m-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
 @keyframes m-glow{0%,100%{opacity:1}50%{opacity:.78}}
-@keyframes m-breathe{0%,100%{opacity:1}50%{opacity:.84}}
+/* one light sweep across the slabs every 14s: 1.2s along the cut angle (about 20deg), then rest */
+@keyframes m-sweep{0%{opacity:0;transform:translate(-360px,-132px);animation-timing-function:var(--ease-standard)}
+  2.5%{opacity:1}6%{opacity:1}8.6%,100%{opacity:0;transform:translate(1440px,528px)}}
 @keyframes m-idle{0%,100%{rotate:1 .6 0 0deg}38%{rotate:1 .5 0 1.1deg}70%{rotate:.4 1 0 -.9deg}}
 @keyframes shimmer{0%,100%{opacity:1}50%{opacity:.6}}
 @keyframes m-ring{from{opacity:.7;transform:scale(1)}to{opacity:0;transform:scale(2.8)}}
@@ -212,13 +214,13 @@ html{scroll-padding-top:var(--m-hdr,88px)}/* js/motion.js writes the pinned head
   :root:not(.m-hero-seen) .hero h1 .ln + .ln > span{animation-delay:230ms}
   :root:not(.m-hero-seen) .hero-sub{animation:m-rise var(--dur-4) var(--ease-decel) 420ms backwards}
   :root:not(.m-hero-seen) .hero-cta{animation:m-rise var(--dur-4) var(--ease-decel) 500ms backwards}
-  /* return visits in the same session: a short settle instead of the full sequence */
+  /* arriving by link or Back/forward in the same session: a short settle instead of the full sequence (a reload plays the full one) */
   .m-hero-seen .home .hero-body,.m-hero-seen .home .slab-set{animation:m-fade var(--dur-3) var(--ease-standard) backwards}
 
   /* ambient life: slow, small, phase-offset; paused offscreen (.m-off from JS) and in hidden tabs (html.m-hidden).
      The idle tilt sits on the stack wrapper, so it never competes with the springs that move the cards. */
   .home .dots .on{animation:shimmer 7s ease-in-out infinite;animation-delay:calc(1.6s + var(--i) * 110ms)}
-  .home .slabs{animation:m-breathe 14s ease-in-out 1.2s infinite}
+  .home .slab-sweep{animation:m-sweep 14s linear 2.4s infinite}
   .home .hero-cards{animation:m-idle 13s ease-in-out 1.5s infinite}
   .home .mbar i{animation:m-glow 5s ease-in-out 2.4s infinite}
   .m-hero-seen .home .mbar i{animation-delay:1s}
@@ -228,7 +230,7 @@ html{scroll-padding-top:var(--m-hdr,88px)}/* js/motion.js writes the pinned head
    settling onto the protocol base. Compositor-driven where supported; JS fallback otherwise. */
 @supports (animation-timeline:view()){
   @media (prefers-reduced-motion:no-preference) and (min-width:961px){
-    .home .slabs{animation:m-par-slab linear both,m-breathe 14s ease-in-out 1.2s infinite;animation-timeline:scroll(root block),auto;animation-range:0 100vh,normal}
+    .home .slabs{animation:m-par-slab linear both;animation-timeline:scroll(root block);animation-range:0 100vh}
     .home .hero-cards{animation:m-par-cards linear both,m-idle 13s ease-in-out 1.5s infinite;animation-timeline:scroll(root block),auto;animation-range:0 100vh,normal}
     /* the fan follows whichever card is behind: --hc-b is 1 behind and 0 in front (a spring in js/home.js mid-swap) */
     .home .hcard{animation:hc-fan linear both;animation-timeline:scroll(root block);animation-range:0 100vh;
@@ -495,8 +497,8 @@ html.m-vt-theme::view-transition-old(m-theme-toggle){display:none}
 html.m-vt-theme::view-transition-new(m-theme-toggle){animation:none;mix-blend-mode:normal}
 
 /* ---------- pause: ambient loops stop offscreen (.m-off set by an IntersectionObserver) and in hidden tabs ---------- */
-.m-off .dots .on,.m-off.dots .on,.m-off .slabs,.m-off .hero-cards,.m-off .mbar i,.m-off .status-live::before,.m-off.status-live::before,
-html.m-hidden .dots .on,html.m-hidden .slabs,html.m-hidden .hero-cards,html.m-hidden .mbar i,html.m-hidden .status-live::before,html.m-hidden .c-st::before{animation-play-state:paused}
+.m-off .dots .on,.m-off.dots .on,.m-off .slabs,.m-off .slab-sweep,.m-off .hero-cards,.m-off .mbar i,.m-off .status-live::before,.m-off.status-live::before,
+html.m-hidden .dots .on,html.m-hidden .slabs,html.m-hidden .slab-sweep,html.m-hidden .hero-cards,html.m-hidden .mbar i,html.m-hidden .status-live::before,html.m-hidden .c-st::before{animation-play-state:paused}
 
 /* ---------- reduced motion: every state change is instant (JS skips its animations too) ---------- */
 @media (prefers-reduced-motion:reduce){
