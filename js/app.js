@@ -153,9 +153,14 @@
     k.push(h("div",{class:"ticket"},[DM.skBlock("sk-box","height:var(--ctl);width:200px;max-width:100%;border-radius:999px"),h("div",{class:"field-grp"},[h("label",{},[S("10ch")]),DM.skBlock("sk-box","height:var(--ctl);border-radius:999px")]),
       h("div",{class:"line"},[S("12ch"),S("5ch")]),h("div",{class:"line"},[S("6ch"),S("5ch")]),DM.skBlock("sk-box","height:var(--tap)")]));
     return h("div",{class:"dm-skel"},k)}
+  /* The sheet bar's More actions menu: Copy link (this page's address with ?m=<id>, which opens the same market on load) and View on explorer,
+     a control of the live product that the concept note names */
+  function moreMenu(m){var mn=U.menu({label:"More actions",items:[
+    ["Copy link",function(b){W.copyText(location.origin+location.pathname+"?m="+m.id,function(ok){mn.say(ok?"Copied":"Not copied");W.announce(ok?"Link copied.":"Copying is blocked here.")},b)}],
+    ["View on explorer",function(b){U.concept("Not part of this concept. In the product this opens the market on the chain explorer.",b)}]]});return mn}
   function openPanel(m,init){lastFocus=document.activeElement;var root=document.getElementById("panel-root");root.textContent="";detSlot.cancel();
-    /* the pinned bar (badge, the title we already know, Close) shows at once; the body loads below it */
-    var body=h("div",{class:"dm-body"}),p=h("div",{class:"panel",role:"dialog","aria-modal":"true","aria-label":m.q},[U.sheetTop(h("span",{class:"badge",text:m.isNew?"New · "+m.type:m.type}),m.q,closePanel),body]);
+    /* the pinned bar (badge, the title we already know, More actions, Close) shows at once; the body loads below it */
+    var body=h("div",{class:"dm-body"}),p=h("div",{class:"panel",role:"dialog","aria-modal":"true","aria-label":m.q},[U.sheetTop(h("span",{class:"badge",text:m.isNew?"New · "+m.type:m.type}),m.q,closePanel,moreMenu(m).el),body]);
     root.appendChild(h("div",{class:"scrim",onclick:closePanel}));root.appendChild(p);document.addEventListener("keydown",esc);p.querySelector(".panel-top .pt-x").focus();
     if(window.Motion){Motion.scan(p);if(Motion.panelIn)Motion.panelIn(root)}
     function load(){detSlot.run({key:"app:market:"+m.id,cacheLabel:"Market: "+m.q,producer:function(){return m},scope:"details",initial:true,busy:p,label:"Loading market details",
@@ -420,7 +425,7 @@
         pageState="ok";sections(true);
         if(o.retried&&!modal())DM.focusFirst(wrap);
         if(!info.shown){U.clear(statsEl);U.clear(catsEl);U.clear(typesEl);U.clear(outEl)}
-        stats();cats();types();render();
+        stats();cats();types();render();openFromUrl();
         if(!window.Motion)return;
         /* after a skeleton the tiles morph in place and count up; the cards cross over (js/motion.js) and the rest
            reveal as they scroll in, exactly as on a first load */
@@ -430,6 +435,9 @@
         DM.renderError(pageBox,e,{level:"page",subject:"the markets",retry:function(){DM.holdFocus(wrap);load({initial:true,retried:true})},
           back:{text:"Back to home",href:"index.html"},focus:!modal()});
         if(e.kind==="network")DM.onOnline(retryOnline)}})}
+  /* A shared link, app.html?m=<id>, opens that market's sheet once the first render is done. An id that is not a market does nothing. Nothing else is kept in the URL. */
+  var deepId=null;try{deepId=new URLSearchParams(location.search).get("m")}catch(e){}
+  function openFromUrl(){var id=deepId;deepId=null;if(id==null)return;var m=ALL.filter(function(x){return String(x.id)===id})[0];if(m)openPanel(m)}
   function retryOnline(){if(pageState==="error")load({initial:true})}
   function refilter(){if(pageState!=="ok"){return}
     var q=snap(),key="app:markets?"+[q.cat,q.status,q.type,q.sort].join("|");
@@ -437,7 +445,7 @@
       show:function(){outEl.classList.add("dm-dim")},
       apply:function(res){outEl.classList.remove("dm-dim");qs=q;listErr=null;listEmpty=!!res.empty;render()},
       fail:function(e){outEl.classList.remove("dm-dim");qs=q;listErr=e;listEmpty=false;render();if(e.kind==="network")DM.onOnline(refilter)}})}
-  if(!DM){stats();cats();types();render()}
+  if(!DM){stats();cats();types();render();openFromUrl()}
   else{DM.page({name:"app",replay:function(o){if(document.querySelector("#panel-root .panel"))closePanel();if(document.querySelector("#sheet-root .cm-sheet"))cmClose(false);load({initial:true,force:o.force})}});
     load({initial:true})}
   if(window.Motion){Motion.ready();

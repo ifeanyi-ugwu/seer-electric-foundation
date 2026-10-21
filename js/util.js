@@ -43,6 +43,33 @@ U.trap=function(e,panel){if(e.key!=="Tab"||!panel)return;var f=[].filter.call(pa
 U.sheetTop=function(badge,title,onClose,extra){var h=U.h,x=h("button",{class:"btn soft pt-x",type:"button",text:"Close",onclick:onClose});
  return h("div",{class:"panel-top"},[h("span",{class:"panel-grip","aria-hidden":"true"}),
   h("div",{class:"pt-in"+(badge?" has-k":"")},[badge||null,title!=null?h("h2",{class:"pt-title",text:title}):null,extra?h("div",{class:"pt-acts"},[extra,x]):x])])};
+/* U.menu({label, items:[[text, fn(button)], ...]}): the "More actions" button of a sheet bar (three vertical dots) and the small menu it opens
+   below itself. Up and Down move between the items (wrapping), Home and End jump, Escape closes and returns focus to the button, Tab closes,
+   a press outside closes, and choosing an item closes the menu and returns focus to the button before the item runs. The menu stays inside
+   the viewport (it is shifted right when the button sits near the left edge). Returns {el, btn, say(text)}: el goes in the sheet bar
+   (U.sheetTop's fourth argument) and say(text) shows a short confirmation under the button ("Copied"). */
+U.menu=function(o){var h=U.h,doc=document,id="menu-"+(U._mn=(U._mn||0)+1),on=false,tt=0;
+ var ic=U.svg("svg",{viewBox:"0 0 16 16",width:"16",height:"16",fill:"currentColor","aria-hidden":"true",focusable:"false"});[3,8,13].forEach(function(y){ic.appendChild(U.svg("circle",{cx:"8",cy:String(y),r:"1.5"}))});
+ var btn=h("button",{class:"btn soft pt-more",type:"button","aria-label":o.label,"aria-haspopup":"menu","aria-expanded":"false","aria-controls":id}),
+  list=h("div",{class:"menu",role:"menu","aria-label":o.label,id:id,hidden:""}),tip=h("span",{class:"menu-tip",hidden:"","aria-hidden":"true"}),
+  wrap=h("div",{class:"pt-menu"},[btn,list,tip]),items=o.items.map(function(it){
+   return h("button",{class:"menu-i",type:"button",role:"menuitem",tabindex:"-1",text:it[0],onclick:function(){close(true);it[1](btn)}})});
+ btn.appendChild(ic);items.forEach(function(i){list.appendChild(i)});
+ function at(k){var n=items.length;k=(k+n)%n;items[k].focus({preventScroll:true})}
+ function out(e){if(wrap.isConnected&&wrap.contains(e.target))return;close(false);
+  /* a press on the dimmed page only closes the menu: its click is not passed on, so the sheet stays open */
+  if(e.target.classList&&e.target.classList.contains("scrim")){var sw=function(v){v.stopPropagation();v.preventDefault()};doc.addEventListener("click",sw,{capture:true,once:true});setTimeout(function(){doc.removeEventListener("click",sw,true)},500)}}
+ function close(back){if(!on)return;on=false;list.hidden=true;list.style.right="";btn.setAttribute("aria-expanded","false");doc.removeEventListener("pointerdown",out,true);if(back&&btn.isConnected)btn.focus({preventScroll:true})}
+ function show(first){if(on)return;on=true;tip.hidden=true;list.hidden=false;btn.setAttribute("aria-expanded","true");doc.addEventListener("pointerdown",out,true);
+  /* right edges line up; if that pushes the menu past the left edge of the screen, it moves right by the overshoot */
+  var r=list.getBoundingClientRect(),gap=8;if(r.left<gap)list.style.right=(r.left-gap)+"px";at(first)}
+ btn.onclick=function(){if(on)close(true);else show(0)};
+ btn.onkeydown=function(e){if(e.key==="ArrowDown"||e.key==="ArrowUp"){e.preventDefault();show(e.key==="ArrowUp"?-1:0)}};
+ list.onkeydown=function(e){var k=items.indexOf(doc.activeElement);
+  if(e.key==="ArrowDown"){e.preventDefault();at(k+1)}else if(e.key==="ArrowUp"){e.preventDefault();at(k-1)}
+  else if(e.key==="Home"){e.preventDefault();at(0)}else if(e.key==="End"){e.preventDefault();at(-1)}
+  else if(e.key==="Escape"){e.preventDefault();e.stopPropagation();close(true)}else if(e.key==="Tab")close(true)};
+ return{el:wrap,btn:btn,say:function(t){clearTimeout(tt);tip.textContent=t;tip.hidden=false;tt=setTimeout(function(){tip.hidden=true},2200)}}};
 /* U.sheet({open,label,badge,title,kids,onClose,instant,root,cls,focus}): one detail sheet per root, at body level
    (outside the query containers, so position:fixed is relative to the viewport). Side sheet on tablets, bottom sheet
    on phones (css/shell.css). It morphs in place like the page, so controls inside keep focus while values change.

@@ -246,7 +246,19 @@ html:not(.m-js) .panel-top::after{opacity:1}/* without the motion runtime the ha
 .pt-in{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"t x";align-items:center;gap:var(--s-2) var(--s-3)}
 .pt-in.has-k{grid-template-areas:"k x" "t t"}
 .pt-in > .badge{grid-area:k;justify-self:start}
-.pt-in > .btn{grid-area:x;align-self:start}
+.pt-in > .btn,.pt-in > .pt-acts{grid-area:x;align-self:start}
+.pt-acts{display:flex;align-items:center;gap:var(--s-2)}
+.pt-more{width:var(--ctl-sm);padding:0}
+/* the sheet menu: opens below its button inside the bar's own layer, so it moves with the bar's condense and never changes the bar's size */
+.pt-menu{position:relative;display:flex}
+.menu,.menu-tip{position:absolute;top:calc(100% + var(--s-1));right:0;z-index:5}
+.menu{display:grid;min-width:min(176px,calc(100vw - 2 * var(--s-4)));max-width:calc(100vw - 2 * var(--s-4));padding:var(--s-1);background:var(--card);border:1px solid var(--line);border-radius:var(--r-card);box-shadow:0 10px 24px -14px rgba(0,0,0,.6)}
+:root[data-theme=light] .menu{box-shadow:0 10px 24px -14px rgba(23,23,28,.35)}
+.menu[hidden],.menu-tip[hidden]{display:none}
+.menu-i{display:flex;align-items:center;min-height:var(--tap);padding:0 var(--s-3);border:0;border-radius:var(--r-chip);background:none;color:var(--text);font:inherit;font-size:var(--fs-body);text-align:left;cursor:pointer;white-space:nowrap}
+.menu-i:focus-visible{outline-offset:-2px}
+@media (hover:hover){.menu-i:hover{background:var(--surface)}}
+.menu-tip{padding:var(--s-1) var(--s-3);background:var(--violet-soft);color:var(--violet-text);border-radius:var(--r-chip);font-size:var(--fs-meta);white-space:nowrap;pointer-events:none}
 .pt-in > .pt-title{grid-area:t;min-width:0;overflow-wrap:anywhere}
 .pt-in:not(.has-k) > .pt-title{align-self:center}
 
