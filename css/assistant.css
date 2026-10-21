@@ -197,3 +197,9 @@ html.m-hidden .as-glow,.as-paused .as-glow,.as-away .as-glow,.as-open .as-glow{a
   .as-track{border:1px solid ButtonText}.as-switch[aria-checked=true] .as-track{background:Highlight}
   .as-bot,.as-me{border:1px solid CanvasText}
 }
+/* streamed replies: every word is in place from the start and fades in on its own delay (opacity and a touch of blur only, no reflow) */
+.as-w{opacity:0;animation:as-w 240ms var(--ease-decel,cubic-bezier(.05,.7,.1,1)) both}
+@keyframes as-w{from{opacity:0;filter:blur(3px)}to{opacity:1;filter:none}}
+@media (prefers-reduced-motion:reduce){.as-w{animation:none;opacity:1}}
+.as-sugg.as-hold{visibility:hidden;pointer-events:none}
+@media (prefers-reduced-motion:no-preference){.as-ask > .as-sugg[data-key=follow]:not(.as-hold){animation:as-in var(--spring-settle-t,.33s) var(--spring-settle,ease) both}}

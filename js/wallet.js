@@ -100,7 +100,8 @@ function close(){if(!ws)return;var w=ws;ws=null;clearTimeout(w.t);clearTimeout(w
   U.sheet({root:"wallet-root",open:false});
   /* focus returns to where the person was, or to what the connection unlocked */
   if(S.on&&w.after){w.after();return}
-  if(w.from&&w.from.isConnected&&w.from.getClientRects().length)w.from.focus();else if(hdr)hdr.focus()}
+  /* preventScroll: returning focus to a control in the pinned header must never move the page (some browsers scroll to reveal it) */
+  if(w.from&&w.from.isConnected&&w.from.getClientRects().length)w.from.focus({preventScroll:true});else if(hdr)hdr.focus({preventScroll:true})}
 function focusIn(sel){var r=doc.getElementById("wallet-root"),n=r&&r.querySelector(sel||"[data-wl-focus]");if(n)n.focus({preventScroll:false})}
 function sheet(first){if(!ws)return;var kids,title,label,badge=null;
   if(ws.mode==="connect"){title=label="Connect a wallet";kids=[connectStep()]}

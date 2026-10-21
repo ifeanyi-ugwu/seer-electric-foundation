@@ -22,7 +22,7 @@ var FILE={home:"index.html",app:"app.html",futarchy:"futarchy.html",deep:"deep.h
 
 /* ---------- state for the tab: the open tab and the conversation ---------- */
 function load(){try{var v=JSON.parse(sessionStorage.getItem(KEY)||"null");if(v&&Array.isArray(v.msgs))return v}catch(e){}return{tab:"ask",msgs:[]}}
-var ST=load();
+var ST=load();ST.msgs&&ST.msgs.forEach(function(m){if(m&&m.vis!=null)m.vis=null});
 function save(){try{sessionStorage.setItem(KEY,JSON.stringify({tab:ST.tab,msgs:ST.msgs.slice(-40).map(function(m){return{r:m.r,t:m.t,link:m.link||null,follow:m.follow||null}})}))}catch(e){}}
 
 /* ---------- the knowledge map: scripted answers, matched on words in the question ---------- */
@@ -111,24 +111,29 @@ function wirePane(p){var y0=0,body=p.querySelector(".as-body");
 
 /* ---------- Ask ---------- */
 /* a reply's visible text streams in an aria-hidden paragraph; screen readers get the whole reply, once, from the hidden twin */
-function bubble(m,i){var me=m.r==="me",vis=m.vis!=null&&m.vis<m.t.length?m.t.slice(0,m.vis):m.t;
+/* a streaming reply is laid out in full from the first frame (so the bubble never grows or re-wraps) and each word fades in on its
+   own delay; the delay is measured from when the reply started, so a re-render mid-stream resumes in place instead of restarting */
+function streamWords(m){var ws=m.t.split(" "),el=performance.now()-(m.t0||0);
+  return ws.map(function(w,k){return h("span",{class:"as-w",style:"animation-delay:"+Math.round(k*m.step-el)+"ms"},[w+(k<ws.length-1?" ":"")])})}
+function bubble(m,i){var me=m.r==="me",streaming=m.vis!=null;
   return h("div",{class:"as-msg "+(me?"as-me":"as-bot"),"data-key":"m"+i},me?[h("span",{class:"dm-sr",text:"You: "}),h("p",{class:"as-txt",text:m.t})]:[
-    h("span",{class:"dm-sr",text:"Seer assistant: "+m.t}),h("p",{class:"as-txt","aria-hidden":"true"},[vis]),
-    m.link&&(m.vis==null||m.vis>=m.t.length)&&m.link[1]!==FILE?h("a",{class:"as-go",href:m.link[1]},[h("span",{text:m.link[0]}),svg("svg",{viewBox:"0 0 16 16",width:"16",height:"16","aria-hidden":"true",focusable:"false"},[svg("path",{d:"M3 8h9.5M8.5 3.5 13 8l-4.5 4.5",fill:"none",stroke:"currentColor","stroke-width":"1.5"})])]):null])}
-function chips(list,key){return h("div",{class:"as-sugg","data-key":key,role:"group","aria-label":key==="follow"?"Follow-up questions":"Suggested questions"},list.map(function(q){return h("button",{class:"chip as-chip",type:"button","aria-disabled":busy?"true":null,onclick:function(){send(q)}},[q])}))}
+    h("span",{class:"dm-sr",text:"Seer assistant: "+m.t}),h("p",{class:"as-txt","aria-hidden":"true"},streaming?streamWords(m):[m.t]),
+    m.link&&!streaming&&m.link[1]!==FILE?h("a",{class:"as-go",href:m.link[1]},[h("span",{text:m.link[0]}),svg("svg",{viewBox:"0 0 16 16",width:"16",height:"16","aria-hidden":"true",focusable:"false"},[svg("path",{d:"M3 8h9.5M8.5 3.5 13 8l-4.5 4.5",fill:"none",stroke:"currentColor","stroke-width":"1.5"})])]):null])}
+function chips(list,key,hold){return h("div",{class:"as-sugg"+(hold?" as-hold":""),"aria-hidden":hold?"true":null,"data-key":key,role:"group","aria-label":key==="follow"?"Follow-up questions":"Suggested questions"},list.map(function(q){return h("button",{class:"chip as-chip",type:"button","aria-disabled":busy?"true":null,onclick:function(){send(q)}},[q])}))}
 var HELLO="Hi, I am the Seer assistant. Ask me about markets, Futarchy or anything on this page.";
 function ask(){var log=[h("div",{class:"as-msg as-bot","data-key":"hello"},[h("span",{class:"dm-sr",text:"Seer assistant: "+HELLO}),h("p",{class:"as-txt","aria-hidden":"true",text:HELLO})]),
     chips(SUGG[PAGE],"sugg0")];
   ST.msgs.forEach(function(m,i){log.push(bubble(m,i))});
   if(busy==="typing")log.push(h("div",{class:"as-msg as-bot as-typing","data-key":"typing","aria-hidden":"true"},[h("i"),h("i"),h("i")]));
-  var last=ST.msgs[ST.msgs.length-1],done=last&&last.r==="bot"&&!busy;
+  var last=ST.msgs[ST.msgs.length-1],reply=last&&last.r==="bot"&&last.follow&&last.follow.length;
   return h("div",{class:"as-pane as-ask",id:"as-pane","data-key":"ask"},[
     /* the one statement that the replies are scripted, and the way to start over */
     h("div",{class:"as-askbar","data-key":"askbar"},[h("p",{class:"as-note"},[h("i",{"aria-hidden":"true"}),"Scripted preview"]),
       ST.msgs.length&&!busy?h("button",{class:"as-clear",type:"button",onclick:function(){ST.msgs=[];save();draw();say("Conversation cleared.");var i=doc.getElementById("as-q");if(i)i.focus()}},["Clear conversation"]):null]),
     h("div",{class:"as-scroll as-log",role:"log","aria-live":"polite","aria-label":"Conversation",tabindex:"0","data-key":"log"},log),
     /* follow-up questions after a reply sit outside the log, so the log only ever announces the reply itself */
-    done&&last.follow&&last.follow.length?chips(last.follow,"follow"):null,
+    /* held (invisible, same size) while the reply streams, so the log keeps its final height and nothing shifts when they appear */
+    (busy?PENDING:(reply?last.follow:null))&&(busy?PENDING:last.follow).length?chips(busy?PENDING:last.follow,"follow",!!busy):null,
     h("form",{class:"as-compose","data-key":"compose",onsubmit:function(e){e.preventDefault();if(busy)return;var i=doc.getElementById("as-q");if(i&&i.value.trim()){var v=i.value.trim();i.value="";send(v)}}},[
       h("label",{class:"dm-sr",for:"as-q",text:"Ask the Seer assistant"}),
       h("input",{class:"field as-q",id:"as-q",type:"text",autocomplete:"off",maxlength:"200",placeholder:"Ask about markets or this page",enterkeyhint:"send"}),
@@ -138,16 +143,13 @@ function scrollLog(instant){var l=doc.querySelector("#"+RID+" .as-log");if(!l)re
 /* a reply: a short typing beat, then the text streams in word by word (all at once under reduced motion). Screen
    readers get the whole reply once, when it is added to the log. */
 function redraw(){if(isOpen())draw()}
-function send(q){if(busy)return;ST.msgs.push({r:"me",t:q});save();busy="typing";redraw();scrollLog();
-  var a=answer(q);
+var PENDING=null; /* the follow-up chips of the reply being prepared: their space is held from the moment the question is sent */
+function send(q){if(busy)return;var a=answer(q);PENDING=a.f||null;ST.msgs.push({r:"me",t:q});save();busy="typing";redraw();scrollLog();
   setTimeout(function(){var m={r:"bot",t:a.t,link:a.link||null,follow:a.f||null};
-    if(reduced()){ST.msgs.push(m);busy=false;save();redraw();scrollLog();return}
-    var words=a.t.split(" "),n=0;m.vis=0;ST.msgs.push(m);busy="stream";save();redraw();scrollLog();
-    var step=Math.max(18,Math.min(42,1400/words.length));
-    (function go(){n=Math.min(words.length,n+2);m.vis=words.slice(0,n).join(" ").length;
-      if(n>=words.length){m.vis=null;busy=false;save();redraw();scrollLog();return}
-      var t=doc.querySelector("#"+RID+' [data-key="m'+(ST.msgs.length-1)+'"] .as-txt');if(t)t.textContent=m.t.slice(0,m.vis);
-      scrollLog(true);setTimeout(go,step)})()},reduced()?150:520+Math.random()*260)}
+    if(reduced()){ST.msgs.push(m);busy=false;PENDING=null;save();redraw();scrollLog();return}
+    var n=a.t.split(" ").length,step=Math.max(14,Math.min(36,1500/n));
+    m.vis=0;m.t0=performance.now();m.step=step;ST.msgs.push(m);busy="stream";save();redraw();scrollLog();
+    setTimeout(function(){m.vis=null;busy=false;PENDING=null;save();redraw()},Math.round(n*step+320))},reduced()?150:520+Math.random()*260)}
 
 /* ---------- Demo: the judges' controls ---------- */
 var DELAY_T={0:"Instant",1:"1s",2:"2s",3:"3s",8:"8s"},ERR_T={none:"None",network:"Network",timeout:"Timeout",server:"Server error",notfound:"Not found",empty:"Empty"};
