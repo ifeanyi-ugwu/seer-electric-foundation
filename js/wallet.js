@@ -163,7 +163,7 @@ function connectStep(){var s=ws.step,k=ws.kind;
       return h("li",{},[h("button",a,[h("span",{class:"wl-ic"},[glyph(id)]),h("span",{class:"wl-opt-t"},[h("b",{text:KINDS[id][0]}),h("span",{class:"note",text:KINDS[id][1]})]),
         svg("svg",{class:"wl-chev",viewBox:"0 0 16 16",width:"16",height:"16",fill:"none",stroke:"currentColor","stroke-width":"1.5","aria-hidden":"true",focusable:"false"},[svg("path",{d:"M6 3.5 10.5 8 6 12.5"})])])])})),
     /* the one statement for the whole wallet flow */
-    h("p",{class:"note wl-demo",text:"Demo only: no wallet is contacted and no funds move."})]);
+    h("p",{class:"cn",text:"Demo only: no wallet is contacted and no funds move."})]);
   if(s==="wait")return h("div",{class:"wl-step wl-center","data-key":"wl-wait-"+k},[k==="mobile"?qr():dots(),
     h("h3",{class:"wl-h",tabindex:"-1","data-wl-focus":"",text:WAIT[k][0]}),
     h("p",{class:"note",role:"status",text:WAIT[k][1]}),link("Cancel",cancel)]);
@@ -284,7 +284,7 @@ Flow.prototype.style=function(){return this.hold&&this.step!=="form"?"min-height
 Flow.prototype.view=function(){var f=this,s=f.step,t=f.copy(),sum=f.sum||{rows:[]},cls="tx-step"+(f.dir<0?" tx-rev":"");
   if(s==="review")return h("div",{class:cls,"data-key":"tx-review"},[
     h("h3",{class:"tx-h",tabindex:"-1","data-tx-focus":"",text:t.review}),
-    h("dl",{class:"tx-sum"},sum.rows.map(function(r){return h("div",{class:"tx-row"+(r[2]?" "+r[2]:"")},[h("dt",{text:r[0]}),h("dd",{text:r[1]})])})),
+    h("dl",{class:"tx-sum"},sum.rows.map(function(r){return h("div",{class:"tx-row"+(r[2]?" "+r[2]:"")},[h("dt",{text:r[0]}),h("dd",{},[r[1]])])})),
     sum.note?h("p",{class:"note",text:sum.note}):null,
     h("div",{class:"wl-acts"},[h("button",{class:"btn lg",type:"button",text:t.confirm,onclick:function(){f.sign()}}),
       h("button",{class:"btn soft wl-wide",type:"button",text:"Back",onclick:function(){f.go("form","[data-tx-place]")}})])]);

@@ -52,7 +52,6 @@
 .wl-opt-t{display:grid;gap:2px;min-width:0}
 .wl-opt-t b{font-weight:500;font-size:var(--fs-ui)}
 .wl-chev{color:var(--muted);transition:translate var(--spring-snappy-t,.3s) var(--spring-snappy,ease)}
-.wl-demo{border-top:1px solid var(--line);padding-top:var(--s-3)}
 
 /* waiting: three violet blocks step in turn (still under reduced motion) */
 .wl-dots{display:flex;gap:6px;height:48px;align-items:center}
@@ -121,8 +120,6 @@
 .tx-row dd{margin:0;text-align:right;min-width:0;overflow-wrap:anywhere;font-family:var(--num);font-variant-numeric:tabular-nums}
 .tx-row.tx-q dd{font-family:var(--font);text-wrap:balance}
 .tx-row.tx-tot dt{color:var(--text)}.tx-row.tx-tot dd{font-weight:500}
-.tx-row.tx-free dd{color:var(--pos)}
-:root[data-theme=light] .tx-row.tx-free dd{color:#00604f}
 .tx-ref{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--s-1) var(--s-2);font-size:var(--fs-meta)}
 .tx-ref code{color:var(--text);background:var(--surface);border-radius:var(--r-chip);padding:2px 6px}
 /* a new step slides in along x (on the independent translate property, so it adds to the morph's own rise and fade);

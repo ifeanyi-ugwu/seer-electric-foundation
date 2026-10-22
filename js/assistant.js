@@ -129,7 +129,7 @@ function ask(){var log=[h("div",{class:"as-msg as-bot","data-key":"hello"},[h("s
   var last=ST.msgs[ST.msgs.length-1],reply=last&&last.r==="bot"&&last.follow&&last.follow.length;
   return h("div",{class:"as-pane as-ask",id:"as-pane","data-key":"ask"},[
     /* the one statement that the replies are scripted, and the way to start over */
-    h("div",{class:"as-askbar","data-key":"askbar"},[h("p",{class:"as-note"},[h("i",{"aria-hidden":"true"}),"Scripted preview"]),
+    h("div",{class:"as-askbar","data-key":"askbar"},[h("p",{class:"cn",text:"Scripted preview"}),
       ST.msgs.length&&!busy?h("button",{class:"as-clear",type:"button",onclick:function(){ST.msgs=[];save();draw();say("Conversation cleared.");var i=doc.getElementById("as-q");if(i)i.focus()}},["Clear conversation"]):null]),
     h("div",{class:"as-scroll as-log",role:"log","aria-live":"polite","aria-label":"Conversation",tabindex:"0","data-key":"log"},log),
     /* follow-up questions after a reply sit outside the log, so the log only ever announces the reply itself */
@@ -162,7 +162,7 @@ function demo(){if(!D)return h("div",{class:"as-pane",id:"as-pane"},[h("p",{clas
   var s=D.settings,c=D.counts,can=D.canReplay(),narrowClose=function(){if(mqPhone.matches)close()};
   var err=s.error,forceKind=err==="none"?"server":err;
   var items=[
-    h("p",{class:"as-note as-demo-note","data-key":"dnote"},[h("i",{"aria-hidden":"true"}),"These controls are for the demo: they simulate slow, failing and offline loads on every page in this tab."]),
+    h("p",{class:"cn","data-key":"dnote",text:"These controls are for the demo: they simulate slow, failing and offline loads on every page in this tab."}),
     group("as-g-load","Loading",[
       h("div",{class:"as-field"},[h("span",{class:"as-lbl",id:"as-delay-l",text:"Delay"}),
         h("div",{class:"seg as-seg",role:"group","aria-labelledby":"as-delay-l"},D.DELAYS.map(function(d){return h("button",{type:"button","aria-pressed":String(s.delay===d),onclick:function(){if(s.delay!==d)set({delay:d},d?"Delay set to "+d+(d===1?" second":" seconds"):"Delay set to instant")}},[DELAY_T[d]])}))]),
@@ -177,7 +177,7 @@ function demo(){if(!D)return h("div",{class:"as-pane",id:"as-pane"},[h("p",{clas
       h("p",{class:"as-help",id:"as-trig-n",text:can?"Runs this page's load once with "+(err==="none"?"a server error":err==="empty"?"an empty result":"a "+ERR_T[err].toLowerCase()+" error")+", whatever the scope.":"Open one of the apps to trigger an error."})]),
     group("as-g-net","Network",[sw("as-off",s.offline,"Offline","Every load fails with a network error until you switch this off; the page then retries by itself.",function(){set({offline:!s.offline},s.offline?"Back online.":"Offline on.")})]),
     group("as-g-cache","Cache",[sw("as-cache",s.cache,"Cache","Saved loads show at once and refresh in the background.",function(){set({cache:!s.cache},s.cache?"Cache off.":"Cache on.")}),
-      h("p",{class:"as-live num","data-key":"cache-line"},["Cache: "+c.entries+(c.entries===1?" entry":" entries")+", last read "+D.ago(c.lastRead)]),
+      h("p",{"data-key":"cache-line"},[h("span",{class:"cn-i",text:"Cache: "+c.entries+(c.entries===1?" entry":" entries")+", last read "+D.ago(c.lastRead)})]),
       h("div",{class:"as-two"},[h("button",{class:"btn soft",type:"button",onclick:function(){D.warmCache();say("Cache warmed: "+D.counts.entries+" entries.")}},["Warm cache"]),
         h("button",{class:"btn soft",type:"button","aria-describedby":"as-clear-n",onclick:function(){D.clearCache();say("Cache cleared. The next load is cold.")}},["Clear cache ("+c.entries+")"])]),
       h("p",{class:"as-help",id:"as-clear-n",text:"Last cleared "+D.ago(c.lastCleared)+"."}),
@@ -200,7 +200,7 @@ function hideHint(refocus){if(!hint)return;var n=hint,f=refocus&&n.contains(doc.
 function openDemo(){hideHint();if(ST.tab!=="demo"){ST.tab="demo";save()}if(isOpen()){if(doc.querySelector("#"+RID+" .as-tabs"))draw();return}open()}
 function showHint(){if(hint||seen()||isOpen())return;markSeen();
   hint=h("aside",{class:"as-hint","aria-label":"Demo controls",onkeydown:function(e){if(e.key==="Escape"){e.stopPropagation();hideHint(true)}}},[
-    h("p",{class:"as-hint-t",text:"Demo controls: slow loads, errors, offline"}),
+    h("p",{class:"cn as-hint-t",text:"Demo controls: slow loads, errors, offline"}),
     h("button",{class:"as-hint-x",type:"button","aria-label":"Close",onclick:function(){hideHint(true)}},[svg("svg",{viewBox:"0 0 16 16",width:"16",height:"16","aria-hidden":"true",focusable:"false"},[svg("path",{d:"M3.5 3.5l9 9M12.5 3.5l-9 9",fill:"none",stroke:"currentColor","stroke-width":"1.5"})])]),
     h("button",{class:"btn soft as-hint-go",type:"button",text:"Open",onclick:openDemo})]);
   doc.body.appendChild(hint);away();void hint.offsetWidth;hint.classList.add("m-in");say("Demo controls: slow loads, errors, offline.")}

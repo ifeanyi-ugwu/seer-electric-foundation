@@ -52,7 +52,7 @@ html.m-hidden .as-glow,.as-paused .as-glow,.as-away .as-glow,.as-open .as-glow{a
 :root[data-theme=light] .as-hint{box-shadow:0 10px 16px rgba(60,30,120,.18)}
 .as-hint.m-in{opacity:1;visibility:visible;transform:none;transition-delay:0s}
 .as-hint.m-in.as-away{opacity:0;visibility:hidden;pointer-events:none;transform:translateY(8px);transition:transform var(--dur-2,.2s) var(--ease-accel,ease),opacity var(--dur-1,.12s) var(--ease-accel,ease),visibility 0s linear var(--dur-2,.2s)}
-.as-hint-t{grid-column:1;grid-row:1;margin:0;padding-top:var(--s-2);font-size:var(--fs-body);line-height:var(--lh-snug);overflow-wrap:anywhere}
+.as-hint-t{grid-column:1;grid-row:1;margin:0}
 .as-hint-x{grid-column:2;grid-row:1;width:44px;height:44px;padding:0;border:0;background:none;color:var(--muted);cursor:pointer;display:grid;place-items:center;border-radius:50%}
 @media (hover:hover){.as-hint-x:hover{color:var(--text)}}
 .as-hint-x:focus-visible{outline:2px solid var(--violet-text);outline-offset:-4px}
@@ -122,8 +122,6 @@ html.m-hidden .as-glow,.as-paused .as-glow,.as-away .as-glow,.as-open .as-glow{a
 .as-body{min-height:0;display:grid}
 .as-pane{min-height:0;display:grid;align-content:stretch}
 .as-scroll{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--text) 22%,transparent) transparent}
-.as-note{display:flex;align-items:center;gap:var(--s-2);color:var(--muted);font-size:var(--fs-meta);line-height:var(--lh-snug)}
-.as-note > i{width:8px;height:8px;flex:none;background:var(--violet)}
 
 /* ---------- Ask: a log of messages that scrolls, follow-up questions, and the composer pinned at the foot ---------- */
 .as-ask{grid-template-rows:auto minmax(0,1fr) auto auto}
@@ -155,8 +153,6 @@ html.m-hidden .as-glow,.as-paused .as-glow,.as-away .as-glow,.as-open .as-glow{a
 
 /* ---------- Demo: grouped controls ---------- */
 .as-demo > .as-scroll{display:grid;align-content:start;gap:var(--s-4);padding:var(--s-1) var(--s-4) var(--s-5)}
-.as-demo-note{color:var(--text-2);padding:var(--s-2) var(--s-3);background:var(--card);border-radius:var(--r-card);align-items:flex-start}
-.as-demo-note > i{margin-top:4px}
 .as-group{display:grid;gap:var(--s-3);padding-top:var(--s-4);border-top:1px solid var(--line);min-width:0}
 .as-gh{font-size:var(--fs-ui);font-weight:500;line-height:var(--lh-snug);display:flex;align-items:center;gap:var(--s-2)}
 .as-gh::before{content:"";width:8px;height:8px;flex:none;background:var(--violet)}
@@ -175,7 +171,6 @@ html.m-hidden .as-glow,.as-paused .as-glow,.as-away .as-glow,.as-open .as-glow{a
 .as-track i{position:absolute;left:4px;top:4px;width:18px;height:18px;border-radius:50%;background:var(--text-2);transition:transform var(--spring-snappy-t,.31s) var(--spring-snappy,ease),background-color var(--dur-2,.2s) var(--ease-standard,ease)}
 .as-switch[aria-checked=true] .as-track{background:var(--violet);box-shadow:none}
 .as-switch[aria-checked=true] .as-track i{transform:translateX(18px);background:#fff}
-.as-live{color:var(--text-2);font-size:var(--fs-meta);font-family:var(--num);font-variant-numeric:tabular-nums}
 .as-two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s-2)}
 .as-sheet .as-two .btn{min-height:var(--tap);font-size:var(--fs-body);white-space:normal;line-height:1.2}
 .as-entries summary{display:flex;align-items:center;min-height:var(--tap);color:var(--text-2);font-size:var(--fs-meta);cursor:pointer}

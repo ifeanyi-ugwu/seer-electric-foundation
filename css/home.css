@@ -285,7 +285,7 @@ circle.g-on{fill:var(--violet)}
 .foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:var(--s-6)}
 .foot-brand svg{height:24px;width:auto;color:var(--text)}
 .foot-name{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
-.foot-brand p.muted{margin-top:var(--s-4);font-size:14px;max-width:40ch}
+.foot-brand .cn{margin-top:var(--s-4);max-width:40ch}
 .foot h2{font-size:14px;color:var(--muted);letter-spacing:0;margin-bottom:var(--s-3);font-weight:500}
 .foot ul{list-style:none;padding:0;display:grid;gap:var(--s-1);font-size:14px}
 .foot ul a{display:inline-flex;align-items:center;min-height:32px}

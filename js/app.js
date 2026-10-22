@@ -39,7 +39,7 @@
         row("Resolves by",rs.state==="disputed"?(rs.source||"Reality.eth")+", now in Kleros arbitration":(rs.source||"Reality.eth")+", with Kleros arbitration if disputed","tx-q"),
         row("Answer",a,"tx-q"),
         row("Collateral",U.COLL,"tx-q"),
-        row("Market address",[h("span",{class:"num",text:W.short(addr)}),W.copyBtn(addr,"market address")],"rules-addr"),
+        row("Market address",[h("span",{class:"num",text:W.short(addr)}),h("span",{class:"cn-i",text:"demo address"}),W.copyBtn(addr,"market address")],"rules-addr"),
         row("Verification",m.isNew?"Not verified":"Verified on Kleros Curate","tx-q")]),
       h("p",{class:"note",text:rs.rules+" If the question cannot be answered, it resolves Invalid, and only \u201cInvalid result\u201d shares redeem for the collateral."}),
       rs.state==="awaiting"?h("p",{class:"note"},[h("button",{class:"wl-link",type:"button",text:"Answer on Reality.eth",onclick:function(e){U.concept("Not part of this concept. In the product this opens the question on Reality.eth.",e.currentTarget)}})]):null]);return d}
@@ -266,7 +266,7 @@
     function focusPlace(){var b=tk.querySelector("[data-tx-place]");if(b)b.focus()}
     function place(){var p=Math.min(.99,Math.max(.01,price())),a=amt,s=a/p,o=m.outs?m.outs[pick][0]:null,sd=sideName();
       fl.place(a,function(){return{amount:a,meta:{type:"Trade",market:m.q,mid:m.id,product:"app",outcome:o,side:bin?"":sd,shares:s,price:p,status:m.status},
-        rows:[["Market",m.q,"tx-q"]].concat(o?[["Outcome",o,"tx-q"]]:[],bin?[]:[["Side",sd]],[["Amount",W.money(a)+" "+U.COLL,"tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(s)],["Max slippage","0.5%"],["Minimum shares",U.shares(s*.995)],[m.scalar?"Maximum payout":"Payout if correct","$"+U.num(s,2)],["Network fee","Free in demo","tx-free"]]),
+        rows:[["Market",m.q,"tx-q"]].concat(o?[["Outcome",o,"tx-q"]]:[],bin?[]:[["Side",sd]],[["Amount",W.money(a)+" "+U.COLL,"tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(s)],["Max slippage","0.5%"],["Minimum shares",U.shares(s*.995)],[m.scalar?"Maximum payout":"Payout if correct","$"+U.num(s,2)],["Network fee",U.cni("Free in demo")]]),
         done:"You bought "+U.shares(s)+" "+(o?(bin?"shares on "+o:side+" shares on "+o):m.scalar?sd+" shares":"shares on the branch \u201c"+sd.toLowerCase()+"\u201d")+"."}},"amt")}
     var drawTicket=function(){var p=Math.min(.99,Math.max(.01,price())),f=h("div");
       tk.style.minHeight=fl.style()?fl.hold+"px":"";
@@ -427,7 +427,7 @@
     var m=toMarket(cm),liq=num(cm.liq),detail=m.outs?m.outs.map(function(o){return o[0]}).join(", "):m.scalar?m.scalar.lo+" to "+m.scalar.hi+(m.scalar.unit?" "+m.scalar.unit:"")+", estimate "+m.scalar.est:m.cond.if+"; "+m.cond.metric+(m.cond.unit?" ("+m.cond.unit+")":"");
     cflow.review({amount:liq,meta:{type:"Create market",market:m.q},
       rows:[["Question",m.q,"tx-q"],["Category",m.cat],["Type",m.type],[m.outs?(m.type==="Multi-scalar"?"Ranges":"Outcomes"):m.scalar?"Range":"Condition",detail,"tx-q"],["Closes",(closeOf(m)||{full:"Not set"}).full],
-        ["Liquidity locked",W.money(liq)+" "+U.COLL,"tx-tot"],["Network fee","Free in demo","tx-free"]],
+        ["Liquidity locked",W.money(liq)+" "+U.COLL,"tx-tot"],["Network fee",U.cni("Free in demo")]],
       note:"The liquidity stays locked in the market until it resolves.",
       done:"“"+m.q+"” is open for trading. Its liquidity is locked in the market."})}
   function cmDraw(first){if(!cm)return;var body=cflow.step==="form"?cmForm():cflow.view();

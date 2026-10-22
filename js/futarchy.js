@@ -27,7 +27,7 @@ function bprice(p,b){var lo=Math.min(p.pass,p.fail)*.75,hi=Math.max(p.pass,p.fai
 function place(){var p=view.p,b=branch,a=amt,pr=b==="pass"?p.pass:p.fail,px=bprice(p,b),sh=a/px,name="#"+p.id+" "+p.t;
  flow.place(a,function(){return{amount:a,meta:{type:"Trade",market:name,mid:p.id,product:"futarchy",outcome:null,side:b==="pass"?"If it passes":"If it fails",shares:sh,price:px,status:"Open"},
   rows:[["Market",name,"tx-q"],["Branch",b==="pass"?"If it passes":"If it fails"],["Forecast",fmt(p,pr)],["Amount",W.money(a)+" "+U.COLL,"tx-tot"],
-   ["Price per share","$"+px.toFixed(2)],["Shares",U.shares(sh)],["Max slippage","0.5%"],["Minimum shares",U.shares(sh*.995)],["Payout if correct","$"+U.num(sh,2)],["Network fee","Free in demo","tx-free"]],
+   ["Price per share","$"+px.toFixed(2)],["Shares",U.shares(sh)],["Max slippage","0.5%"],["Minimum shares",U.shares(sh*.995)],["Payout if correct","$"+U.num(sh,2)],["Network fee",U.cni("Free in demo")]],
   note:"If the other branch happens, this trade is called off and the stake comes back.",
   done:"You bought "+U.shares(sh)+" shares in the "+(b==="pass"?"pass":"fail")+" branch of proposal #"+p.id+"."}},"amt")}
 /* a forecast with its unit, in the site's number style: "$1.24", "$412K", "$18.2M", "2.1"; a negative has the sign first (U+2212) */

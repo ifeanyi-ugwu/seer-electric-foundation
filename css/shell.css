@@ -93,7 +93,6 @@ select:focus{outline:2px solid var(--violet-text);outline-offset:2px}
 
 /* ---------- badges (one style everywhere) ---------- */
 .badge{display:inline-block;font-size:var(--fs-cap);line-height:16px;padding:2px 8px;border-radius:var(--r-chip);background:var(--violet-soft);color:var(--violet-text);white-space:nowrap}
-.badge.ghost{background:transparent;border:1px solid var(--line);color:var(--muted);padding:1px 7px}
 
 /* ---------- text roles ---------- */
 .num{font-family:var(--num);font-variant-numeric:tabular-nums;letter-spacing:0}

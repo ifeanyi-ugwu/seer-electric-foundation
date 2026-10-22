@@ -115,6 +115,8 @@ U.sheet=function(o){var R=o.root||"sheet-root",root=document.getElementById(R),h
 U.covered=function(R){return R!=="wallet-root"&&!!document.querySelector("#wallet-root .panel")};
 U.openPanel=function(){return document.querySelector("#sheet-root .panel, #panel-root .panel, #wallet-root .panel")};
 
+/* U.cni(text): the inline concept note (css/components.css) for a word that says a value is a demo one. */
+U.cni=function(text){return U.h("span",{class:"cn-i",text:text})};
 /* A concept note: one short line at the foot of the screen for a control that exists in the live product and is outside this concept.
    U.concept(text, opener): one at a time, announced once through the page's polite live region, gone after 5 seconds, on Escape or on its
    Close button. Focus stays where it is; Close returns it to opener. While a sheet is open on a narrow screen the sheet is lifted by the
@@ -128,7 +130,7 @@ U.concept=function(text,opener){var h=U.h,doc=document,root=doc.documentElement;
   if(back&&opener&&opener.isConnected)opener.focus({preventScroll:true})}
  var x=h("button",{class:"btn soft cn-x",type:"button","aria-label":"Close note",onclick:function(){end(false,true)}}),ic=U.svg("svg",{viewBox:"0 0 16 16",width:"16",height:"16","aria-hidden":"true",focusable:"false",fill:"none",stroke:"currentColor","stroke-width":"1.6","stroke-linecap":"round"});
  ic.appendChild(U.svg("path",{d:"M4 4l8 8M12 4l-8 8"}));x.appendChild(ic);
- n=h("div",{class:"concept-note",id:"concept-note",role:"region","aria-label":"Concept note"},[h("span",{class:"cn-t",text:text}),x]);n.__end=end;
+ n=h("div",{class:"concept-note",id:"concept-note",role:"region","aria-label":"Concept note"},[h("span",{class:"cn cn-t",text:text}),x]);n.__end=end;
  doc.body.appendChild(n);doc.addEventListener("keydown",key,true);
  if(U.openPanel()&&matchMedia("(max-width:760px)").matches){root.classList.add("cn-on");root.style.setProperty("--cn-h",Math.ceil(innerHeight-n.offsetTop+8)+"px")}
  var D=window.SeerDemo,W=window.SeerWallet;(D&&D.announce||W&&W.announce||function(){})(text);
