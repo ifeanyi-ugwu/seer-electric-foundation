@@ -74,7 +74,8 @@ td.mq{white-space:normal;min-width:240px;max-width:420px;font-size:var(--fs-ui)}
 .rules[open] > summary::after{transform:rotate(180deg)}
 @media (prefers-reduced-motion:reduce){.rules > summary::after{transition:none}}
 .rules > .note{margin-top:var(--s-3)}
-.rules .rules-addr dd{display:flex;align-items:center;justify-content:flex-end;gap:var(--s-2)}
+.rules .rules-addr dd{display:flex;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:var(--s-1) var(--s-2)}
+.rules .rules-addr .num{white-space:nowrap}/* the address never breaks inside its hex; the note and Copy wrap to the next line instead */
 .olist{display:grid;gap:var(--s-2)}
 .sel{cursor:pointer;border:2px solid transparent;width:100%;font:inherit;color:inherit;text-align:left}
 @media (hover:hover){.sel:hover{border-color:color-mix(in srgb,var(--violet) 45%,transparent)}}
