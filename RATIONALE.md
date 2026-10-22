@@ -83,7 +83,7 @@ Each row is a place where the built interface differs from what the kit specifie
 
 The kit does not specify the following, so the build adds it. These are additions, not departures.
 
-- Spacing, type scale, control heights and the three layout ranges: [Layout: three ranges](BEHAVIOUR.md#layout-three-ranges). The 4px spacing scale also is also a departure row under Layout and spacing.
+- Spacing, type scale, control heights and the three layout ranges: [Layout: three ranges](BEHAVIOUR.md#layout-three-ranges). The 4px spacing scale is also a departure row under Layout and spacing.
 - Page headers, pinned header behaviour, detail sheets and page-head marks: [Page headers and sheets](BEHAVIOUR.md#page-headers-and-sheets).
 - Motion language, spring presets, tokens and reduced motion: [Motion](BEHAVIOUR.md#motion).
 - Light and dark theme change: [Theme change](BEHAVIOUR.md#theme-change).
