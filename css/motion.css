@@ -58,7 +58,7 @@
    ================================================================================================= */
 .m-phys,.m-phys:hover,.m-phys:active{transform:translate(calc(var(--m-x,0px) + var(--m-fx,0px)),calc(var(--m-y,0px) + var(--m-fy,0px))) scale(var(--m-s,1)) rotate(var(--m-r,0deg))}
 .m-live{will-change:transform}
-/* cards: tilt toward the pointer, the icon and badge drift the other way (inner parallax), a specular
+/* cards: tilt towards the pointer, the icon and badge drift the other way (inner parallax), a specular
    highlight follows the pointer. Fine pointers only; touch gets press and lift only. */
 @media (hover:hover) and (pointer:fine){
   .mgrid .mcard.m-phys,.mgrid .mcard.m-phys:hover,.mgrid .mcard.m-phys:active{transform:perspective(900px) translate(calc(var(--m-x,0px) + var(--m-fx,0px)),calc(var(--m-y,0px) + var(--m-fy,0px))) rotateX(var(--m-rx,0deg)) rotateY(var(--m-ry,0deg)) scale(var(--m-s,1))}
@@ -133,7 +133,7 @@ html{scroll-padding-top:var(--m-hdr,88px)}/* js/motion.js writes the pinned head
 .m-hov-on.shell-products a:hover{background:transparent}
 
 /* ---------- landing nav: fixed (JS adds .m-nav-fixed after measuring, and the hero keeps its height in --m-nav-h),
-   transparent over the hero until the page moves, then the same states as the tool header: the Documents and Blog
+   transparent over the hero until the page moves, then the same states as the tool header: the Documentation and Blog
    row is the one that tucks on phones ---------- */
 .m-nav-fixed .hero{z-index:3;padding-top:var(--m-nav-h,84px)}
 .m-nav-fixed .topnav{position:fixed;top:0;left:0;right:0;z-index:30;pointer-events:none}

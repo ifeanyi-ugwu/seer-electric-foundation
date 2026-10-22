@@ -14,7 +14,7 @@ function differs(s){return(s.r==="Selected"&&s.p<.3)||(s.r==="Not selected"&&s.p
 var ICON={"Selected":"✓","Not selected":"✕","In review":"…","Pending":"○"};
 function badge(s){var c=s==="Selected"?"var(--pos)":s==="Not selected"?"var(--neg)":"var(--text-2)";return h("span",{style:"color:"+c,class:"num",text:ICON[s]+" "+s})}
 /* the trade panel for one submission: inline beside the table on desktop, in a sheet on tablet and phone */
-function sideKids(s,inSheet){var p=st.side==="Yes"?s.p:1-s.p,open=s.r==="In review"||s.r==="Pending",k=[],SK=DM&&DM.sk,B=DM&&DM.skBlock;
+function sideKids(s,inSheet){var p=U.pround(Math.min(.99,Math.max(.01,st.side==="Yes"?s.p:1-s.p))),open=s.r==="In review"||s.r==="Pending",k=[],SK=DM&&DM.sk,B=DM&&DM.skBlock;
  /* the submission's details are loading: its title is already in the bar; the body waits as placeholders */
  if(det.id===s.id&&det.state==="loading")return[h("div",{class:"line"},[h("span",{class:"muted",text:"Reviewer decision"}),SK("10ch")]),B("sk-box","height:var(--ctl);border-radius:999px"),
   h("div",{class:"line"},[h("span",{},[SK("5ch")]),SK("5ch")]),h("div",{class:"field-grp"},[h("label",{},[SK("12ch")]),B("sk-box","height:var(--ctl);border-radius:999px")]),
@@ -29,8 +29,8 @@ function sideKids(s,inSheet){var p=st.side==="Yes"?s.p:1-s.p,open=s.r==="In revi
   var won=s.r==="Selected"?"Will be selected":"Will not be selected";
   W.redeem({flow:flow,market:s.n,mid:s.id,product:"opportunity",quiet:true,after:focusPlace,win:function(x){return x.side===won}}).forEach(function(n){k.push(n)});return k}
  k.push(h("div",{class:"seg",role:"group","aria-label":"Side"},["Yes","No"].map(function(x){return h("button",{type:"button","aria-pressed":String(st.side===x),text:"Will "+(x==="Yes"?"":"not ")+"be selected",onclick:function(){st.side=x;draw()}})})));
- var pay=function(){return"$"+U.num(Math.max(0,st.amt)/Math.min(.99,Math.max(.01,p)),2)},err=W.amountError(st.amt,flow.tried);
- k.push(h("div",{class:"line"},[h("span",{text:"Price"}),h("b",{class:"num",text:"$"+p.toFixed(2)})]));
+ var pay=function(){return"$"+U.num(Math.max(0,st.amt)/p,2)},err=W.amountError(st.amt,flow.tried);
+ k.push(h("div",{class:"line"},[h("span",{text:"Price"}),h("b",{class:"num",text:U.price(p)})]));
  W.holdLines(s.id,"opportunity").forEach(function(n){k.push(n)});
  k.push(h("div",{class:"field-grp"},[W.amountLabel("amt","Amount ("+U.COLL+")"),
   h("input",Object.assign({class:"field",id:"amt",type:"number",min:"1",value:String(st.amt),oninput:function(e){st.amt=+e.target.value||0;var o=document.getElementById("opp-out");if(window.Motion)Motion.num(o,pay());else o.textContent=pay();W.amountLive(e.target,st.amt,flow)}},W.amountAttrs("amt",err))),
@@ -41,9 +41,9 @@ function sideKids(s,inSheet){var p=st.side==="Yes"?s.p:1-s.p,open=s.r==="In revi
 /* the ticket's flow (js/wallet.js): review, signature and result replace the form inside the same panel or sheet */
 var W=window.SeerWallet,flow=W.flow({box:function(){return document.querySelector('[data-tx="opp"]')},onChange:function(){draw()}});
 function focusPlace(){var b=document.querySelector('[data-tx="opp"] [data-tx-place]');if(b)b.focus()}
-function place(s){var yes=st.side==="Yes",p=Math.min(.99,Math.max(.01,yes?s.p:1-s.p)),a=st.amt,sh=a/p,side="Will "+(yes?"":"not ")+"be selected";
+function place(s){var yes=st.side==="Yes",p=U.pround(Math.min(.99,Math.max(.01,yes?s.p:1-s.p))),a=st.amt,sh=a/p,side="Will "+(yes?"":"not ")+"be selected";
  flow.place(a,function(){return{amount:a,meta:{type:"Trade",market:s.n,mid:s.id,product:"opportunity",outcome:null,side:side,shares:sh,price:p,status:"Open"},
-  rows:[["Submission",s.n,"tx-q"],["Side",side],["Amount",W.money(a)+" "+U.COLL,"tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(sh)],["Max slippage","0.5%"],["Minimum shares",U.shares(sh*.995)],
+  rows:[["Submission",s.n,"tx-q"],["Side",side],["Amount",W.money(a)+" "+U.COLL,"tx-tot"],["Price per share",U.price(p)],["Shares",U.shares(sh)],["Max slippage","0.5%"],["Minimum shares",U.shares(sh*.995)],
    ["Payout if reviewers agree","$"+U.num(sh,2)],["Network fee",U.cni("Free in demo")]],
   done:"You bought "+U.shares(sh)+" shares on "+s.n+": "+side.toLowerCase()+"."}},"amt")}
 function close(){var s=st.sel;st.sel=null;selSlot.cancel();flow.reset();draw();if(s){var r=document.querySelector('tr[data-key="s'+s.id+'"]');if(r)r.focus({preventScroll:true})}}

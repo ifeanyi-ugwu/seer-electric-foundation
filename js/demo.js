@@ -43,7 +43,7 @@ var S=norm(read(KEY));
 function copy(){return{delay:S.delay,error:S.error,scope:{page:S.scope.page,details:S.scope.details,tx:S.scope.tx},offline:S.offline,cache:S.cache}}
 Object.defineProperty(D,"settings",{get:copy});
 D.DELAYS=DELAYS;D.ERRORS=ERRORS;
-function emit(why){write(KEY,S);paintRoot();var s=copy();subs.slice().forEach(function(f){try{f(s,why)}catch(e){}})}
+function emit(why){write(KEY,S);paintRoot();var s=copy();subs.slice().forEach(function(f){try{f(s,why)}catch(e){setTimeout(function(){throw e})}})}
 D.subscribe=function(f){subs.push(f);return function(){var i=subs.indexOf(f);if(i>=0)subs.splice(i,1)}};
 D.set=function(p){var was=isOffline(),n=norm(Object.assign(copy(),p||{},{scope:Object.assign(copy().scope,p&&p.scope||{})}));S=n;emit("set");
   var now=isOffline();if(was!==now)netChange(now)};
@@ -83,7 +83,7 @@ var C=(function(){var c=read(CKEY);c=c&&typeof c==="object"?c:{};if(!c.entries||
   ["hits","misses","lastRead","lastCleared"].forEach(function(k){c[k]=+c[k]||0});return c})();
 function saveC(){write(CKEY,C)}
 var LABELS={"app:markets":"Explorer markets","fut:proposals":"Futarchy proposals","deep:proposals":"Deep proposals",
-  "opp:submissions":"Opportunity submissions","risk:matrix:exploit":"Risk: exploit","risk:matrix:depeg":"Risk: depeg","risk:matrix:oracle":"Risk: oracle"};
+  "opp:submissions":"Opportunity submissions","app:leaderboard?p=week":"Leaderboard, Week","app:leaderboard?p=month":"Leaderboard, Month","app:leaderboard?p=all":"Leaderboard, All time","risk:matrix:exploit":"Risk: exploit","risk:matrix:depeg":"Risk: depeg","risk:matrix:oracle":"Risk: oracle"};
 D.label=function(k){if(LABELS[k])return LABELS[k];var m=/^(\w+):(\w+):(.+)$/.exec(k);return m?m[1]+" "+m[2]+" "+m[3]:k};
 function store(key,label){var o=C.entries[key];C.entries[key]={at:Date.now(),reads:(o&&o.reads)||0,label:label||(o&&o.label)||null};saveC();emit("cache")}
 D.entries=function(){return Object.keys(C.entries).map(function(k){var e=C.entries[k];return{key:k,label:e.label||D.label(k),at:e.at,reads:e.reads||0}}).sort(function(a,b){return b.at-a.at})};

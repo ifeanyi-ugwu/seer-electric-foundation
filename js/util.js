@@ -15,8 +15,15 @@ window.U={
   return"$"+m.toFixed(1).replace(/\.0$/,"")+"B"},
  /* A demo address for a market: 0x and 40 lowercase hex characters worked out from its id, so the same id always gives the same address. Nothing about it is on a chain. */
  addr:function(id){var a=(Number(id)||0)+0x9e3779b9>>>0,s="",i;for(i=0;i<5;i++){a=a+0x6d2b79f5>>>0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;s+=(((t^t>>>14)>>>0)).toString(16).padStart(8,"0")}return"0x"+s.slice(0,40)},
- /* shares: two decimals below 10 so a small trade does not read 0.0, one decimal from 10 */
- shares:function(v){v=Number(v);return U.num(v,v<10?2:1)},
+ /* shares: always two decimals, so the payout of $1.00 a share (shown to two decimals) equals the shares printed */
+ shares:function(v){return U.num(v,2)},
+ /* The one price per share. pround is the price a trade is made at: three decimals below $0.10, two from $0.10, so the price printed times the shares
+    printed is the amount. price is the same figure as text. */
+ pround:function(p){p=Number(p);return p<.1?Math.round(p*1e3)/1e3:Math.round(p*100)/100},
+ price:function(p){p=U.pround(p);return"$"+p.toFixed(p<.1?3:2)},
+ /* The price of one branch of a Futarchy proposal (pass and fail are its two forecasts): where the branch's forecast sits in a range around both,
+    kept between $0.05 and $0.95. The Futarchy ticket and the explorer's ticket for the same proposal both use it. */
+ bprice:function(pass,fail,branch){var lo=Math.min(pass,fail)*.75,hi=Math.max(pass,fail)*1.25,v=branch==="pass"?pass:fail;return Math.round(Math.min(.95,Math.max(.05,(v-lo)/(hi-lo)))*100)/100},
  /* a plain number to a fixed count of decimals (min decimals optional), grouped, with the same minus sign */
  num:function(v,dec,min){v=Number(v);if(!isFinite(v))return"0";var s=Math.abs(v).toLocaleString("en-GB",{minimumFractionDigits:min==null?dec:min,maximumFractionDigits:dec});return(v<0&&/[1-9]/.test(s)?"\u2212":"")+s},
  /* Explicit table roles: on phones .rtbl tables are laid out as cards (display:block/grid), which drops the native

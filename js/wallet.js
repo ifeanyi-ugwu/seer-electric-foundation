@@ -177,11 +177,11 @@ function connectStep(){var s=ws.step,k=ws.kind;
     h("h3",{class:"wl-h",tabindex:"-1","data-wl-focus":"",text:"Wallet connected"}),
     h("p",{class:"note"},[KINDS[k][0]+" ",h("span",{class:"num",text:short(S.addr)})])])}
 /* the demo data layer (js/demo.js) can slow the connection down or make it fail (its transactions scope); the steps look the same */
-var CONN_ERR={offline:["No network connection","Seer could not reach the network, so no wallet was connected. Try again when you are back online."],
-  network:["Connection failed","The network dropped while connecting, so no wallet was connected. Try again."],
-  timeout:["Connection timed out","Your wallet did not answer in time, so no wallet was connected. Try again."],
-  server:["Connection failed","The connection could not be completed, so no wallet was connected. Try again."],
-  notfound:["Wallet not found","That wallet could not be found. Try again, or choose another way to connect."]};
+var CONN_ERR={offline:["No network connection","Seer could not reach the network, so no wallet was connected."],
+  network:["Connection failed","The network dropped while connecting, so no wallet was connected."],
+  timeout:["Connection timed out","Your wallet did not answer in time, so no wallet was connected."],
+  server:["Connection failed","The connection could not be completed, so no wallet was connected."],
+  notfound:["Wallet not found","That wallet could not be found."]};
 function plan(base){var D=window.SeerDemo;return D&&D.wait?D.wait(base):{ms:base,err:null,check:function(){return null}}}
 function start(k){clearTimeout(ws.t);ws.kind=k;ws.err=null;step("wait");var w=plan(k==="mobile"?1800:1200);
   ws.t=setTimeout(function(){if(!ws||ws.step!=="wait")return;var e=w.check();
@@ -260,7 +260,8 @@ Flow.prototype.place=function(amount,sum,field){if(!S.on)return;var e=W.amountEr
   if(e){this.tried=true;this.o.onChange();var f=field&&doc.getElementById(field);if(f)f.focus();return}
   this.sum=sum();this.go("review")};
 Flow.prototype.review=function(sum){if(!S.on)return;this.sum=sum;this.go("review")};
-Flow.prototype.sign=function(){var f=this,w=plan(1000);clearTimeout(f.tm);f.err=null;f.go("sign");
+/* A second press on Confirm while signing does nothing. The step that follows Confirm puts Reject under the pointer, so Reject ignores presses for 500ms after signing starts and a double click cannot reject the trade. */
+Flow.prototype.sign=function(){var f=this;if(f.step==="sign")return;var w=plan(1000);clearTimeout(f.tm);f.err=null;f.at=performance.now();f.go("sign");
   f.tm=setTimeout(function(){f.tm=0;if(f.step!=="sign")return;var e=w.check();
     /* a failure from the network (js/demo.js, transactions scope): nothing is spent, the attempt is logged */
     if(e){f.err=e;W.log({type:f.sum.meta.type,market:f.sum.meta.market,amount:f.sum.amount,status:"Failed"});f.go("failed");
@@ -272,7 +273,7 @@ Flow.prototype.copy=function(){return Object.assign({},this.t,(this.sum&&this.su
 function txReason(e){return({offline:"You are offline, so nothing was sent. Your balance is unchanged.",network:"The network could not be reached, so nothing was sent. Your balance is unchanged.",
   timeout:"The network did not confirm it in time, so nothing was sent. Your balance is unchanged.",server:"The network returned an error, so nothing was sent. Your balance is unchanged.",
   notfound:"This market is no longer available, so nothing was sent. Your balance is unchanged."})[e.offline?"offline":e.kind]||"Nothing was sent. Your balance is unchanged."}
-Flow.prototype.reject=function(){clearTimeout(this.tm);this.tm=0;W.log({type:this.sum.meta.type,market:this.sum.meta.market,amount:this.sum.amount,status:"Rejected"});
+Flow.prototype.reject=function(){if(this.step!=="sign"||performance.now()-(this.at||0)<500)return;clearTimeout(this.tm);this.tm=0;W.log({type:this.sum.meta.type,market:this.sum.meta.market,amount:this.sum.amount,status:"Rejected"});
   this.go("rejected");announce("Transaction rejected. Nothing was sent.")};
 Flow.prototype.finish=function(){var d=this.o.onDone;this.tried=false;if(d){d(this);return}
   /* a ticket inside a sheet closes that sheet on Done; an inline ticket goes back to its form */

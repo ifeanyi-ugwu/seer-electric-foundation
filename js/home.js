@@ -100,7 +100,7 @@
       if (pr >= 0.995) { c.emerge = false; st.removeProperty('--hc-sh'); delete c.out.h; }
     }
   }
-  /* move a card toward a role; from (optional) sets where it starts, jump lands it there at once */
+  /* move a card towards a role; from (optional) sets where it starts, jump lands it there at once */
   function target(c, role, o) {
     o = o || {};
     var g = G[role], p = c.p, t = { x: g.x, y: g.y, s: g.s, d: g.d, b: g.b, o: 1 }, k;

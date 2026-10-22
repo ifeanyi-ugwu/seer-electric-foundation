@@ -43,9 +43,9 @@
         row("Verification",m.isNew?"Not verified":"Verified on Kleros Curate","tx-q")]),
       h("p",{class:"note",text:rs.rules+" If the question cannot be answered, it resolves Invalid, and only \u201cInvalid result\u201d shares redeem for the collateral."}),
       rs.state==="awaiting"?h("p",{class:"note"},[h("button",{class:"wl-link",type:"button",text:"Answer on Reality.eth",onclick:function(e){U.concept("Not part of this concept. In the product this opens the question on Reality.eth.",e.currentTarget)}})]):null]);return d}
-  /* a scalar value with its unit: "$" leads, a word follows after a space, a symbol follows directly */
-  function sfmt(v,u){var n=U.num(v,2,0),neg=n.charAt(0)==="\u2212";if(neg)n=n.slice(1);
-    return(neg?"\u2212":"")+(u==="$"?"$"+n:u&&/^[A-Za-z]/.test(u)?n+" "+u:n+(u||""))}
+  /* a scalar value with its unit: a unit that starts with "$" puts the $ first and the rest after the number with no space ("$412K", "$78"), a word follows after a space, a symbol follows directly */
+  function sfmt(v,u){var n=U.num(v,2,0),neg=n.charAt(0)==="\u2212";u=u||"";if(neg)n=n.slice(1);
+    return(neg?"\u2212":"")+(u.charAt(0)==="$"?"$"+n+u.slice(1):/^[A-Za-z]/.test(u)?n+" "+u:n+u)}
   function appOf(m){return m.app||"seer"}
   function appName(m){return APPS.filter(function(a){return a[0]===appOf(m)})[0][1]}
   function lead(m){if(!m.outs)return null;return m.outs.slice().sort(function(a,b){return b[1]-a[1]})[0]}
@@ -61,9 +61,12 @@
 
   /* markets created earlier in this session (sessionStorage, so they survive a reload or a trip to another page) */
   var NEWKEY="seer-new-markets";
-  function stored(){try{var v=JSON.parse(sessionStorage.getItem(NEWKEY)||"[]");return Array.isArray(v)?v:[]}catch(e){return[]}}
+  /* only whole markets are read back: an entry that is not shaped like one made here is ignored */
+  function whole(m){return!!m&&typeof m==="object"&&!!m.id&&typeof m.q==="string"&&typeof m.cat==="string"&&TYPES.indexOf(m.type)>=0&&typeof m.vol==="number"&&typeof m.liq==="number"&&
+    (Array.isArray(m.outs)?m.outs.every(function(o){return Array.isArray(o)&&typeof o[0]==="string"&&typeof o[1]==="number"}):m.type==="Scalar"?!!m.scalar&&typeof m.scalar==="object":m.type==="Conditional"&&!!m.cond&&typeof m.cond==="object")}
+  function stored(){try{var v=JSON.parse(sessionStorage.getItem(NEWKEY)||"[]");return Array.isArray(v)?v.filter(whole):[]}catch(e){return[]}}
   function store(l){try{sessionStorage.setItem(NEWKEY,JSON.stringify(l))}catch(e){}}
-  stored().slice().reverse().forEach(function(m){if(m&&m.id&&!ALL.some(function(x){return x.id===m.id}))ALL.unshift(m)});
+  stored().slice().reverse().forEach(function(m){if(!ALL.some(function(x){return x.id===m.id}))ALL.unshift(m)});
 
   /* Saved markets: the ids of the markets starred in this tab (sessionStorage, so they follow a reload). Without storage they last for the page. */
   var SAVEKEY="seer-saved";
@@ -94,6 +97,8 @@
   /* the address of this page for the state now (the open market, if any), keeping the hash */
   function here(mid){var q=query(mid);return location.pathname+(q?"?"+q:"")+location.hash}
   function urlSync(){clearTimeout(qt);qt=0;try{history.replaceState(history.state,"",here(openId))}catch(e){}}
+  /* chips, selects, the view and Saved rewrite the address after 300 ms of quiet, as the search does, so a burst of presses is one rewrite */
+  function urlLater(){clearTimeout(qt);qt=setTimeout(urlSync,300)}
   function shareUrl(id){return location.origin+location.pathname+"?"+query(id)}
   addEventListener("pagehide",function(){if(qt)urlSync()});
   var STAR="M10 2.4l2.3 4.8 5.2.7-3.8 3.6.9 5.2L10 14.2l-4.6 2.5.9-5.2L2.5 7.9l5.2-.7z";
@@ -124,23 +129,23 @@
     [""].concat(TYPES).forEach(function(t){var n=M.filter(function(m){return!t||m.type===t}).length;
       f.appendChild(h("button",{class:"chip",type:"button","data-key":t||"all","aria-pressed":String(st.type===t),text:t?t+" · "+n:"All types",onclick:function(){st.type=t;types();refilter()}}))});
     /* Saved is one more chip after the types, and combines with every other filter. It filters the loaded markets at once, as search does. */
-    f.appendChild(h("button",{class:"chip",type:"button","data-key":"saved","aria-pressed":String(st.saved),text:"Saved · "+savedCount(),onclick:function(){st.saved=!st.saved;urlSync();types();if(pageState==="ok"&&!pageSlot.pending)render()}}));patch(el,f)}
+    f.appendChild(h("button",{class:"chip",type:"button","data-key":"saved","aria-pressed":String(st.saved),text:"Saved · "+savedCount(),onclick:function(){st.saved=!st.saved;urlLater();types();if(pageState==="ok"&&!pageSlot.pending)render()}}));patch(el,f)}
 
   function cardBody(m){
     var body=[];
-    /* Outcome actions follow one rule: tradable markets with 3+ outcomes trade Yes/No per outcome;
-       tradable two-outcome markets buy either outcome directly; closed markets show no actions,
+    /* Outcome actions follow one rule: tradable markets with 3+ outcomes (other than multi-scalar) trade Yes/No per outcome;
+       tradable two-outcome markets, and multi-scalar markets (each outcome pays its share of all the answers), buy the outcome directly; closed markets show no actions,
        and a resolved market marks its winner. The chips are visual cues; the card opens the ticket. */
     var tradable=m.status==="Open";
     function acts(o){
       if(!tradable)return m.status==="Resolved"&&o[1]===1?h("span",{class:"won",text:"Won"}):null;
-      if(m.outs.length>2)return h("span",{class:"acts","aria-hidden":"true"},[h("span",{class:"yn","data-side":"Yes",text:"Yes"}),h("span",{class:"yn n","data-side":"No",text:"No"})]);
+      if(m.outs.length>2&&m.type!=="Multi-scalar")return h("span",{class:"acts","aria-hidden":"true"},[h("span",{class:"yn","data-side":"Yes",text:"Yes"}),h("span",{class:"yn n","data-side":"No",text:"No"})]);
       return h("span",{class:"acts","aria-hidden":"true"},[h("span",{class:"yn buy",text:"Buy"})])}
     if(m.outs){m.outs.slice(0,m.outs.length>3?3:m.outs.length).forEach(function(o,i){
       body.push(h("div",{class:"orow","data-o":String(i)},[h("span",{text:o[0]}),h("span",{class:"pct"},[h("span",{class:"num",text:pc(o[1])}),acts(o)])]))});
       if(m.outs.length>3)body.push(h("span",{class:"more",text:"+ "+(m.outs.length-3)+(m.outs.length-3===1?" more outcome":" more outcomes")}))}
     else if(m.scalar){var s=m.scalar,p=(s.est-s.lo)/((s.hi-s.lo)||1)*100;p=Math.max(0,Math.min(100,p));
-      body.push(h("div",{},[h("div",{class:"range"},[h("b",{class:"num",text:sfmt(s.est,s.unit),style:"left:"+p+"%"}),h("i",{style:"left:"+p+"%"})]),h("div",{class:"rl num"},[h("span",{text:U.num(s.lo,2,0)}),h("span",{text:"Market estimate"}),h("span",{text:U.num(s.hi,2,0)})])]))}
+      body.push(h("div",{},[h("div",{class:"range"},[h("b",{class:"num",text:sfmt(s.est,s.unit),style:"left:"+p+"%"}),h("i",{style:"left:"+p+"%"})]),h("div",{class:"rl num"},[h("span",{text:sfmt(s.lo,s.unit)}),h("span",{text:"Market estimate"}),h("span",{text:sfmt(s.hi,s.unit)})])]))}
     else if(m.cond){var c=m.cond,f=function(v){return v==null?"No trades yet":sfmt(v,c.unit)};
       body.push(h("div",{class:"cond"},[h("div",{},[h("small",{text:"If "+c.if.toLowerCase()}),h("b",{class:"num",text:f(c.a)})]),h("div",{},[h("small",{text:"If not"}),h("b",{class:"num",text:f(c.b)})])]))}
     var tb=h("span",{class:"badge",text:m.type});
@@ -151,10 +156,10 @@
 
   /* explicit table roles: on phones the table is laid out as cards, which drops the native semantics (see shell.css) */
   function roles(t){t.setAttribute("role","table");Array.prototype.forEach.call(t.querySelectorAll("thead,tbody,tr,th,td"),function(n){n.setAttribute("role",{THEAD:"rowgroup",TBODY:"rowgroup",TR:"row",TH:"columnheader",TD:"cell"}[n.tagName])});return t}
-  function estText(m){return m.scalar.per?U.num(m.scalar.est,2,0)+" "+m.scalar.per:sfmt(m.scalar.est,m.scalar.unit)}
+  function estText(m){return sfmt(m.scalar.est,m.scalar.unit)}
   function leadText(m){if(m.outs&&!m.outs.length)return"No outcomes yet";var l=lead(m);if(l)return l[0]+" · "+pc(l[1]);
     if(m.scalar)return"Estimate "+estText(m);
-    return m.cond.a==null?"No trades yet":"Pass "+U.num(m.cond.a,2,0)+" / fail "+U.num(m.cond.b,2,0)}
+    var c=m.cond;return c.a==null?"No trades yet":"If "+c.if.toLowerCase()+" "+sfmt(c.a,c.unit)+" / If not "+sfmt(c.b,c.unit)}
   function table(list){var w=h("div",{class:"tbl-wrap rtbl app-tbl"}),t=h("table"),hd=h("tr"),f=document.createDocumentFragment();
     f.appendChild(w);
     [["Market",""],["Type",""],["Leading outcome",""],["Volume","r"],["Liquidity","r"],["Closes",""],["Status",""],["Saved","r c-sv"]].forEach(function(c){hd.appendChild(h("th",{class:c[1],scope:"col",text:c[0]}))});
@@ -235,7 +240,7 @@
     openId=m.id;closing=false;pushed=false;
     if(from==="pop"||(from==="load"&&history.state&&history.state.m!=null))pushed=!!(history.state&&history.state.m!=null);
     /* an address that opens a market (a link from another page) first becomes the list's own entry, then the market is pushed, so Back closes the sheet and stays on the page */
-    else if(!from||from==="load"){try{if(from==="load")history.replaceState(history.state,"",here(null));history.pushState({m:m.id},"",here(m.id));pushed=true}catch(e){}}
+    else if(!from||from==="load"){try{if(from==="load"||qt){clearTimeout(qt);qt=0;history.replaceState(history.state,"",here(null))}history.pushState({m:m.id},"",here(m.id));pushed=true}catch(e){}}
     /* the pinned bar (badge, the title we already know, More actions, Close) shows at once; the body loads below it */
     var body=h("div",{class:"dm-body"}),p=h("div",{class:"panel",role:"dialog","aria-modal":"true","aria-label":m.q},[U.sheetTop(h("span",{class:"badge",text:m.isNew?"New · "+m.type:m.type}),m.q,closePanel,moreMenu(m).el),body]);
     root.appendChild(h("div",{class:"scrim",onclick:closePanel}));root.appendChild(p);document.addEventListener("keydown",esc);p.querySelector(".panel-top .pt-x").focus();
@@ -252,23 +257,28 @@
     function fill(info){
     /* a market with no outcomes has nothing to trade: the sheet says so in place of the details */
     if(m.outs&&!m.outs.length){body.appendChild(DM.emptyView({level:"sheet",title:"No outcomes yet",text:"This market has no outcomes to trade yet."}));return}
-    /* side is Yes or No on every type: Yes is Buy Yes, Up, or the "If" branch; No is Buy No, Down, or "If not". A two-outcome market has no side: its outcome rows are the choice. */
-    var bin=!!m.outs&&m.outs.length===2,pick=init&&init.pick<(m.outs||[]).length?init.pick:0,side=!bin&&init&&init.side==="No"?"No":"Yes",amt=50;
+    /* side is Yes or No on every type: Yes is Buy Yes, Up, or the "If" branch; No is Buy No, Down, or "If not". A two-outcome market has no side: its outcome rows are the choice.
+       A multi-scalar market has none either: each outcome pays its share of all the answers, so there is nothing to bet against. */
+    var bin=!!m.outs&&(m.outs.length===2||m.type==="Multi-scalar"),pick=init&&init.pick<(m.outs||[]).length?init.pick:0,side=!bin&&init&&init.side==="No"?"No":"Yes",amt=50;
     var sp=m.scalar?Math.max(0,Math.min(1,(m.scalar.est-m.scalar.lo)/((m.scalar.hi-m.scalar.lo)||1))):.5;
     var cp=m.cond&&m.cond.a!=null&&m.cond.b!=null&&m.cond.a+m.cond.b>0?m.cond.a/(m.cond.a+m.cond.b):.5;
+    /* a Futarchy proposal's branches are priced as on the Futarchy page (U.bprice); any other conditional market splits the two forecasts */
+    var fut=m.app==="futarchy"&&m.cond&&m.cond.a!=null&&m.cond.b!=null;
     var base=function(){return m.outs?m.outs[pick][1]:m.scalar?sp:cp};
-    var price=function(){return side==="Yes"?base():1-base()};
+    var price=function(){return fut?U.bprice(m.cond.a,m.cond.b,side==="Yes"?"pass":"fail"):side==="Yes"?base():1-base()};
+    var called=fut?"If the other branch happens, this trade is called off and the stake comes back.":"If the condition does not happen, this branch's shares are worth nothing.";
     var sideName=function(){return m.scalar?(side==="Yes"?"Up":"Down"):m.cond?(side==="Yes"?"If "+m.cond.if.toLowerCase():"If not"):side};
     var tk=h("div",{class:"ticket","data-tx":"app"});
     /* the ticket runs the whole trade in place: form, review, signature, result (js/wallet.js) */
     flow=W.flow({box:function(){return tk},onChange:function(){drawTicket()}});
     var fl=flow;
     function focusPlace(){var b=tk.querySelector("[data-tx-place]");if(b)b.focus()}
-    function place(){var p=Math.min(.99,Math.max(.01,price())),a=amt,s=a/p,o=m.outs?m.outs[pick][0]:null,sd=sideName();
+    function place(){var p=U.pround(Math.min(.99,Math.max(.01,price()))),a=amt,s=a/p,o=m.outs?m.outs[pick][0]:null,sd=sideName();
       fl.place(a,function(){return{amount:a,meta:{type:"Trade",market:m.q,mid:m.id,product:"app",outcome:o,side:bin?"":sd,shares:s,price:p,status:m.status},
-        rows:[["Market",m.q,"tx-q"]].concat(o?[["Outcome",o,"tx-q"]]:[],bin?[]:[["Side",sd]],[["Amount",W.money(a)+" "+U.COLL,"tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(s)],["Max slippage","0.5%"],["Minimum shares",U.shares(s*.995)],[m.scalar?"Maximum payout":"Payout if correct","$"+U.num(s,2)],["Network fee",U.cni("Free in demo")]]),
+        rows:[["Market",m.q,"tx-q"]].concat(o?[["Outcome",o,"tx-q"]]:[],bin?[]:[["Side",sd]],[["Amount",W.money(a)+" "+U.COLL,"tx-tot"],["Price per share",U.price(p)],["Shares",U.shares(s)],["Max slippage","0.5%"],["Minimum shares",U.shares(s*.995)],m.type==="Multi-scalar"?["Pays at resolution","This outcome's share of all the answers"]:[m.scalar?"Maximum payout":"Payout if correct","$"+U.num(s,2)],["Network fee",U.cni("Free in demo")]]),
+        note:m.cond?called:null,
         done:"You bought "+U.shares(s)+" "+(o?(bin?"shares on "+o:side+" shares on "+o):m.scalar?sd+" shares":"shares on the branch \u201c"+sd.toLowerCase()+"\u201d")+"."}},"amt")}
-    var drawTicket=function(){var p=Math.min(.99,Math.max(.01,price())),f=h("div");
+    var drawTicket=function(){var p=U.pround(Math.min(.99,Math.max(.01,price()))),f=h("div");
       tk.style.minHeight=fl.style()?fl.hold+"px":"";
       if(fl.step!=="form"){f.appendChild(fl.view());patch(tk,f);return}
       if(m.status!=="Open"){
@@ -280,20 +290,21 @@
       var labs=m.scalar?["Up","Down"]:m.cond?["If "+m.cond.if.toLowerCase(),"If not"]:["Buy Yes","Buy No"];
       if(!bin)tk.appendChild(h("div",{class:"seg",role:"group","aria-label":m.cond?"Branch":"Side"},["Yes","No"].map(function(s,i){return h("button",{type:"button","aria-pressed":String(side===s),text:labs[i],onclick:function(){side=s;drawTicket()}})})));
       if(m.scalar)tk.appendChild(h("p",{class:"note",text:"Up gains as the value resolves higher; Down gains as it resolves lower."}));
-      if(m.cond)tk.appendChild(h("p",{class:"note",text:"If the condition does not happen, this branch's shares are worth nothing."}));
+      if(m.cond)tk.appendChild(h("p",{class:"note",text:called}));
       W.holdLines(m.id,"app").forEach(function(n){tk.appendChild(n)});
       var err=W.amountError(amt,fl.tried),at=W.amountAttrs("amt",err);
       var inp=h("input",{class:"field",type:"number",min:"1",value:String(amt),id:"amt","aria-label":"Amount in "+U.COLL,"aria-invalid":at["aria-invalid"],"aria-describedby":at["aria-describedby"],
         oninput:function(e){amt=Number(e.target.value)||0;upd(true);W.amountLive(e.target,amt,fl)}});
       tk.appendChild(h("div",{class:"field-grp"},[W.amountLabel("amt","Amount ("+U.COLL+")"),inp,W.amountErr("amt",err)]));
-      var l1=h("span",{class:"num","data-k":"price"}),l2=h("span",{class:"num","data-k":"shares"}),l3=m.scalar?null:h("span",{class:"num","data-k":"payout"});
+      var l1=h("span",{class:"num","data-k":"price"}),l2=h("span",{class:"num","data-k":"shares"}),l3=m.scalar||m.type==="Multi-scalar"?null:h("span",{class:"num","data-k":"payout"});
       tk.appendChild(h("div",{class:"line"},[h("span",{text:"Price per share"}),l1]));tk.appendChild(h("div",{class:"line"},[h("span",{text:"Shares"}),l2]));
       if(m.scalar){var hiT=sfmt(m.scalar.hi,m.scalar.unit),loT=sfmt(m.scalar.lo,m.scalar.unit),up=side==="Yes";
         tk.appendChild(h("div",{class:"line"},[h("span",{text:"At "+(up?hiT:loT)+" or "+(up?"above":"below")}),h("span",{class:"num",text:"$1.00 per share"})]));
         tk.appendChild(h("div",{class:"line"},[h("span",{text:"At "+(up?loT:hiT)+" or "+(up?"below":"above")}),h("span",{class:"num",text:"$0"})]))}
+      else if(m.type==="Multi-scalar")tk.appendChild(h("div",{class:"line"},[h("span",{text:"Pays at resolution: this outcome's share of all the answers"})]));
       else tk.appendChild(h("div",{class:"line"},[h("span",{text:"Payout if correct"}),l3]));
       /* live: values tick to the new amount; the spans are looked up because a morph keeps the on-screen nodes */
-      function upd(live){var s=Math.max(0,amt)/p,v=[["price","$"+p.toFixed(2)],["shares",U.shares(s)],["payout","$"+U.num(s,2)]];
+      function upd(live){var s=Math.max(0,amt)/p,v=[["price",U.price(p)],["shares",U.shares(s)],["payout","$"+U.num(s,2)]];
         v.forEach(function(x){var n=live?tk0.querySelector('[data-k="'+x[0]+'"]'):[l1,l2,l3][["price","shares","payout"].indexOf(x[0])];if(!n)return;
           if(live&&window.Motion)Motion.num(n,x[1]);else n.textContent=x[1]})}upd();
       /* one wallet control per page (the header); until it is connected the ticket action waits, and its hint connects */
@@ -303,8 +314,8 @@
     var list=null;
     /* every outcome market lists the Invalid result last: shown for completeness, not tradable here */
     var inv=function(){return h("div",{class:"orow muted","data-key":"inv"},[h("span",{text:"Invalid result"}),h("span",{class:"pct num",text:"0%"})])};
-    if(m.outs&&m.status==="Resolved"){/* a resolved market is not a choice: plain rows, the winner marked */
-      list=h("div",{class:"olist"},m.outs.map(function(o,i){return h("div",{class:"orow","data-key":"o"+i},[h("span",{text:o[0]}),h("span",{class:"pct"},[h("span",{class:"num",text:pc(o[1])}),o[0]===resOf(m).answer?h("span",{class:"won",text:"Won"}):null])])}).concat([inv()]))}
+    if(m.outs&&m.status!=="Open"){/* a market that is not open is not a choice: plain rows, and only a resolved market marks its winner */
+      list=h("div",{class:"olist"},m.outs.map(function(o,i){return h("div",{class:"orow","data-key":"o"+i},[h("span",{text:o[0]}),h("span",{class:"pct"},[h("span",{class:"num",text:pc(o[1])}),m.status==="Resolved"&&o[0]===resOf(m).answer?h("span",{class:"won",text:"Won"}):null])])}).concat([inv()]))}
     else if(m.outs){list=h("div",{class:"olist"},[]);var draw=function(){var f=h("div");m.outs.forEach(function(o,i){f.appendChild(h("button",{type:"button",class:"orow sel","data-key":"o"+i,"aria-pressed":String(pick===i),onclick:function(){pick=i;if(fl.step!=="form")fl.reset();draw();drawTicket()}},[h("span",{text:o[0]}),h("span",{class:"num",text:pc(o[1])})]))});f.appendChild(inv());patch(list,f)};draw()}
     else{list=h("div",{class:"mcard static"},cardBody(m).slice(1,-1))}
     var ld=lead(m),cl=closeOf(m),hist=ld?spark(m.id*37,ld[1],ld[0],m.status==="Resolved"):estHistory(m);
@@ -375,7 +386,7 @@
       h("ul",{},ids.map(function(id){return h("li",{},[h("button",{class:"wl-link",type:"button",onclick:function(){focusField(id)}},[labelOf(id)+": "+e[id]])])}))]));
     var f=[];
     var ql=c.q.trim().length;
-    f.push(grp("cm-q","Question",ctl("input","cm-q",{type:"text",value:c.q,autocomplete:"off",placeholder:"Will the city open the new line by June 30?",desc:"cm-q-n"},function(v){c.q=v}),
+    f.push(grp("cm-q","Question",ctl("input","cm-q",{type:"text",value:c.q,autocomplete:"off",placeholder:"Will the city open the new line by 30 June?",desc:"cm-q-n"},function(v){c.q=v}),
       [h("span",{class:"cm-count num"+(ql>120?" over":""),id:"cm-q-n",text:ql+" of 120 characters"})]));
     var cats=allCats();
     f.push(grp("cm-cat","Category",ctl("select","cm-cat",{},function(v){c.cat=v},[h("option",{value:"",text:"Choose a category",selected:c.cat===""?"selected":null})].concat(
@@ -456,12 +467,12 @@
   W.subscribe(function(){if(redrawTicket)redrawTicket();if(cm&&document.querySelector("#sheet-root .cm-sheet"))cmDraw()});
 
   U.slashSearch("#q");
-  document.getElementById("q").oninput=function(e){st.q=e.target.value;render();clearTimeout(qt);qt=setTimeout(urlSync,300)};
+  document.getElementById("q").oninput=function(e){st.q=e.target.value;render();urlLater()};
   document.getElementById("cat-m").onchange=function(e){st.cat=e.target.value;cats();refilter()};
   document.getElementById("status").onchange=function(e){st.status=e.target.value;refilter()};
   document.getElementById("app").onchange=function(e){st.app=e.target.value;refilter()};
   document.getElementById("sort").onchange=function(e){st.sort=e.target.value;refilter()};
-  function view(v){st.view=v;try{localStorage.setItem(VIEWKEY,v)}catch(e){}urlSync();document.getElementById("vg").setAttribute("aria-pressed",String(v==="grid"));document.getElementById("vt").setAttribute("aria-pressed",String(v==="table"));if(pageState==="ok"&&!pageSlot.pending)render()}
+  function view(v){st.view=v;try{localStorage.setItem(VIEWKEY,v)}catch(e){}urlLater();document.getElementById("vg").setAttribute("aria-pressed",String(v==="grid"));document.getElementById("vt").setAttribute("aria-pressed",String(v==="table"));if(pageState==="ok"&&!pageSlot.pending)render()}
   document.getElementById("vg").onclick=function(){view("grid")};document.getElementById("vt").onclick=function(){view("table")};
   /* the controls show the state read from the address */
   var appSel=document.getElementById("app");appSel.appendChild(h("option",{value:"",text:"All apps"}));APPS.forEach(function(a){appSel.appendChild(h("option",{value:a[0],text:a[1]}))});
@@ -524,6 +535,9 @@
         if(e.kind==="network")DM.onOnline(retryOnline)}})}
   /* A shared link, app.html?m=<id>, opens that market's sheet once the first render is done. An id that is not a market does nothing and leaves the address. */
   var deepId=null;try{deepId=new URLSearchParams(location.search).get("m")}catch(e){}
+  /* a value in the address that was not valid (or was the default) is taken out of it once it has been read (after ?m= is taken: the sheet opens from deepId) */
+  (function(){var have;try{have=new URLSearchParams(location.search)}catch(e){return}var want=new URLSearchParams(query(null));
+    if(["cat","type","status","app","sort","view","q","saved"].some(function(k){return have.has(k)&&have.get(k)!==want.get(k)}))urlSync()})();
   function marketBy(id){return ALL.filter(function(x){return String(x.id)===id})[0]}
   function openFromUrl(){var id=deepId;deepId=null;if(id==null)return;var m=marketBy(id);if(m)openPanel(m,null,"load");else urlSync()}
   /* Back and Forward: the sheet follows ?m= in the address */
@@ -531,7 +545,7 @@
     if(id==null){if(openId!=null)closeNow();return}
     if(String(openId)===id)return;var m=marketBy(id);if(m)openPanel(m,null,"pop");else if(openId!=null)closeNow()}
   function retryOnline(){if(pageState==="error")load({initial:true})}
-  function refilter(){urlSync();if(pageState!=="ok"){return}
+  function refilter(){urlLater();if(pageState!=="ok"){return}
     var q=snap(),key="app:markets?"+[q.cat,q.status,q.type,q.app,q.sort].join("|");
     listSlot.run({key:key,cacheLabel:"Explorer markets, filtered",producer:function(){return ALL},scope:"page",busy:outEl,label:"Loading markets",empty:function(){return[]},
       show:function(){outEl.classList.add("dm-dim")},
@@ -610,7 +624,7 @@
       f.appendChild(lbErr?DM.errorView(lbErr,{level:"panel",hl:"h2",subject:"the traders",retry:function(){DM.holdFocus(lbOut);lbRefresh()}})
         :DM.emptyView({level:"panel",hl:"h2",title:"No traders yet",text:"Nobody has traded in this period yet. Check again in a moment.",action:{text:"Check again",onclick:function(){DM.holdFocus(lbOut);lbRefresh()}}}));
       patch(lbOut,f);return}
-    var rows=lbRows();lbCount.textContent=rows.length+" traders";
+    var rows=lbRows();var nt=(LB[lb.period]||[]).length;lbCount.textContent=nt+" traders"+(rows.length>nt?" and you":"");
     f.appendChild(lbTable(rows));patch(lbOut,f,{flip:"tbody tr"});
     patch(lbSortEl,lbSortbar());var ss=document.getElementById("lb-sort");if(ss&&ss.value!==lb.sort)ss.value=lb.sort;
     /* a wallet that is not connected is asked to connect, with the shared hint */

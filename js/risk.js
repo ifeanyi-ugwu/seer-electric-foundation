@@ -27,18 +27,18 @@ function dates(){return h("p",{class:"muted","data-key":"dates"},["Estimates tra
 function tlabel(t){return TYPES.filter(function(x){return x[0]===t})[0][1]}
 function cname(c){return P[c.i][0]+", "+HZ[c.k]}
 function cmid(c){return(c.i+1)*100+TYPES.map(function(x){return x[0]}).indexOf(c.t)*10+c.k}
-function cpx(c){var e=val(c.t,c.i,c.k)/100;return Math.min(.99,Math.max(.01,side==="Yes"?e:1-e))}
+function cpx(c){var e=val(c.t,c.i,c.k)/100;return U.pround(Math.min(.99,Math.max(.01,side==="Yes"?e:1-e)))}
 function focusPlace(){var b=document.querySelector('[data-tx="risk"] [data-tx-place]');if(b)b.focus()}
 function cplace(){var c=cell,p=cpx(c),a=amt,sh=a/p,sd=side,nm=P[c.i][0]+" \u00b7 "+tlabel(c.t)+" \u00b7 "+HZ[c.k];
  flow.place(a,function(){return{amount:a,meta:{type:"Trade",market:nm,mid:cmid(c),product:"risk",outcome:null,side:sd,shares:sh,price:p,status:"Open"},
-  rows:[["Market",nm,"tx-q"],["Side",sd==="Yes"?"Yes (loss event happens)":"No"],["Amount",W.money(a)+" "+U.COLL,"tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(sh)],["Max slippage","0.5%"],["Minimum shares",U.shares(sh*.995)],["Payout if correct","$"+U.num(sh,2)],["Network fee",U.cni("Free in demo")]],
+  rows:[["Market",nm,"tx-q"],["Side",sd==="Yes"?"Yes (loss event happens)":"No"],["Amount",W.money(a)+" "+U.COLL,"tx-tot"],["Price per share",U.price(p)],["Shares",U.shares(sh)],["Max slippage","0.5%"],["Minimum shares",U.shares(sh*.995)],["Payout if correct","$"+U.num(sh,2)],["Network fee",U.cni("Free in demo")]],
   done:"You bought "+U.shares(sh)+" "+sd+" shares on "+cname(c)+"."}},"amt")}
 function ticketKids(c){var p=cpx(c),k=[h("h2",{text:"Buy cover"})];
  if(flow.step!=="form"){k.push(flow.view());return k}
  var err=W.amountError(amt,flow.tried),pay=function(){return"$"+U.num(Math.max(0,amt)/p,2)};
  k.push(h("div",{class:"seg",role:"group","aria-label":"Side"},["Yes","No"].map(function(x){return h("button",{type:"button","aria-pressed":String(side===x),text:x,onclick:function(){side=x;sheet()}})})));
  k.push(h("p",{class:"note",text:side==="Yes"?"Yes pays $1.00 per share if the loss event happens within "+HZ[c.k]+".":"No pays $1.00 per share if it does not."}));
- k.push(h("div",{class:"line"},[h("span",{text:"Price per share"}),h("b",{class:"num",text:"$"+p.toFixed(2)})]));
+ k.push(h("div",{class:"line"},[h("span",{text:"Price per share"}),h("b",{class:"num",text:U.price(p)})]));
  W.holdLines(cmid(c),"risk").forEach(function(n){k.push(n)});
  k.push(h("div",{class:"field-grp"},[W.amountLabel("amt","Amount ("+U.COLL+")"),
   h("input",Object.assign({class:"field",id:"amt",type:"number",min:"1",value:String(amt),oninput:function(e){amt=+e.target.value||0;var o=document.getElementById("risk-out");if(window.Motion)Motion.num(o,pay());else o.textContent=pay();W.amountLive(e.target,amt,flow)}},W.amountAttrs("amt",err))),W.amountErr("amt",err)]));
@@ -74,9 +74,9 @@ function draw(animate){if(pageState!=="ok")return;var target=document.getElement
  root.appendChild(sec);
  /* compare chart */
  /* Drawn at the panel's pixel width (no viewBox scaling) so every label stays 11px. */
- var W=Math.max(240,chartW()),nar=W<420,H=W<520?220:260,L=nar?34:44,B=30,T=18,s=U.svg("svg",{class:"chart",viewBox:"0 0 "+W+" "+H,width:W,height:H,role:"img","aria-label":"Grouped bars comparing selected protocols across horizons"}),mv=Math.max.apply(null,st.sel.map(function(i){return val(t,i,3)}).concat([1])),FILL=["var(--violet)","var(--violet-text)","var(--text-2)"],PAT=["none","6 3","2 2"];
- for(var g=0;g<4;g++){var gy=T+g*(H-T-B)/3;s.appendChild(U.svg("line",{x1:L,x2:W-8,y1:gy,y2:gy,stroke:"var(--line)"}));var tx=U.svg("text",{x:L-6,y:gy+4,"text-anchor":"end","font-size":"11",fill:"var(--muted)",class:"num"});tx.textContent=(mv*(1-g/3)).toFixed(1)+"%";s.appendChild(tx)}
- var gw=(W-L-8)/4;HZ.forEach(function(z,k){var bw=Math.min(40,(gw-(nar?6:16))/Math.max(1,st.sel.length));st.sel.forEach(function(i,j){var v=val(t,i,k),bh=v/mv*(H-T-B),x=L+k*gw+(gw-bw*st.sel.length)/2+j*bw;
+ var CW=Math.max(240,chartW()),nar=CW<420,H=CW<520?220:260,L=nar?34:44,B=30,T=18,s=U.svg("svg",{class:"chart",viewBox:"0 0 "+CW+" "+H,width:CW,height:H,role:"img","aria-label":"Grouped bars comparing selected protocols across horizons"}),mv=Math.max.apply(null,st.sel.map(function(i){return val(t,i,3)}).concat([1])),FILL=["var(--violet)","var(--violet-text)","var(--text-2)"],PAT=["none","6 3","2 2"];
+ for(var g=0;g<4;g++){var gy=T+g*(H-T-B)/3;s.appendChild(U.svg("line",{x1:L,x2:CW-8,y1:gy,y2:gy,stroke:"var(--line)"}));var tx=U.svg("text",{x:L-6,y:gy+4,"text-anchor":"end","font-size":"11",fill:"var(--muted)",class:"num"});tx.textContent=(mv*(1-g/3)).toFixed(1)+"%";s.appendChild(tx)}
+ var gw=(CW-L-8)/4;HZ.forEach(function(z,k){var bw=Math.min(40,(gw-(nar?6:16))/Math.max(1,st.sel.length));st.sel.forEach(function(i,j){var v=val(t,i,k),bh=v/mv*(H-T-B),x=L+k*gw+(gw-bw*st.sel.length)/2+j*bw;
   s.appendChild(U.svg("rect",{"data-key":"b"+k+"-"+i,"data-tween":"x y width height",x:x,y:H-B-bh,width:bw-3,height:bh,fill:FILL[j],"fill-opacity":j===2?.6:1,stroke:"var(--bg)","stroke-dasharray":PAT[j]}));
   var v2=U.svg("text",{"data-key":"t"+k+"-"+i,"data-tween":"x y",x:x+(bw-3)/2,y:H-B-bh-4,"text-anchor":"middle","font-size":"11",fill:"var(--text)",class:"num"});v2.textContent=v.toFixed(1);s.appendChild(v2)});
   var lb=U.svg("text",{"data-key":"z"+k,x:L+k*gw+gw/2,y:H-10,"text-anchor":"middle","font-size":"12",fill:"var(--text-2)"});lb.textContent=nar?HS[k]:z;s.appendChild(lb)});

@@ -398,7 +398,7 @@ M.selects=wrapSel;
    .m-open on the wrapper, best effort: a press toggles it; change, blur, Escape, Tab, Enter on an open menu and the
    window losing focus close it; Space, F4 and Alt+Up/Down (plus the arrows and Enter on macOS) open it from the
    keyboard. A native menu holds the pointer while it is open, so the page seeing the pointer travel again (after a
-   moment, by more than a few pixels) means it has closed. When unsure it errs toward closed. */
+   moment, by more than a few pixels) means it has closed. When unsure it errs towards closed. */
 var HAS_OPEN=(function(){try{return CSS.supports("selector(select:open)")}catch(e){return false}})();
 function selOf(t){return t&&t.tagName==="SELECT"&&t.parentNode&&t.parentNode.classList&&t.parentNode.classList.contains("sel-wrap")?t:null}
 var selAt=null;
@@ -521,7 +521,7 @@ function phys(){if(phys.on||!SP)return;phys.on=1;var pressed=null,hov=null,card=
     var l=liftOf(t);if(l)drive(t,{y:l},"settle",{eps:.05});
     if(t.matches(".mgrid .mcard")){card=t;rect=t.getBoundingClientRect();t.style.setProperty("--m-gl","1")}},{passive:true});
   doc.addEventListener("pointerout",function(e){if(!hov)return;var rt=e.relatedTarget;if(rt&&hov.contains(rt))return;if(e.target!==hov&&!hov.contains(e.target))return;leave(hov);hov=null},{passive:true});
-  /* tilt toward the pointer, the specular highlight and the inner parallax follow with a little lag */
+  /* tilt towards the pointer, the specular highlight and the inner parallax follow with a little lag */
   doc.addEventListener("pointermove",function(e){if(!card)return;ev=e;
     if(!q)q=requestAnimationFrame(function(){q=0;if(!card||!rect)return;var x=Math.max(-.5,Math.min(.5,(ev.clientX-rect.left)/rect.width-.5)),y=Math.max(-.5,Math.min(.5,(ev.clientY-rect.top)/rect.height-.5));
       drive(card,{rx:-y*8,ry:x*8,gx:x*rect.width*.6,gy:y*rect.height*.6,px:-x*4,py:-y*4},"settle",{eps:.05})})},{passive:true});

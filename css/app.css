@@ -99,7 +99,7 @@ td.mq{white-space:normal;min-width:240px;max-width:420px;font-size:var(--fs-ui)}
 .lb-tbl th.r button{text-align:right}
 #lb-hint:not(:empty){margin-top:var(--s-4)}
 @media (min-width:1101px){.lb-tbl th:first-child,.lb-tbl td:first-child{width:96px}}
-/* up to 1100px: rank, trader and profit on the first line, then volume, markets and win rate with their labels above */
+/* up to 1100px: rank, trader and profit on the first line, then volume, markets and ROI with their labels above */
 @media (max-width:1100px){
   .lb-tbl tr{grid-template-columns:auto minmax(0,1fr) minmax(0,1fr) auto;grid-template-areas:"rk tr tr pf" "vo vo mk wr";align-items:start}
   .lb-tbl td[data-label]::before{display:block;margin:0 0 2px}

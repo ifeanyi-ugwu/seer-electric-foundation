@@ -22,12 +22,10 @@ function slot(){return DM?DM.slot():{run:function(o){o.apply({data:o.producer(),
 var pageSlot=slot(),detSlot=slot(),chartSlot=slot(),pageState="ok",det={state:"ok",err:null},cst={state:"ok",err:null};
 var flow=W.flow({box:function(){return document.querySelector('[data-tx="fut"]')},onChange:function(){detail()}});
 function focusPlace(){var b=document.querySelector('[data-tx="fut"] [data-tx-place]');if(b)b.focus()}
-/* an illustrative price for the long side of a branch: where its forecast sits in a range around both forecasts */
-function bprice(p,b){var lo=Math.min(p.pass,p.fail)*.75,hi=Math.max(p.pass,p.fail)*1.25,v=b==="pass"?p.pass:p.fail;return Math.round(Math.min(.95,Math.max(.05,(v-lo)/(hi-lo)))*100)/100}
-function place(){var p=view.p,b=branch,a=amt,pr=b==="pass"?p.pass:p.fail,px=bprice(p,b),sh=a/px,name="#"+p.id+" "+p.t;
+function place(){var p=view.p,b=branch,a=amt,pr=b==="pass"?p.pass:p.fail,px=U.bprice(p.pass,p.fail,b),sh=a/px,name="#"+p.id+" "+p.t;
  flow.place(a,function(){return{amount:a,meta:{type:"Trade",market:name,mid:p.id,product:"futarchy",outcome:null,side:b==="pass"?"If it passes":"If it fails",shares:sh,price:px,status:"Open"},
   rows:[["Market",name,"tx-q"],["Branch",b==="pass"?"If it passes":"If it fails"],["Forecast",fmt(p,pr)],["Amount",W.money(a)+" "+U.COLL,"tx-tot"],
-   ["Price per share","$"+px.toFixed(2)],["Shares",U.shares(sh)],["Max slippage","0.5%"],["Minimum shares",U.shares(sh*.995)],["Payout if correct","$"+U.num(sh,2)],["Network fee",U.cni("Free in demo")]],
+   ["Price per share",U.price(px)],["Shares",U.shares(sh)],["Max slippage","0.5%"],["Minimum shares",U.shares(sh*.995)],["Payout if correct","$"+U.num(sh,2)],["Network fee",U.cni("Free in demo")]],
   note:"If the other branch happens, this trade is called off and the stake comes back.",
   done:"You bought "+U.shares(sh)+" shares in the "+(b==="pass"?"pass":"fail")+" branch of proposal #"+p.id+"."}},"amt")}
 /* a forecast with its unit, in the site's number style: "$1.24", "$412K", "$18.2M", "2.1"; a negative has the sign first (U+2212) */
@@ -40,12 +38,12 @@ function series(p,key,n){var r=U.rng(p.id*7+(key==="pass"?1:2)),end=p[key],start
 function chartH(cw){return Math.max(280,Math.round(cw))<520?200:240}
 function chart(p,cw,range){
  /* Drawn at the container's pixel width so labels stay 11px at every size. */
- var W=Math.max(280,Math.round(cw)),H=chartH(cw),L=44,B=24,T=12,R=12,a=series(p,"pass",range),b=series(p,"fail",range),all=a.concat(b),mn=Math.min.apply(null,all),mx=Math.max.apply(null,all),pad=(mx-mn)*.15||1;mn-=pad;mx+=pad;
- var X=function(i){return L+i/(range-1)*(W-L-R)},Y=function(v){return T+(1-(v-mn)/(mx-mn))*(H-T-B)};
+ var CW=Math.max(280,Math.round(cw)),H=chartH(cw),L=44,B=24,T=12,R=12,a=series(p,"pass",range),b=series(p,"fail",range),all=a.concat(b),mn=Math.min.apply(null,all),mx=Math.max.apply(null,all),pad=(mx-mn)*.15||1;mn-=pad;mx+=pad;
+ var X=function(i){return L+i/(range-1)*(CW-L-R)},Y=function(v){return T+(1-(v-mn)/(mx-mn))*(H-T-B)};
  /* data-y and data-fmt let js/motion.js add a pointer readout: value range, plot top and bottom, plot left and right, and the number format */
- var s=U.svg("svg",{class:"chart",viewBox:"0 0 "+W+" "+H,width:W,height:H,role:"img","aria-label":"Forecast of "+p.metric+" if the proposal passes ("+fmt(p,p.pass)+") versus if it fails ("+fmt(p,p.fail)+")",
-  "data-y":[mn,mx,T,H-B,L,W-R].map(function(v){return+v.toFixed(2)}).join(" "),"data-fmt":(p.unit.charAt(0)==="$"?"$":"")+"|"+p.dec+"|"+p.unit.replace("$","")});
- for(var g=0;g<5;g++){var gy=T+g*(H-T-B)/4,gv=mx-g*(mx-mn)/4;s.appendChild(U.svg("line",{x1:L,x2:W-R,y1:gy,y2:gy,stroke:"var(--line)"}));var t=U.svg("text",{x:L-8,y:gy+4,"text-anchor":"end","font-size":"11",fill:"var(--muted)",class:"num"});t.textContent=gv.toFixed(p.dec);s.appendChild(t)}
+ var s=U.svg("svg",{class:"chart",viewBox:"0 0 "+CW+" "+H,width:CW,height:H,role:"img","aria-label":"Forecast of "+p.metric+" if the proposal passes ("+fmt(p,p.pass)+") versus if it fails ("+fmt(p,p.fail)+")",
+  "data-y":[mn,mx,T,H-B,L,CW-R].map(function(v){return+v.toFixed(2)}).join(" "),"data-fmt":(p.unit.charAt(0)==="$"?"$":"")+"|"+p.dec+"|"+p.unit.replace("$","")});
+ for(var g=0;g<5;g++){var gy=T+g*(H-T-B)/4,gv=mx-g*(mx-mn)/4;s.appendChild(U.svg("line",{x1:L,x2:CW-R,y1:gy,y2:gy,stroke:"var(--line)"}));var t=U.svg("text",{x:L-8,y:gy+4,"text-anchor":"end","font-size":"11",fill:"var(--muted)",class:"num"});t.textContent=gv.toFixed(p.dec);s.appendChild(t)}
  var lab=[["Start",0],[p.result?"Close":"Now",range-1]];lab.forEach(function(l,k){var tx=U.svg("text",{x:X(l[1]),y:H-6,"text-anchor":k?"end":"start","font-size":"11",fill:"var(--muted)"});tx.textContent=l[0];s.appendChild(tx)});
  function path(arr,col,dash){var d=arr.map(function(v,i){return(i?"L":"M")+X(i).toFixed(1)+" "+Y(v).toFixed(1)}).join(" ");s.appendChild(U.svg("path",{class:"m-line","data-tween":"d",d:d,fill:"none",stroke:col,"stroke-width":"2.5","stroke-dasharray":dash||"","stroke-linejoin":"round"}))}
  path(a,"var(--pos)");path(b,"var(--neg)","7 5");
