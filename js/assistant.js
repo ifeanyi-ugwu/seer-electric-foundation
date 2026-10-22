@@ -99,7 +99,7 @@ function draw(first){var kids=[tabs(),h("div",{class:"as-body","data-key":"as-bo
 function tab(t){if(ST.tab===t)return;ST.tab=t;save();draw();if(t==="ask")scrollLog(true);say(t==="ask"?"Ask":"Demo controls")}
 function tabs(){return h("div",{class:"as-tabbar","data-key":"as-tabbar"},[h("div",{class:"seg as-tabs",role:"group","aria-label":"Assistant mode"},[
   h("button",{type:"button","aria-pressed":String(ST.tab==="ask"),"aria-controls":"as-pane",onclick:function(){tab("ask")}},["Ask"]),
-  h("button",{type:"button","aria-pressed":String(ST.tab==="demo"),"aria-controls":"as-pane",onclick:function(){tab("demo")}},["Demo"])])])}
+  h("button",{type:"button","aria-pressed":String(ST.tab==="demo"),"aria-label":"Demo","aria-controls":"as-pane",onclick:function(){tab("demo")}},["Demo",h("span",{class:"cn-tag","aria-hidden":"true",text:"CONCEPT"})])])])}
 /* the open pane scrolls on its own, below the pinned bar and the tabs; the bar's hairline follows that scroll, and on
    phones a drag that starts in a pane that can scroll moves the pane, never the sheet */
 function wirePane(p){var y0=0,body=p.querySelector(".as-body");
@@ -162,7 +162,6 @@ function demo(){if(!D)return h("div",{class:"as-pane",id:"as-pane"},[h("p",{clas
   var s=D.settings,c=D.counts,can=D.canReplay(),narrowClose=function(){if(mqPhone.matches)close()};
   var err=s.error,forceKind=err==="none"?"server":err;
   var items=[
-    h("p",{class:"cn","data-key":"dnote",text:"These controls are for the demo: they simulate slow, failing and offline loads on every page in this tab."}),
     group("as-g-load","Loading",[
       h("div",{class:"as-field"},[h("span",{class:"as-lbl",id:"as-delay-l",text:"Delay"}),
         h("div",{class:"seg as-seg",role:"group","aria-labelledby":"as-delay-l"},D.DELAYS.map(function(d){return h("button",{type:"button","aria-pressed":String(s.delay===d),onclick:function(){if(s.delay!==d)set({delay:d},d?"Delay set to "+d+(d===1?" second":" seconds"):"Delay set to instant")}},[DELAY_T[d]])}))]),
@@ -177,7 +176,7 @@ function demo(){if(!D)return h("div",{class:"as-pane",id:"as-pane"},[h("p",{clas
       h("p",{class:"as-help",id:"as-trig-n",text:can?"Runs this page's load once with "+(err==="none"?"a server error":err==="empty"?"an empty result":"a "+ERR_T[err].toLowerCase()+" error")+", whatever the scope.":"Open one of the apps to trigger an error."})]),
     group("as-g-net","Network",[sw("as-off",s.offline,"Offline","Every load fails with a network error until you switch this off; the page then retries by itself.",function(){set({offline:!s.offline},s.offline?"Back online.":"Offline on.")})]),
     group("as-g-cache","Cache",[sw("as-cache",s.cache,"Cache","Saved loads show at once and refresh in the background.",function(){set({cache:!s.cache},s.cache?"Cache off.":"Cache on.")}),
-      h("p",{"data-key":"cache-line"},[h("span",{class:"cn-i",text:"Cache: "+c.entries+(c.entries===1?" entry":" entries")+", last read "+D.ago(c.lastRead)})]),
+      h("p",{class:"as-help","data-key":"cache-line",text:"Cache: "+c.entries+(c.entries===1?" entry":" entries")+", last read "+D.ago(c.lastRead)}),
       h("div",{class:"as-two"},[h("button",{class:"btn soft",type:"button",onclick:function(){D.warmCache();say("Cache warmed: "+D.counts.entries+" entries.")}},["Warm cache"]),
         h("button",{class:"btn soft",type:"button","aria-describedby":"as-clear-n",onclick:function(){D.clearCache();say("Cache cleared. The next load is cold.")}},["Clear cache ("+c.entries+")"])]),
       h("p",{class:"as-help",id:"as-clear-n",text:"Last cleared "+D.ago(c.lastCleared)+"."}),
@@ -186,7 +185,8 @@ function demo(){if(!D)return h("div",{class:"as-pane",id:"as-pane"},[h("p",{clas
     group("as-g-sys","Open a system page",[h("ul",{class:"as-links"},[["404 page","this-page-does-not-exist.html"],["Error page: offline","error.html?type=offline"],["Error page: timeout","error.html?type=timeout"],
       ["Error page: server error","error.html?type=server"],["Error page: unexpected","error.html?type=unknown"],["Loading page","loading.html?next="+FILE]].map(function(l){
       return h("li",{},[h("a",{class:"as-link",href:l[1]},[h("span",{text:l[0]}),svg("svg",{viewBox:"0 0 16 16",width:"16",height:"16","aria-hidden":"true",focusable:"false"},[svg("path",{d:"M3 8h9.5M8.5 3.5 13 8l-4.5 4.5",fill:"none",stroke:"currentColor","stroke-width":"1.5"})])])])}))])];
-  return h("div",{class:"as-pane as-demo",id:"as-pane","data-key":"demo"},[h("div",{class:"as-scroll","data-key":"dscroll"},items)])}
+  /* the whole tab is marked once, in a band under the tab bar: the controls below are plain */
+  return h("div",{class:"as-pane as-demo",id:"as-pane","data-key":"demo"},[h("p",{class:"cn-band","data-key":"dband",text:"Judge controls. Not part of the product."}),h("div",{class:"as-scroll","data-key":"dscroll"},items)])}
 
 if(D&&D.subscribe)D.subscribe(function(){label();if(isOpen()&&ST.tab==="demo")draw()});
 /* ---------- the first-visit callout: an entry point to the Demo tab, nothing more ---------- */

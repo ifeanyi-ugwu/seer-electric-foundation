@@ -15,13 +15,16 @@ nav.shell{display:flex;align-items:center;gap:24px;padding:20px 40px}
 nav.shell a{color:var(--text-2);text-decoration:none}nav.shell a[aria-current]{color:var(--text)}
 @media(max-width:640px){nav.shell{padding:16px;flex-wrap:wrap;gap:12px}}
 /* concept note: text that says a thing is a demo, illustrative or outside the concept. No colour of its own: neutral ink, a dashed edge and a faint hatch at the slab angle.
-   .cn is a block with a generated "CONCEPT" label (not announced twice); .cn-i is inline with no label. */
-.cn,.cn-i{font:400 12px/1.5 var(--num);font-variant-numeric:tabular-nums;color:var(--text-2);overflow-wrap:anywhere;
+   .cn is a block with a generated "CONCEPT" label (not announced twice); .cn-i is inline with no label; .cn-band is the full-width block
+   (dashed top and bottom edges, no side edges) that marks a whole panel, and .cn-tag the small dashed label beside a control that opens one. */
+.cn,.cn-i,.cn-band{font:400 12px/1.5 var(--num);font-variant-numeric:tabular-nums;color:var(--text-2);overflow-wrap:anywhere;
   border:1px dashed color-mix(in srgb,var(--text) 28%,transparent);
   background:repeating-linear-gradient(-20deg,transparent 0 7px,color-mix(in srgb,var(--text) 6%,transparent) 7px 8px)}
-.cn{display:block;padding:8px 10px}
+.cn,.cn-band{display:block;padding:8px 10px}
+.cn-band{border-left:0;border-right:0;padding-left:var(--s-4);padding-right:var(--s-4)}
+.cn-tag{display:inline-block;margin-left:var(--s-2);padding:2px 4px;border:1px dashed color-mix(in srgb,currentColor 55%,transparent);font:500 9.5px/1 var(--num);letter-spacing:.08em;vertical-align:1px}
 .cn-i{display:inline;padding:1px 6px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
-.cn::before{content:"CONCEPT ";content:"CONCEPT " / "";font-size:10.5px;letter-spacing:.1em;font-weight:500;color:var(--text)}
+.cn::before,.cn-band::before{content:"CONCEPT ";content:"CONCEPT " / "";font-size:10.5px;letter-spacing:.1em;font-weight:500;color:var(--text)}
 /* a chart key: line style swatches with their names */
 .legend{display:flex;gap:var(--s-4);flex-wrap:wrap;margin:var(--s-3) 0 var(--s-2)}
 .legend span{display:flex;align-items:center;gap:var(--s-2);font-size:var(--fs-meta);color:var(--text-2);min-width:0;overflow-wrap:anywhere}
