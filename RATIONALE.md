@@ -63,7 +63,7 @@ Each row is a place where the built interface differs from what the kit specifie
 | Hero shows two full market cards you can swap: tap the card behind and it springs forward, then replays its dots, climbing number and bar | The kit's hero has a mostly hidden back card. Two complete, interchangeable cards show that Seer carries many markets, and each card has its own moment. |
 | The front card carries the full logo (mark and wordmark) at 40px wide in the second violet, where the header uses the white logo at full size | A card is one market, so the brand sits as a quiet label above the question. |
 | FADES slabs reused at low opacity as a page-head band on the app pages, drawn inline and theme-aware | An image can't follow the theme or sit cleanly behind title text. It ties the tools to the landing hero. |
-| The kit's purple portrait photography, a cinematic graphic style the kit lists, is not used | The kit's own web comps use none, and the Figma file has no exportable photos. |
+| The kit's purple duotone portrait, shown in a social-post example in the brandbook, is not used | The kit's web comps contain no photography (their only images are 16px flags and icons), and the file's one portrait is a 294px-wide cut-out, too small for a page. The six interfaces are data pages and carry no portrait. |
 
 ### Layout and spacing
 
