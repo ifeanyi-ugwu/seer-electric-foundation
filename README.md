@@ -15,4 +15,4 @@ The site is plain HTML, CSS and JS with no build step. Serve the folder statical
 
 This is a concept for the contest brief. It does not assume the behaviour of the live products, and it does not cover every control of them. Outside the concept: the portfolio page, liquidity management, rewards payouts, watchlist alerts and the explorer link.
 
-Design rationale and every departure from the brand kit: [RATIONALE.md](RATIONALE.md).
+Departures from the Electric Foundation kit and the design rationale: [RATIONALE.md](RATIONALE.md). How the interface behaves: [BEHAVIOUR.md](BEHAVIOUR.md).
