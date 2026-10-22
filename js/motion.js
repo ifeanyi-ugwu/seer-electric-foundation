@@ -418,7 +418,7 @@ function selOpen(){if(selOpen.on||HAS_OPEN)return;selOpen.on=1;var mac=/Mac|iP(h
     else if(k===" "||(mac&&(k==="ArrowDown"||k==="ArrowUp"||k==="Enter")))selSet(s,true)},true);
   addEventListener("blur",function(){each(doc.querySelectorAll(".sel-wrap.m-open"),function(w){w.classList.remove("m-open")})})}
 
-function scan(r){r=r||doc;wrapSel(r);if(r.matches&&r.matches(".seg,.tabs"))indicator(r);each(r.querySelectorAll(".seg,.tabs"),indicator);
+function scan(r){r=r||doc;wrapSel(r);if(r.matches&&r.matches(".seg,.tabs,.pv-tabs"))indicator(r);each(r.querySelectorAll(".seg,.tabs,.pv-tabs"),indicator);
   each(r.querySelectorAll("svg.chart[data-y]"),chartHover);}
 M.scan=scan;
 

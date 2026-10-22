@@ -528,7 +528,7 @@
         /* after a skeleton the tiles morph in place and count up; the cards cross over (js/motion.js) and the rest
            reveal as they scroll in, exactly as on a first load */
         if(info.shown)Motion.countIn(statsEl.querySelectorAll("b"),80);else Motion.reveal("#stats > div",{onIn:Motion.dataIn});
-        Motion.reveal("#cats, .toolbar, #types, #count",{rise:8});Motion.reveal("#out .mcell, #out tbody tr")},
+        Motion.reveal(".pv-tabs, #cats, .toolbar, #types, #count",{rise:8});Motion.reveal("#out .mcell, #out tbody tr")},
       fail:function(e,info){unskeleton();pageState="error";sections(false);
         DM.renderError(pageBox,e,{level:"page",subject:"the markets",retry:function(){DM.holdFocus(wrap);load({initial:true,retried:true})},
           back:{text:"Back to home",href:"index.html"},focus:!modal()});
@@ -553,20 +553,20 @@
       fail:function(e){outEl.classList.remove("dm-dim");qs=q;listErr=e;listEmpty=false;render();if(e.kind==="network")DM.onOnline(refilter)}})}
   /* ======================= two views: Markets and Leaderboard =======================
      One page, two views, chosen by the bare hash: #leaderboard shows the leaderboard, #markets or no hash the explorer (any other hash,
-     such as #demo, leaves the view as it is). The switch in the page head pushes the hash without scrolling, so Back, Forward and a reload
-     keep the view. A view loads when it is first shown. */
-  var pvTitle=document.querySelector(".phead h1"),pvLede=document.querySelector(".phead .lede"),pvT0=pvTitle.textContent,pvL0=pvLede.textContent;
-  var tab="markets",started=false,pvM=document.getElementById("pv-m"),pvL=document.getElementById("pv-l");
+     such as #demo, leaves the view as it is). The switch is the first row of the page body, under the head, which is the same in both views;
+     it pushes the hash without scrolling, so Back, Forward and a reload keep the view. Text that belongs to one view sits below the switch,
+     inside that view. A view loads when it is first shown. */
+  var tab="markets",started=false,firstShow=true,pvM=document.getElementById("pv-m"),pvL=document.getElementById("pv-l");
   function hashView(){var x=location.hash;return x==="#leaderboard"?"leaderboard":x===""||x==="#markets"?"markets":null}
   function startExplorer(){if(started)return;started=true;
-    if(!DM){stats();cats();types();render();openFromUrl();if(window.Motion){Motion.reveal("#stats > div",{onIn:Motion.dataIn});Motion.reveal("#cats, .toolbar, #types, #count",{rise:8});Motion.reveal("#out .mcell, #out tbody tr")}}
+    if(!DM){stats();cats();types();render();openFromUrl();if(window.Motion){Motion.reveal("#stats > div",{onIn:Motion.dataIn});Motion.reveal(".pv-tabs, #cats, .toolbar, #types, #count",{rise:8});Motion.reveal("#out .mcell, #out tbody tr")}}
     else load({initial:true})}
-  function showView(v){tab=v;var l=v==="leaderboard";wrap.hidden=l;lbEl.hidden=!l;
+  function showView(v){var was=tab,l=v==="leaderboard";tab=v;wrap.hidden=l;lbEl.hidden=!l;
+    /* the incoming view fades in (opacity only, nothing moves; instant under reduced motion) */
+    if(!firstShow&&was!==v&&!(window.Motion&&Motion.reduced())){var vin=l?lbEl:wrap;vin.classList.remove("m-vin");void vin.offsetWidth;vin.classList.add("m-vin");vin.addEventListener("animationend",function e(){vin.classList.remove("m-vin");vin.removeEventListener("animationend",e)})}
+    firstShow=false;
     pvM.setAttribute("aria-pressed",String(!l));pvL.setAttribute("aria-pressed",String(l));
     document.title=l?"Seer app | Leaderboard":"Seer app | Market explorer";
-    /* the page head follows the view: its title and sentence, and Create market only where a market can be created */
-    pvTitle.textContent=l?"Leaderboard":pvT0;pvLede.textContent=l?"The most profitable traders, with volume and ROI.":pvL0;
-    document.getElementById("create").hidden=l;
     if(l){if(lbState==="idle")lbLoad({initial:true});else if(lbState==="ok")lbRender()}else startExplorer()}
   function go(v){if(v===tab)return;try{history.pushState(null,"",v==="leaderboard"?"#leaderboard":location.pathname+location.search)}catch(e){}
     showView(v);if(DM)DM.announce(v==="leaderboard"?"Showing the leaderboard.":"Showing the markets.")}
@@ -646,7 +646,7 @@
           DM.renderEmpty(lbBox,{level:"page",kind:"Nothing here yet",title:"No traders yet",text:"Nobody has traded in this period yet. Check again in a moment.",action:{text:"Check again",onclick:function(){DM.holdFocus(lbEl);lbLoad({initial:true,retried:true})}},focus:o.retried&&!modal()});return}
         lbState="ok";lbSections(true);if(!info.shown){U.clear(lbOut)}
         lbRender();if(o.retried&&!modal())DM.focusFirst(lbMain);openFromUrl();
-        if(window.Motion){Motion.scan(lbEl);Motion.reveal("#lb .lb-head, #lb .sortbar",{rise:8});Motion.reveal("#lb tbody tr")}},
+        if(window.Motion){Motion.scan(lbEl);Motion.reveal("#lb .lb-lede, #lb .lb-head, #lb .sortbar",{rise:8});Motion.reveal("#lb tbody tr")}},
       fail:function(e){lbUnskel();lbState="error";lbSections(false);
         DM.renderError(lbBox,e,{level:"page",subject:"the traders",retry:function(){DM.holdFocus(lbEl);lbLoad({initial:true,retried:true})},back:{text:"Back to home",href:"index.html"},focus:!modal()});
         if(e.kind==="network")DM.onOnline(function(){if(lbState==="error")lbLoad({initial:true})})}})}

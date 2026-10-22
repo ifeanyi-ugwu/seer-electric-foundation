@@ -87,9 +87,21 @@ td.mq{white-space:normal;min-width:240px;max-width:420px;font-size:var(--fs-ui)}
 .mcard.static{cursor:default;min-height:0;box-shadow:none}
 
 /* ================================ LEADERBOARD ================================
-   The switch sits in the page head beside Create market. The table is the shared .tbl.tall.rtbl: a table from 1101px with its header
+   The Markets and Leaderboard switch is the first row of the page body (.pv-tabs), under a head that is the same in both views. The table is the shared .tbl.tall.rtbl: a table from 1101px with its header
    stuck under the page header, cut-corner cards below it (shell.css), with the column sort moved to the "Sort by" bar. */
 .pv-act{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s-3) var(--s-4)}
+/* the view switch reads as navigation, not a filter: plain text buttons on a 1px rule, the active one underlined in violet (the underline glides on the shared indicator springs) */
+.pv-tabs{display:flex;flex-wrap:wrap;gap:0 var(--s-5);border-bottom:1px solid var(--line);margin:0 0 var(--gap-block)}
+.pv-tabs button{position:relative;min-height:var(--tap);padding:0 var(--s-1);border:0;background:transparent;color:var(--text-2);font:inherit;font-size:var(--fs-body);cursor:pointer;white-space:nowrap}
+@media (hover:hover){.pv-tabs button:hover{color:var(--text)}}
+.pv-tabs button[aria-pressed=true]{color:var(--text);box-shadow:inset 0 -2px 0 var(--violet)}
+.pv-tabs button:focus-visible{outline:2px solid var(--violet-text);outline-offset:-2px}
+.pv-tabs.m-ind-on > button[aria-pressed=true]{box-shadow:none}
+.pv-tabs .m-ind{top:auto;bottom:-1px;height:2px!important;border-radius:0!important}
+.lb-lede{margin:0 0 var(--s-4)}
+.m-vin{animation:m-vin 160ms var(--ease-standard,ease) both}
+@keyframes m-vin{from{opacity:0}}
+@media (prefers-reduced-motion:reduce){.m-vin{animation:none}}
 .lb-ctl{display:grid;gap:var(--s-3);margin-bottom:var(--gap-block)}
 .lb-ctl .sortbar{margin:0}
 .lb-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--s-2) var(--s-4)}
