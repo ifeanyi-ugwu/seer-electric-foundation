@@ -419,8 +419,7 @@ function selOpen(){if(selOpen.on||HAS_OPEN)return;selOpen.on=1;var mac=/Mac|iP(h
   addEventListener("blur",function(){each(doc.querySelectorAll(".sel-wrap.m-open"),function(w){w.classList.remove("m-open")})})}
 
 function scan(r){r=r||doc;wrapSel(r);if(r.matches&&r.matches(".seg,.tabs"))indicator(r);each(r.querySelectorAll(".seg,.tabs"),indicator);
-  each(r.querySelectorAll("svg.chart[data-y]"),chartHover);
-  if(pauseIO)each(r.querySelectorAll(".status-live,.c-st[data-status=Live]"),function(el){if(!el.__po){el.__po=1;pauseIO.observe(el)}})}
+  each(r.querySelectorAll("svg.chart[data-y]"),chartHover);}
 M.scan=scan;
 
 /* ---------- product nav: active indicator + gliding hover pill ---------- */
@@ -694,7 +693,6 @@ function vizIn(v,d){d+=140;
   M.stagger(v.querySelectorAll(".board tbody tr"),d,45);M.grow(v.querySelectorAll(".sig i"),{delay:d+120,step:45});M.countIn(v.querySelectorAll(".board td .num"),d+120);
   M.stagger(v.querySelectorAll(".risk li"),d,45);M.grow(v.querySelectorAll(".rb i"),{delay:d+100,step:45});M.countIn(v.querySelectorAll(".rv"),d+100)}
 function landing(){try{sessionStorage.setItem("seer-hero","1")}catch(e){}
-  if(!root.classList.contains("m-hero-seen"))each(".hero .mbig",function(el){M.countUp(el,{delay:640,dur:D.xl})});
   M.reveal(".sec-head,.steps > li,.types > li,.feat-copy,.foot-grid > *");
   M.reveal(".base,.cta-block",{wipe:true});
   M.reveal(".feat .viz",{onIn:vizIn});

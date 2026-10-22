@@ -55,7 +55,6 @@
 .more{color:var(--muted);font-size:var(--fs-cap)}
 .foot{margin-top:auto;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:var(--s-1) var(--s-2);padding-top:var(--s-2)}
 .foot > :last-child{margin-left:auto}
-.status-live{color:var(--neg)}
 
 /* table view (desktop): fits without scrolling from 1101px */
 .app-tbl table{min-width:0}
@@ -130,7 +129,6 @@ td.mq{white-space:normal;min-width:240px;max-width:420px;font-size:var(--fs-ui)}
   .app-tbl .c-q{grid-area:q;max-width:none;min-width:0;font-size:var(--fs-ui);line-height:var(--lh-snug)}
   .app-tbl .c-ty{grid-area:ty;align-self:center}
   .app-tbl .c-st{grid-area:st;text-align:right;align-self:center;color:var(--text-2);font-size:var(--fs-meta)}
-  .app-tbl .c-st[data-status=Live]{color:var(--neg)}
   .rtbl.app-tbl tr td.c-lo{grid-area:lo;background:var(--row);border-radius:var(--r-chip);padding:var(--s-2) var(--s-3)}
   .app-tbl .c-vo{grid-area:vo;text-align:left}.app-tbl .c-li{grid-area:li;text-align:left}.app-tbl .c-cl{grid-area:cl;text-align:right}
   .app-tbl .c-cl::before{text-align:right}

@@ -27,8 +27,8 @@ function bprice(p,b){var lo=Math.min(p.pass,p.fail)*.75,hi=Math.max(p.pass,p.fai
 function place(){var p=view.p,b=branch,a=amt,pr=b==="pass"?p.pass:p.fail,px=bprice(p,b),sh=a/px,name="#"+p.id+" "+p.t;
  flow.place(a,function(){return{amount:a,meta:{type:"Trade",market:name,mid:p.id,product:"futarchy",outcome:null,side:b==="pass"?"If it passes":"If it fails",shares:sh,price:px,status:"Open"},
   rows:[["Market",name,"tx-q"],["Branch",b==="pass"?"If it passes":"If it fails"],["Forecast",fmt(p,pr)],["Amount",W.money(a)+" "+U.COLL,"tx-tot"],
-   ["Price per share","$"+px.toFixed(2)],["Shares",U.shares(sh)],["Max slippage","1%"],["Minimum shares",U.shares(sh*.99)],["Payout if correct","$"+U.num(sh,2)],["Network fee","Free in demo","tx-free"]],
-  note:"If the other branch happens, this trade is refunded.",
+   ["Price per share","$"+px.toFixed(2)],["Shares",U.shares(sh)],["Max slippage","0.5%"],["Minimum shares",U.shares(sh*.995)],["Payout if correct","$"+U.num(sh,2)],["Network fee","Free in demo","tx-free"]],
+  note:"If the other branch happens, this trade is called off and the stake comes back.",
   done:"You bought "+U.shares(sh)+" shares in the "+(b==="pass"?"pass":"fail")+" branch of proposal #"+p.id+"."}},"amt")}
 /* a forecast with its unit, in the site's number style: "$1.24", "$412K", "$18.2M", "2.1"; a negative has the sign first (U+2212) */
 function fmt(p,v){if(p.unit==="$"&&Math.abs(v)>=1e3)return U.money(v);var n=U.num(v,p.dec),neg=n.charAt(0)==="\u2212",pre=p.unit.charAt(0)==="$"?"$":"";if(neg)n=n.slice(1);
@@ -133,7 +133,7 @@ function detail(animate){U.tipClose();var p=view.p,d=delta(p),root=document.getE
   var inp=h("input",Object.assign({class:"field",type:"number",min:"1",value:String(amt),id:"amt",oninput:function(e){amt=+e.target.value||0;W.amountLive(e.target,amt,flow)}},W.amountAttrs("amt",err)));
   t.appendChild(h("div",{class:"field-grp t-b"},[W.amountLabel("amt","Amount ("+U.COLL+")"),inp,W.amountErr("amt",err)]));
   var pb=W.placeBtn({extra:true,onPlace:place});pb.classList.add("t-b");t.appendChild(pb);
-  t.appendChild(W.hint({extra:"If the other branch happens, this trade is refunded.",cls:"t-b",after:focusPlace}))}
+  t.appendChild(W.hint({extra:"If the other branch happens, this trade is called off and the stake comes back.",cls:"t-b",after:focusPlace}))}
  [head,two,ch,t].forEach(function(n){el.appendChild(n)});U.patch(root,el,{animate:animate!==false});focusHead()}
 function focusHead(){if(!headFocus)return;headFocus=false;var n=document.querySelector("#detail .dhead h2");if(n)n.focus({preventScroll:true})}
 /* the chart is drawn at its panel's content width so labels stay 11px at every size */

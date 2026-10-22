@@ -282,7 +282,7 @@ circle.g-on{fill:var(--violet)}
 
 /* footer */
 .foot{border-top:1px solid var(--line);padding-block:var(--s-8) max(var(--s-6),env(safe-area-inset-bottom))}
-.foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:var(--s-6)}
+.foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:var(--s-6)}
 .foot-brand svg{height:24px;width:auto;color:var(--text)}
 .foot-name{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .foot-brand p.muted{margin-top:var(--s-4);font-size:14px;max-width:40ch}

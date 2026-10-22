@@ -31,7 +31,7 @@ function cpx(c){var e=val(c.t,c.i,c.k)/100;return Math.min(.99,Math.max(.01,side
 function focusPlace(){var b=document.querySelector('[data-tx="risk"] [data-tx-place]');if(b)b.focus()}
 function cplace(){var c=cell,p=cpx(c),a=amt,sh=a/p,sd=side,nm=P[c.i][0]+" \u00b7 "+tlabel(c.t)+" \u00b7 "+HZ[c.k];
  flow.place(a,function(){return{amount:a,meta:{type:"Trade",market:nm,mid:cmid(c),product:"risk",outcome:null,side:sd,shares:sh,price:p,status:"Open"},
-  rows:[["Market",nm,"tx-q"],["Side",sd==="Yes"?"Yes (loss event happens)":"No"],["Amount",W.money(a)+" "+U.COLL,"tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(sh)],["Max slippage","1%"],["Minimum shares",U.shares(sh*.99)],["Payout if correct","$"+U.num(sh,2)],["Network fee","Free in demo","tx-free"]],
+  rows:[["Market",nm,"tx-q"],["Side",sd==="Yes"?"Yes (loss event happens)":"No"],["Amount",W.money(a)+" "+U.COLL,"tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(sh)],["Max slippage","0.5%"],["Minimum shares",U.shares(sh*.995)],["Payout if correct","$"+U.num(sh,2)],["Network fee","Free in demo","tx-free"]],
   done:"You bought "+U.shares(sh)+" "+sd+" shares on "+cname(c)+"."}},"amt")}
 function ticketKids(c){var p=cpx(c),k=[h("h2",{text:"Buy cover"})];
  if(flow.step!=="form"){k.push(flow.view());return k}

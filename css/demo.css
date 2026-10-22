@@ -190,9 +190,6 @@ html.dm-is-offline{--dm-lift:48px}
 @media (max-width:600px){html.cn-on .panel{max-height:calc(100dvh - max(48px,env(safe-area-inset-top) + 16px) - var(--cn-h,0px))}}
 @media (forced-colors:active){.concept-note{border:1px solid CanvasText}}
 
-/* the tool pages end with room for the assistant ball, so the last row or button is never under it */
-#main > .page,#main > .wrap{padding-bottom:calc(var(--s-8) + 48px)}
-@media (max-width:600px){#main > .page,#main > .wrap{padding-bottom:calc(var(--s-7) + 56px)}}
 
 /* ================================== RESPONSIVE ================================== */
 @media (max-width:600px){

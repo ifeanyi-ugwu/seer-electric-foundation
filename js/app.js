@@ -39,8 +39,10 @@
         row("Resolves by",rs.state==="disputed"?(rs.source||"Reality.eth")+", now in Kleros arbitration":(rs.source||"Reality.eth")+", with Kleros arbitration if disputed","tx-q"),
         row("Answer",a,"tx-q"),
         row("Collateral",U.COLL,"tx-q"),
-        row("Market address",[h("span",{class:"num",text:W.short(addr)}),W.copyBtn(addr,"market address")],"rules-addr")]),
-      h("p",{class:"note",text:rs.rules+" If the question cannot be answered, it resolves Invalid, and only \u201cInvalid result\u201d shares redeem for the collateral."})]);return d}
+        row("Market address",[h("span",{class:"num",text:W.short(addr)}),W.copyBtn(addr,"market address")],"rules-addr"),
+        row("Verification",m.isNew?"Not verified":"Verified on Kleros Curate","tx-q")]),
+      h("p",{class:"note",text:rs.rules+" If the question cannot be answered, it resolves Invalid, and only \u201cInvalid result\u201d shares redeem for the collateral."}),
+      rs.state==="awaiting"?h("p",{class:"note"},[h("button",{class:"wl-link",type:"button",text:"Answer on Reality.eth",onclick:function(e){U.concept("Not part of this concept. In the product this opens the question on Reality.eth.",e.currentTarget)}})]):null]);return d}
   /* a scalar value with its unit: "$" leads, a word follows after a space, a symbol follows directly */
   function sfmt(v,u){var n=U.num(v,2,0),neg=n.charAt(0)==="\u2212";if(neg)n=n.slice(1);
     return(neg?"\u2212":"")+(u==="$"?"$"+n:u&&/^[A-Za-z]/.test(u)?n+" "+u:n+(u||""))}
@@ -74,7 +76,7 @@
      once, before the first load; the filters, the search (after 300 ms), the view and the Saved chip rewrite it with replaceState, so the page
      keeps one history entry. Opening a market pushes one entry (m=<id>), so Back closes the sheet and stays on the page; an address that opens a market does the same once it has loaded. The grid or table choice
      is also kept in localStorage under seer-view; a view in the address wins over it. The hash (#leaderboard) is the view and is left as it is. */
-  var STATUSES=["Open","Live","Awaiting result","In dispute","Resolved"],SORTS=["vol","liq","name"],VIEWKEY="seer-view";
+  var STATUSES=["Open","Awaiting result","In dispute","Resolved"],SORTS=["vol","liq","name"],VIEWKEY="seer-view";
   /* the apps a market can come from: the key in the address (?app=) and in a market's app field, and the name shown. A market with no app field was made in the Seer app. */
   var APPS=[["seer","Seer app"],["futarchy","Futarchy"],["deep","Deep"],["opportunity","Opportunity Markets"],["risk","Risk Pricing"]];
   (function(){var p;try{p=new URLSearchParams(location.search)}catch(e){return}
@@ -106,11 +108,11 @@
     /* with Saved on, an unsaved market leaves the list; focus moves to the results line, which says how many remain */
     if(st.saved&&!on&&pageState==="ok"){render();countEl.setAttribute("tabindex","-1");countEl.focus({preventScroll:true})}}
 
-  function stats(){var open=M.filter(function(m){return m.status==="Open"||m.status==="Live"}).length;
+  function stats(){var open=M.filter(function(m){return m.status==="Open"}).length;
     var vol=M.reduce(function(a,m){return a+m.vol},0);var liq=M.reduce(function(a,m){return a+m.liq},0);
     var el=document.getElementById("stats"),f=h("div");
     /* the market count lives once, in the results line; the tiles carry what the list cannot */
-    [["Open or live",String(open)],["Total volume",money(vol)],["Liquidity",money(liq)]].forEach(function(s){
+    [["Open",String(open)],["Total volume",money(vol)],["Liquidity",money(liq)]].forEach(function(s){
       f.appendChild(h("div",{"data-key":s[0]},[h("small",{text:s[0]}),h("b",{class:"num",text:s[1]})]))});patch(el,f,{animate:!!el.firstChild})}
 
   function cats(){var el=document.getElementById("cats"),f=h("div"),sel=document.getElementById("cat-m"),all=["All"].concat(M.map(function(m){return m.cat}).filter(function(c,i,a){return a.indexOf(c)===i}));
@@ -129,7 +131,7 @@
     /* Outcome actions follow one rule: tradable markets with 3+ outcomes trade Yes/No per outcome;
        tradable two-outcome markets buy either outcome directly; closed markets show no actions,
        and a resolved market marks its winner. The chips are visual cues; the card opens the ticket. */
-    var tradable=m.status==="Open"||m.status==="Live";
+    var tradable=m.status==="Open";
     function acts(o){
       if(!tradable)return m.status==="Resolved"&&o[1]===1?h("span",{class:"won",text:"Won"}):null;
       if(m.outs.length>2)return h("span",{class:"acts","aria-hidden":"true"},[h("span",{class:"yn","data-side":"Yes",text:"Yes"}),h("span",{class:"yn n","data-side":"No",text:"No"})]);
@@ -141,9 +143,9 @@
       body.push(h("div",{},[h("div",{class:"range"},[h("b",{class:"num",text:sfmt(s.est,s.unit),style:"left:"+p+"%"}),h("i",{style:"left:"+p+"%"})]),h("div",{class:"rl num"},[h("span",{text:U.num(s.lo,2,0)}),h("span",{text:"Market estimate"}),h("span",{text:U.num(s.hi,2,0)})])]))}
     else if(m.cond){var c=m.cond,f=function(v){return v==null?"No trades yet":sfmt(v,c.unit)};
       body.push(h("div",{class:"cond"},[h("div",{},[h("small",{text:"If "+c.if.toLowerCase()}),h("b",{class:"num",text:f(c.a)})]),h("div",{},[h("small",{text:"If not"}),h("b",{class:"num",text:f(c.b)})])]))}
-    var live=m.status==="Live",tb=h("span",{class:"badge",text:m.type});
+    var tb=h("span",{class:"badge",text:m.type});
     return[h("div",{class:"q"},[h("div",{class:"pfp",text:m.q.charAt(0)}),h("span",{text:m.q})])].concat(body,[
-      h("div",{class:"foot"},[h("div",{class:"meta"},[h("span",{class:"num",text:money(m.vol)+" Vol."}),h("i"),h("span",{text:live?"LIVE":m.status==="Open"?(closeOf(m)?"Closes "+closeOf(m).label:"No close date"):m.status,class:live?"status-live":""})].concat(m.app?[h("i"),h("span",{class:"muted",text:appName(m)})]:[])),
+      h("div",{class:"foot"},[h("div",{class:"meta"},[h("span",{class:"num",text:money(m.vol)+" Vol."}),h("i"),h("span",{text:m.status==="Open"?(closeOf(m)?"Closes "+closeOf(m).label:"No close date"):m.status})].concat(m.app?[h("i"),h("span",{class:"muted",text:appName(m)})]:[])),
         m.isNew?h("span",{class:"foot-b"},[h("span",{class:"badge new",text:"New"}),tb]):tb])])}
   function card(m){return h("div",{class:"mcell","data-key":"m"+m.id},[h("button",{class:"mcard",type:"button",onclick:function(e){var o=e.target.closest("[data-o]"),s=e.target.closest("[data-side]");openPanel(m,{pick:o?+o.dataset.o:0,side:s?s.dataset.side:"Yes"})},"aria-label":m.q+", "+m.type+(m.isNew?", new":"")},cardBody(m)),star(m)])}
 
@@ -264,12 +266,12 @@
     function focusPlace(){var b=tk.querySelector("[data-tx-place]");if(b)b.focus()}
     function place(){var p=Math.min(.99,Math.max(.01,price())),a=amt,s=a/p,o=m.outs?m.outs[pick][0]:null,sd=sideName();
       fl.place(a,function(){return{amount:a,meta:{type:"Trade",market:m.q,mid:m.id,product:"app",outcome:o,side:bin?"":sd,shares:s,price:p,status:m.status},
-        rows:[["Market",m.q,"tx-q"]].concat(o?[["Outcome",o,"tx-q"]]:[],bin?[]:[["Side",sd]],[["Amount",W.money(a)+" "+U.COLL,"tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(s)],["Max slippage","1%"],["Minimum shares",U.shares(s*.99)],[m.scalar?"Maximum payout":"Payout if correct","$"+U.num(s,2)],["Network fee","Free in demo","tx-free"]]),
+        rows:[["Market",m.q,"tx-q"]].concat(o?[["Outcome",o,"tx-q"]]:[],bin?[]:[["Side",sd]],[["Amount",W.money(a)+" "+U.COLL,"tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(s)],["Max slippage","0.5%"],["Minimum shares",U.shares(s*.995)],[m.scalar?"Maximum payout":"Payout if correct","$"+U.num(s,2)],["Network fee","Free in demo","tx-free"]]),
         done:"You bought "+U.shares(s)+" "+(o?(bin?"shares on "+o:side+" shares on "+o):m.scalar?sd+" shares":"shares on the branch \u201c"+sd.toLowerCase()+"\u201d")+"."}},"amt")}
     var drawTicket=function(){var p=Math.min(.99,Math.max(.01,price())),f=h("div");
       tk.style.minHeight=fl.style()?fl.hold+"px":"";
       if(fl.step!=="form"){f.appendChild(fl.view());patch(tk,f);return}
-      if(m.status!=="Open"&&m.status!=="Live"){
+      if(m.status!=="Open"){
         /* a resolved market offers Redeem to a wallet that holds the winning side; any other closed market just says so */
         if(m.status==="Resolved")W.redeem({flow:fl,market:m.q,mid:m.id,product:"app",after:focusPlace,win:function(x){return x.outcome===resOf(m).answer&&(!x.side||x.side==="Yes")}}).forEach(function(n){f.appendChild(n)});
         else f.appendChild(h("p",{text:"Trading is closed for this market.",class:"note"}));
@@ -476,7 +478,7 @@
   function sections(on){[statsEl,filtersEl,countEl,outEl].forEach(function(n){n.hidden=!on});pageBox.hidden=on;if(on)U.clear(pageBox)}
   function skeleton(){var S=DM.sk;sections(true);
     /* the tiles keep their keys, so the real ones morph into these and only the figures change */
-    U.clear(statsEl);["Open or live","Total volume","Liquidity"].forEach(function(l){statsEl.appendChild(h("div",{class:"dm-skel","data-key":l},[h("small",{text:l}),h("b",{class:"num"},[S(l==="Open or live"?"2ch":"5ch")])]))});
+    U.clear(statsEl);["Open","Total volume","Liquidity"].forEach(function(l){statsEl.appendChild(h("div",{class:"dm-skel","data-key":l},[h("small",{text:l}),h("b",{class:"num"},[S(l==="Open"?"2ch":"5ch")])]))});
     U.clear(catsEl);["All","Politics","Sports","Business","Crypto","Pop Culture","Elections","Weather","Science"].forEach(function(c,i){catsEl.appendChild(h("span",{class:"tab dm-skchip","aria-hidden":"true",style:"--sk-d:"+i*40+"ms",text:c}))});
     U.clear(typesEl);["All types"].concat(TYPES.map(function(t){return t+" · 00"}),["Saved · 0"]).forEach(function(c,i){typesEl.appendChild(h("span",{class:"chip dm-skchip","aria-hidden":"true",style:"--sk-d:"+i*40+"ms",text:c}))});
     toolbarEl.classList.add("dm-skz");filtersEl.inert=true;
@@ -549,7 +551,7 @@
     pvM.setAttribute("aria-pressed",String(!l));pvL.setAttribute("aria-pressed",String(l));
     document.title=l?"Seer app | Leaderboard":"Seer app | Market explorer";
     /* the page head follows the view: its title and sentence, and Create market only where a market can be created */
-    pvTitle.textContent=l?"Leaderboard":pvT0;pvLede.textContent=l?"The most profitable traders, with volume and win rate.":pvL0;
+    pvTitle.textContent=l?"Leaderboard":pvT0;pvLede.textContent=l?"The most profitable traders, with volume and ROI.":pvL0;
     document.getElementById("create").hidden=l;
     if(l){if(lbState==="idle")lbLoad({initial:true});else if(lbState==="ok")lbRender()}else startExplorer()}
   function go(v){if(v===tab)return;try{history.pushState(null,"",v==="leaderboard"?"#leaderboard":location.pathname+location.search)}catch(e){}
@@ -566,22 +568,23 @@
       lbCount=document.getElementById("lb-count"),lbSortEl=document.getElementById("lb-sortbar"),lbHint=document.getElementById("lb-hint"),lbPer=document.getElementById("lb-per");
   var LB=window.LEADERS||{week:[],month:[],all:[]},PNAME={week:"Week",month:"Month",all:"All time"};
   var lb={period:"week",sort:"pf",dir:-1},lbState="idle",lbErr=null,lbEmpty=false,lbSlot=slot(),lbListSlot=slot();
-  var LBCOLS=[["rk","Rank",""],["tr","Trader",""],["pf","Profit","r",1],["vo","Volume","r",1],["mk","Markets","r",1],["wr","Win rate","r",1]];
-  var LBSORTS=[["pf","Profit"],["vo","Volume"],["mk","Markets"],["wr","Win rate"]];
+  var LBCOLS=[["rk","Rank",""],["tr","Trader",""],["pf","Profit","r",1],["vo","Volume","r",1],["mk","Markets","r",1],["roi","ROI","r",1]];
+  var LBSORTS=[["pf","Profit"],["vo","Volume"],["mk","Markets"],["roi","ROI"]];
   /* The "You" row. Profit: the value of the positions held at the price stored with them, minus what they cost, plus every redemption credited
      (the cost of a position that was redeemed is not kept, so its credit counts in full). Volume: the cost of the positions held plus the
      confirmed trades that no held position covers. Markets: the different markets among held positions and confirmed trades and redemptions.
-     Win rate: resolved positions held that pay out, plus redemptions, over all of those and the resolved positions that pay nothing; "-" when
-     there are none. */
+     ROI: profit over volume, for a trader and for You alike (roi); "-" when the volume is nothing. */
+  function roi(pf,vo){return vo>0?pf/vo*100:null}
+  function roiText(v){return v==null?"-":(v>0?"+":"")+U.num(v,1,1)+"%"}
   function youRow(){var s=W.state;if(!s.connected)return null;
-    var val=0,cost=0,vol=0,red=0,wins=0,losses=0,mk={},held={};
-    s.positions.forEach(function(p){val+=p.shares*p.price;cost+=p.cost;vol+=p.cost;mk[p.market]=1;held[p.market]=1;if(p.status==="Resolved"){if(p.price>0)wins++;else losses++}});
+    var val=0,cost=0,vol=0,red=0,mk={},held={};
+    s.positions.forEach(function(p){val+=p.shares*p.price;cost+=p.cost;vol+=p.cost;mk[p.market]=1;held[p.market]=1});
     s.activity.forEach(function(a){if(a.status!=="Confirmed")return;
       if(a.type==="Trade"){mk[a.market]=1;if(!held[a.market])vol+=a.amount}
-      else if(a.type==="Redeem"){mk[a.market]=1;red+=a.amount;wins++}});
-    return{key:"you",you:true,addr:s.short,pf:Math.round((val-cost+red)*100)/100,vo:Math.round(vol*100)/100,mk:Object.keys(mk).length,wr:wins+losses?Math.round(wins/(wins+losses)*100):null}}
-  /* every row with its rank by profit (a tie keeps the traders ahead of You), then in the order the sort asks for; a missing win rate goes last */
-  function lbRows(){var r=(LB[lb.period]||[]).map(function(t){return{key:"t"+t[0],addr:W.short(U.addr(t[0])),pf:t[1],vo:t[2],mk:t[3],wr:t[4]}}),y=youRow();if(y)r.push(y);
+      else if(a.type==="Redeem"){mk[a.market]=1;red+=a.amount}});
+    return{key:"you",you:true,addr:s.short,pf:Math.round((val-cost+red)*100)/100,vo:Math.round(vol*100)/100,mk:Object.keys(mk).length,roi:roi(Math.round((val-cost+red)*100)/100,Math.round(vol*100)/100)}}
+  /* every row with its rank by profit (a tie keeps the traders ahead of You), then in the order the sort asks for; a missing ROI goes last */
+  function lbRows(){var r=(LB[lb.period]||[]).map(function(t){return{key:"t"+t[0],addr:W.short(U.addr(t[0])),pf:t[1],vo:t[2],mk:t[3],roi:roi(t[1],t[2])}}),y=youRow();if(y)r.push(y);
     r.sort(function(a,b){return b.pf-a.pf});r.forEach(function(x,i){x.rank=i+1});
     var k=lb.sort,d=lb.dir;r.sort(function(a,b){var x=a[k],z=b[k];if(x==null&&z==null)return a.rank-b.rank;if(x==null)return 1;if(z==null)return-1;return(x-z)*d||a.rank-b.rank});return r}
   function lbTh(c){var on=lb.sort===c[0],txt=c[1]+(on?(lb.dir>0?" \u2191":" \u2193"):"");
@@ -594,7 +597,7 @@
       h("td",{class:"r num c-pf "+(up?"pos":dn?"neg":"")},[up||dn?h("span",{"aria-hidden":"true",text:up?"\u25b2 ":"\u25bc "}):null,(up?"+":"")+U.money(r.pf)]),
       h("td",{class:"r num c-vo","data-label":"Volume",text:U.money(r.vo)}),
       h("td",{class:"r num c-mk","data-label":"Markets",text:String(r.mk)}),
-      h("td",{class:"r num c-wr","data-label":"Win rate",text:r.wr==null?"-":r.wr+"%"})])}
+      h("td",{class:"r num c-wr","data-label":"ROI",text:roiText(r.roi)})])}
   function lbTable(rows){var tb=h("tbody");rows.forEach(function(r){tb.appendChild(lbTr(r))});
     return h("div",{class:"tbl tall rtbl lb-tbl","data-key":"lbt"},[U.roles(h("table",{},[h("thead",{},[h("tr",{},LBCOLS.map(lbTh))]),tb]))])}
   /* below 1101px the column headers are hidden, so the same sort state gets a select and an order toggle, as Deep does */

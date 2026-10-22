@@ -60,6 +60,9 @@ html.m-hidden .as-glow,.as-paused .as-glow,.as-away .as-glow,.as-open .as-glow{a
 @media (prefers-reduced-motion:reduce){.as-hint,.as-hint.m-in.as-away{transition:none!important}}
 @media (forced-colors:active){.as-hint{border-color:CanvasText}}
 
+/* the tool pages end with the ball's footprint (its size, its offset from the edge, safe-area aware, and the demo lift) plus a gap, so the last control can always scroll clear of it */
+#main > .page,#main > .wrap{padding-bottom:calc(var(--as-size) + var(--as-b) + var(--dm-lift,0px) + var(--s-5))}
+
 /* the landing ends with room for the ball, so the last footer link is never under it */
 .home .foot{padding-bottom:max(calc(var(--s-6) + 64px),env(safe-area-inset-bottom))}
 

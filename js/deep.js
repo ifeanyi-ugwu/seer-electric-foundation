@@ -159,7 +159,7 @@ function tprice(d){return tside==="Up"?d.s/10:1-d.s/10}
 function focusPlace(){var b=document.querySelector('[data-tx="deep"] [data-tx-place]');if(b)b.focus()}
 function place(){var d=st.sel,p=tprice(d),a=tamt,s=a/p,sd=tside,name="#"+d.id+" "+d.name;
  flow.place(a,function(){return{amount:a,meta:{type:"Trade",market:"Grant round",mid:d.id,product:"deep",outcome:name,side:sd,shares:s,price:p,status:"Open"},
-  rows:[["Proposal",name,"tx-q"],["Side",sd],["Amount",W.money(a)+" "+U.COLL,"tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(s)],["Max slippage","1%"],["Minimum shares",U.shares(s*.99)],["Network fee","Free in demo","tx-free"]],
+  rows:[["Proposal",name,"tx-q"],["Side",sd],["Amount",W.money(a)+" "+U.COLL,"tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(s)],["Max slippage","0.5%"],["Minimum shares",U.shares(s*.995)],["Network fee","Free in demo","tx-free"]],
   note:"Pays $1.00 per share at "+(sd==="Up"?"10":"0")+".",
   done:"You bought "+U.shares(s)+" "+sd+" shares on the score of proposal #"+d.id+"."}},"deep-amt")}
 function ticketKids(){var d=st.sel,p=tprice(d),ks=[h("h3",{class:"wl-sub","data-key":"tk-h",text:"Trade this score"})];

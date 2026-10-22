@@ -32,9 +32,8 @@
 /* Hero card stack: two full market cards, one in front and one behind. The card behind is a button; it springs
    forward over the other, which eases back and dims, and the card that arrives replays its sequence: dots usher
    in one by one, the percentage climbs and the bar fills.
-   First visit in a session: the front card plays, then the back card comes out from behind it and plays its own.
-   Return visits: both cards are already in place and the numbers climb briefly. Reduced motion: every change is
-   instant and shows final values. Without this script both cards render at rest with their final values.
+   Every load plays the full entrance: the front card plays, then the back card comes out from behind it and plays its own.
+   Reduced motion: every change is instant and shows final values. Without this script both cards render at rest with their final values.
    One requestAnimationFrame loop runs the springs, the climbs and the dot pops, and only while something moves. */
 (function () {
   var root = document.documentElement;
@@ -47,7 +46,7 @@
   var live = document.getElementById('hc-live');
   var K = 190, C = 24;              /* card moves: stiffness and damping (mass 1), as in the approved prototype */
   var DIM = 0.26;                   /* veil over the card behind */
-  var CLIMB = 1500, BRIEF = 600;    /* number climb: full sequence, return-visit settle */
+  var CLIMB = 1500;    /* number climb */
   var HAND = 170;                   /* a swap hands the button and the reading order over after this long */
   var LIFT = -4;                    /* hover lift of the card behind, design px */
   var SWAPPED = 'seer-hero-swapped';

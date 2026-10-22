@@ -43,7 +43,7 @@ var W=window.SeerWallet,flow=W.flow({box:function(){return document.querySelecto
 function focusPlace(){var b=document.querySelector('[data-tx="opp"] [data-tx-place]');if(b)b.focus()}
 function place(s){var yes=st.side==="Yes",p=Math.min(.99,Math.max(.01,yes?s.p:1-s.p)),a=st.amt,sh=a/p,side="Will "+(yes?"":"not ")+"be selected";
  flow.place(a,function(){return{amount:a,meta:{type:"Trade",market:s.n,mid:s.id,product:"opportunity",outcome:null,side:side,shares:sh,price:p,status:"Open"},
-  rows:[["Submission",s.n,"tx-q"],["Side",side],["Amount",W.money(a)+" "+U.COLL,"tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(sh)],["Max slippage","1%"],["Minimum shares",U.shares(sh*.99)],
+  rows:[["Submission",s.n,"tx-q"],["Side",side],["Amount",W.money(a)+" "+U.COLL,"tx-tot"],["Price per share","$"+p.toFixed(2)],["Shares",U.shares(sh)],["Max slippage","0.5%"],["Minimum shares",U.shares(sh*.995)],
    ["Payout if reviewers agree","$"+U.num(sh,2)],["Network fee","Free in demo","tx-free"]],
   done:"You bought "+U.shares(sh)+" shares on "+s.n+": "+side.toLowerCase()+"."}},"amt")}
 function close(){var s=st.sel;st.sel=null;selSlot.cancel();flow.reset();draw();if(s){var r=document.querySelector('tr[data-key="s'+s.id+'"]');if(r)r.focus({preventScroll:true})}}
