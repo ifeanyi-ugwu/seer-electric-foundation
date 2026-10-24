@@ -23,7 +23,7 @@
     if(reduced()){go();return}
     if(!d.startViewTransition){root.classList.add("st-xfade");go();setTimeout(function(){root.classList.remove("st-xfade")},360);return}
     var r=tg.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,R=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y)),
-      retreat=next==="dark",dur=retreat?676:520,c0="circle(0px at "+x+"px "+y+"px)",c1="circle("+R+"px at "+x+"px "+y+"px)",vt,keep=null,released=0;
+      retreat=next==="dark",dur=676,c0="circle(0px at "+x+"px "+y+"px)",c1="circle("+R+"px at "+x+"px "+y+"px)",vt,keep=null,released=0;
     /* darkness is the absence of light, so light leads: to light, the new theme radiates out of the toggle; to dark, the light is
        withdrawn into the toggle and the dark is what is left behind */
     root.classList.add("st-vt");if(retreat)root.classList.add("st-vt-back");
@@ -37,7 +37,7 @@
     /* safety: if the browser never gets to the update (a stalled capture), skip the transition and switch anyway */
     setTimeout(function(){if(!did){try{vt.skipTransition()}catch(e){}go();done()}},500);
     if(retreat)setTimeout(release,Math.round(dur*.64));
-    vt.ready.then(function(){root.animate({clipPath:retreat?[c1,c0]:[c0,c1]},{duration:dur,easing:"cubic-bezier(.05,.7,.1,1)",
+    vt.ready.then(function(){root.animate({clipPath:retreat?[c1,c0]:[c0,c1]},{duration:dur,easing:retreat?"cubic-bezier(.05,.7,.1,1)":"cubic-bezier(.9,0,.95,.3)",
       pseudoElement:retreat?"::view-transition-old(root)":"::view-transition-new(root)",fill:"both"})},done);
     vt.finished.then(done,done)})}
 

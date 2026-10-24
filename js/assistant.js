@@ -150,7 +150,7 @@ function send(q){if(busy)return;var a=answer(q);PENDING=a.f||null;ST.msgs.push({
     if(reduced()){ST.msgs.push(m);busy=false;PENDING=null;save();redraw();scrollLog();return}
     var n=a.t.split(" ").length,step=Math.max(14,Math.min(36,1500/n));
     m.vis=0;m.t0=performance.now();m.step=step;ST.msgs.push(m);busy="stream";save();redraw();scrollLog();
-    setTimeout(function(){m.vis=null;busy=false;PENDING=null;save();redraw()},Math.round(n*step+320))},reduced()?150:520+Math.random()*260)}
+    setTimeout(function(){m.vis=null;busy=false;PENDING=null;save();redraw();scrollLog()},Math.round(n*step+320))},reduced()?150:520+Math.random()*260)}
 
 /* ---------- Demo: the judges' controls ---------- */
 var DELAY_T={0:"Instant",1:"1s",2:"2s",3:"3s",8:"8s"},ERR_T={none:"None",network:"Network",timeout:"Timeout",server:"Server error",notfound:"Not found",empty:"Empty"};

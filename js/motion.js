@@ -15,7 +15,7 @@ var doc=document,root=doc.documentElement,NS="http://www.w3.org/2000/svg",M={},S
 var mqR=matchMedia("(prefers-reduced-motion: reduce)"),mqFine=matchMedia("(hover: hover) and (pointer: fine)"),mqWide=matchMedia("(min-width: 961px)"),mqPhone=matchMedia("(max-width: 600px)");
 function reduced(){return mqR.matches}
 var D={xs:120,s:200,m:320,l:520,xl:900};
-var E={standard:"cubic-bezier(.2,0,0,1)",decel:"cubic-bezier(.05,.7,.1,1)",accel:"cubic-bezier(.3,0,.8,.15)",spring:"cubic-bezier(.3,1.3,.5,1)"};
+var E={standard:"cubic-bezier(.2,0,0,1)",decel:"cubic-bezier(.05,.7,.1,1)",decelBack:"cubic-bezier(.9,0,.95,.3)",accel:"cubic-bezier(.3,0,.8,.15)",spring:"cubic-bezier(.3,1.3,.5,1)"};
 var STAG=40,MAXSTAG=8;
 var SDA=!!(window.CSS&&CSS.supports&&CSS.supports("animation-timeline: view()"));
 var LIN=!!(window.CSS&&CSS.supports&&CSS.supports("animation-timing-function","linear(0,1)"));
@@ -607,10 +607,10 @@ M.theme=function(apply,btn){if(reduced()){apply();return}
       retreat=LIGHT_LEADS?!toLight:toLight; /* the retreating layer is the old view, shrinking into the toggle */
   /* the icon turns on its own spring; on the retreating direction it gets a springier curve so it turns, overshoots a touch and rests about when the layer has closed into it */
   if(svg&&SP){var full=btn.classList.contains("theme-toggle")?180:360,from=toLight?0:full,to=toLight?full:0;
-    drive(svg,{r:to},retreat?{k:380,c:23}:"snappy",{init:{r:from},eps:.2})}
+    drive(svg,{r:to},{k:380,c:23},{init:{r:from},eps:.2})}
   if(doc.startViewTransition&&btn&&btn.getBoundingClientRect){var r=btn.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,
       R=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y)),vt,c0="circle(0px at "+x+"px "+y+"px)",c1="circle("+R+"px at "+x+"px "+y+"px)",
-      dur=retreat?Math.round(D.l*1.3):D.l;
+      dur=Math.round(D.l*1.3);
     root.classList.add("m-vt-theme");if(retreat)root.classList.add("m-vt-back");
     /* the toggle gets its own layer above both themes, so its icon stays visible while the old view closes over it */
     btn.style.viewTransitionName="m-theme-toggle";
@@ -621,7 +621,7 @@ M.theme=function(apply,btn){if(reduced()){apply();return}
       btn.style.color=btn.style.borderColor=btn.style.backgroundColor="";setTimeout(function(){btn.style.transition=""},300)}
     try{vt=doc.startViewTransition(apply)}catch(e){root.classList.remove("m-vt-theme","m-vt-back");btn.style.viewTransitionName="";release();apply();return}
     if(retreat)setTimeout(release,Math.round(dur*.64));
-    vt.ready.then(function(){root.animate({clipPath:retreat?[c1,c0]:[c0,c1]},{duration:dur,easing:E.decel,fill:"forwards",pseudoElement:retreat?"::view-transition-old(root)":"::view-transition-new(root)"})}).catch(function(){});
+    vt.ready.then(function(){root.animate({clipPath:retreat?[c1,c0]:[c0,c1]},{duration:dur,easing:retreat?E.decel:E.decelBack,fill:"forwards",pseudoElement:retreat?"::view-transition-old(root)":"::view-transition-new(root)"})}).catch(function(){});
     vt.finished.then(done,done);function done(){root.classList.remove("m-vt-theme","m-vt-back");btn.style.viewTransitionName="";release()}return}
   root.classList.add("m-theming");apply();setTimeout(function(){root.classList.remove("m-theming")},D.m+60)};
 
