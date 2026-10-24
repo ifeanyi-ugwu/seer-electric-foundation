@@ -483,6 +483,8 @@ main{view-transition-name:m-main}
 .m-leave{animation:m-vt-out var(--dur-2) var(--ease-accel) both}
 /* theme swap uses a same-document transition: one circular reveal of the whole page */
 html.m-vt-theme::view-transition-old(root),html.m-vt-theme::view-transition-new(root){animation:none;mix-blend-mode:normal}
+/* the incoming theme starts clipped to nothing at the toggle, so no browser can show it whole before the reveal animation takes over */
+html.m-vt-theme:not(.m-vt-back)::view-transition-new(root){clip-path:circle(0px at var(--m-vt-x,100%) var(--m-vt-y,0px))}
 html.m-vt-theme main{view-transition-name:none}
 /* dark to light: the old (dark) view sits on top and shrinks into the toggle */
 html.m-vt-theme.m-vt-back::view-transition-old(root){z-index:2}

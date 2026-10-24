@@ -47,6 +47,7 @@
       retreat=next==="dark",dur=676,svg=tg.querySelector("svg"),lt=svg?lightTurn(svg,next==="light"?0:180,next==="light"?180:0,R,dur,retreat):null,c0="circle(0px at "+x+"px "+y+"px)",c1="circle("+R+"px at "+x+"px "+y+"px)",vt,keep=null,released=0;
     /* darkness is the absence of light, so light leads: to light, the new theme radiates out of the toggle; to dark, the light is
        withdrawn into the toggle and the dark is what is left behind */
+    root.style.setProperty("--st-vt-x",x+"px");root.style.setProperty("--st-vt-y",y+"px");
     root.classList.add("st-vt");if(retreat)root.classList.add("st-vt-back");
     /* the toggle rides above both themes, in the colours of the view that is closing in, so its turn reads against it */
     tg.style.viewTransitionName="st-toggle";

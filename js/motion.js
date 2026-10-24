@@ -627,6 +627,7 @@ M.theme=function(apply,btn){if(reduced()){apply();return}
   if(doc.startViewTransition&&btn&&btn.getBoundingClientRect){var r=btn.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,
       R=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y)),vt,c0="circle(0px at "+x+"px "+y+"px)",c1="circle("+R+"px at "+x+"px "+y+"px)",
       dur=Math.round(D.l*1.3),lt=svg?lightTurn(svg,from,to,R,dur,retreat):null;
+    root.style.setProperty("--m-vt-x",x+"px");root.style.setProperty("--m-vt-y",y+"px");
     root.classList.add("m-vt-theme");if(retreat)root.classList.add("m-vt-back");
     /* the toggle gets its own layer above both themes, so its icon stays visible while the old view closes over it */
     btn.style.viewTransitionName="m-theme-toggle";

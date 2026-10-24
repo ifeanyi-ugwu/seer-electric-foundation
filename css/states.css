@@ -287,6 +287,8 @@ html.st-vt.st-vt-back::view-transition-new(root){z-index:1}
 html.st-vt::view-transition-group(st-toggle){animation:none}
 html.st-vt::view-transition-old(st-toggle){display:none}
 html.st-vt::view-transition-new(st-toggle){animation:none;mix-blend-mode:normal}
+/* the incoming theme starts clipped to nothing at the toggle, so no browser can show it whole before the reveal animation takes over */
+html.st-vt:not(.st-vt-back)::view-transition-new(root){clip-path:circle(0px at var(--st-vt-x,100%) var(--st-vt-y,0px))}
 html.st-vt main{view-transition-name:none}
 html.st-xfade body{transition:background-color var(--st-dur-3) var(--st-standard),color var(--st-dur-3) var(--st-standard)}
 /* page changes: the site's cross-document transition, with only <main> moving */
