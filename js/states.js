@@ -37,8 +37,9 @@
     /* safety: if the browser never gets to the update (a stalled capture), skip the transition and switch anyway */
     setTimeout(function(){if(!did){try{vt.skipTransition()}catch(e){}go();done()}},500);
     if(retreat)setTimeout(release,Math.round(dur*.64));
-    vt.ready.then(function(){root.animate({clipPath:retreat?[c1,c0]:[c0,c1]},{duration:dur,easing:retreat?"cubic-bezier(.05,.7,.1,1)":"cubic-bezier(.9,0,.95,.3)",
-      pseudoElement:retreat?"::view-transition-old(root)":"::view-transition-new(root)",fill:"both"})},done);
+    vt.ready.then(function(){var an=root.animate({clipPath:retreat?[c1,c0]:[c0,c1]},{duration:dur,easing:retreat?"cubic-bezier(.05,.7,.1,1)":"cubic-bezier(.9,0,.95,.3)",
+      pseudoElement:retreat?"::view-transition-old(root)":"::view-transition-new(root)",fill:"both"});
+      vt.finished.then(function(){an.cancel()},function(){an.cancel()})},done);
     vt.finished.then(done,done)})}
 
   /* ---------- header: pinned at the top at every size (css/states.css) and condensed the way the site's headers are

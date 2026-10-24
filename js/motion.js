@@ -621,7 +621,9 @@ M.theme=function(apply,btn){if(reduced()){apply();return}
       btn.style.color=btn.style.borderColor=btn.style.backgroundColor="";setTimeout(function(){btn.style.transition=""},300)}
     try{vt=doc.startViewTransition(apply)}catch(e){root.classList.remove("m-vt-theme","m-vt-back");btn.style.viewTransitionName="";release();apply();return}
     if(retreat)setTimeout(release,Math.round(dur*.64));
-    vt.ready.then(function(){root.animate({clipPath:retreat?[c1,c0]:[c0,c1]},{duration:dur,easing:retreat?E.decel:E.decelBack,fill:"forwards",pseudoElement:retreat?"::view-transition-old(root)":"::view-transition-new(root)"})}).catch(function(){});
+    vt.ready.then(function(){var an=root.animate({clipPath:retreat?[c1,c0]:[c0,c1]},{duration:dur,easing:retreat?E.decel:E.decelBack,fill:"forwards",pseudoElement:retreat?"::view-transition-old(root)":"::view-transition-new(root)"});
+      /* a finished animation on a pseudo-element outlives its transition and would clip the next one, so it is cancelled at the end */
+      vt.finished.then(function(){an.cancel()},function(){an.cancel()})}).catch(function(){});
     vt.finished.then(done,done);function done(){root.classList.remove("m-vt-theme","m-vt-back");btn.style.viewTransitionName="";release()}return}
   root.classList.add("m-theming");apply();setTimeout(function(){root.classList.remove("m-theming")},D.m+60)};
 
