@@ -287,7 +287,6 @@ html.st-vt.st-vt-back::view-transition-new(root){z-index:1}
 html.st-vt::view-transition-group(st-toggle){animation:none}
 html.st-vt::view-transition-old(st-toggle){display:none}
 html.st-vt::view-transition-new(st-toggle){animation:none;mix-blend-mode:normal}
-html.st-vt-back .theme-toggle svg{transition:rotate 520ms cubic-bezier(.3,1.45,.5,1)}
 html.st-vt main{view-transition-name:none}
 html.st-xfade body{transition:background-color var(--st-dur-3) var(--st-standard),color var(--st-dur-3) var(--st-standard)}
 /* page changes: the site's cross-document transition, with only <main> moving */

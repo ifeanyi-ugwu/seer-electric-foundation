@@ -16,6 +16,27 @@
   /* ---------- theme: one toggle; the same circular reveal as the site, a cross-fade without view transitions,
      instant under reduced motion ---------- */
   var tg=$("[data-theme-toggle]");
+  /* the icon turn is read from the light edge (same rule as js/motion.js lightTurn): zero while the edge is at the toggle, full once
+     it is EYE px away, with the icon's spring following that value */
+  var EYE=100;
+  function bez(x1,y1,x2,y2){function c(t,a,b){return((1-3*b+3*a)*t*t*t)+((3*b-6*a)*t*t)+3*a*t}
+    return function(x){if(x<=0)return 0;if(x>=1)return 1;var lo=0,hi=1,m,i;for(i=0;i<30;i++){m=(lo+hi)/2;if(c(m,x1,x2)<x)lo=m;else hi=m}return c((lo+hi)/2,y1,y2)}}
+  var DEC=bez(.05,.7,.1,1),BACK=bez(.9,0,.95,.3);
+  function edgeAt(ms,dur,R,retreat){var u=Math.min(1,Math.max(0,ms/dur));return R*(retreat?1-DEC(u):BACK(u))}
+  function lightTurn(svg,from,to,R,dur,retreat){
+    var prev=svg.__lt,x0=0,T0=null,x,v=0,last=performance.now(),raf=0;
+    if(prev){if(prev.live)x0=Math.max(0,Math.min(1,(prev.ang-from)/(to-from)));prev.stop()}
+    x=x0;var me={live:true,ang:from+(to-from)*x0};svg.__lt=me;svg.style.transition="none";
+    function set(p){me.ang=from+(to-from)*p;svg.style.rotate=me.ang.toFixed(2)+"deg"}
+    function end(){me.live=false;if(svg.__lt===me){svg.__lt=null;svg.style.rotate="";svg.style.transition=""}}
+    function tick(now){raf=0;var dt=Math.min(.05,(now-last)/1000),ms=T0===null?0:now-T0,p=Math.min(1,edgeAt(ms,dur,R,retreat)/EYE),tg=retreat?1-p:p,h=dt/4,i;
+      last=now;for(i=0;i<4;i++){v+=(-380*(x-tg)-23*v)*h;x+=v*h}
+      if(ms>=dur&&Math.abs(x-tg)<.002&&Math.abs(v)<.05){set(tg);end();return}
+      set(x);raf=requestAnimationFrame(tick)}
+    me.ready=function(){if(T0===null)T0=performance.now()};
+    me.finish=function(){if(T0===null)T0=performance.now()-dur};
+    me.stop=function(){if(raf)cancelAnimationFrame(raf);raf=0;me.live=false};
+    set(x);raf=requestAnimationFrame(tick);return me}
   function sync(){if(!tg)return;var l=root.dataset.theme==="light";tg.setAttribute("aria-pressed",String(l));tg.title=l?"Light theme on":"Light theme off"}
   function apply(t){root.dataset.theme=t;store("seer-theme",t);sync()}
   if(tg){sync();tg.addEventListener("click",function(){
@@ -23,7 +44,7 @@
     if(reduced()){go();return}
     if(!d.startViewTransition){root.classList.add("st-xfade");go();setTimeout(function(){root.classList.remove("st-xfade")},360);return}
     var r=tg.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,R=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y)),
-      retreat=next==="dark",dur=676,c0="circle(0px at "+x+"px "+y+"px)",c1="circle("+R+"px at "+x+"px "+y+"px)",vt,keep=null,released=0;
+      retreat=next==="dark",dur=676,svg=tg.querySelector("svg"),lt=svg?lightTurn(svg,next==="light"?0:180,next==="light"?180:0,R,dur,retreat):null,c0="circle(0px at "+x+"px "+y+"px)",c1="circle("+R+"px at "+x+"px "+y+"px)",vt,keep=null,released=0;
     /* darkness is the absence of light, so light leads: to light, the new theme radiates out of the toggle; to dark, the light is
        withdrawn into the toggle and the dark is what is left behind */
     root.classList.add("st-vt");if(retreat)root.classList.add("st-vt-back");
@@ -32,14 +53,16 @@
     if(retreat){var cs=getComputedStyle(tg);keep=1;tg.style.color=cs.color;tg.style.borderColor=cs.borderColor;tg.style.backgroundColor=cs.backgroundColor}
     function release(){if(released||!keep)return;released=1;tg.style.transition="color 180ms,border-color 180ms,background-color 180ms";
       tg.style.color=tg.style.borderColor=tg.style.backgroundColor="";setTimeout(function(){tg.style.transition=""},300)}
-    function done(){root.classList.remove("st-vt","st-vt-back");tg.style.viewTransitionName="";release()}
+    function done(){root.classList.remove("st-vt","st-vt-back");tg.style.viewTransitionName="";release();if(lt)lt.finish()}
     try{vt=d.startViewTransition(go)}catch(e){done();go();return}
     /* safety: if the browser never gets to the update (a stalled capture), skip the transition and switch anyway */
     setTimeout(function(){if(!did){try{vt.skipTransition()}catch(e){}go();done()}},500);
-    if(retreat)setTimeout(release,Math.round(dur*.64));
     vt.ready.then(function(){var an=root.animate({clipPath:retreat?[c1,c0]:[c0,c1]},{duration:dur,easing:retreat?"cubic-bezier(.05,.7,.1,1)":"cubic-bezier(.9,0,.95,.3)",
       pseudoElement:retreat?"::view-transition-old(root)":"::view-transition-new(root)",fill:"both"});
-      vt.finished.then(function(){an.cancel()},function(){an.cancel()})},done);
+      vt.finished.then(function(){an.cancel()},function(){an.cancel()});
+      if(lt)lt.ready();
+      /* the toggle takes its own colours back when the closing light reaches it */
+      if(retreat){var ms=0,rt=r.width/2;while(ms<dur&&edgeAt(ms,dur,R,true)>rt)ms+=4;setTimeout(release,ms)}},done);
     vt.finished.then(done,done)})}
 
   /* ---------- header: pinned at the top at every size (css/states.css) and condensed the way the site's headers are

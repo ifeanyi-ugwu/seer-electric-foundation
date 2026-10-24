@@ -35,7 +35,7 @@ function bez(x1,y1,x2,y2){
   return function(x){if(x<=0)return 0;if(x>=1)return 1;var t=x,i,s;
     for(i=0;i<8;i++){s=slope(t,x1,x2);if(Math.abs(s)<1e-6)break;t-=(calc(t,x1,x2)-x)/s;if(t<0)t=0;if(t>1)t=1}
     return calc(t,y1,y2)}}
-var EF={decel:bez(.05,.7,.1,1),standard:bez(.2,0,0,1)};
+var EF={decel:bez(.05,.7,.1,1),decelBack:bez(.9,0,.95,.3),standard:bez(.2,0,0,1)};
 EF.glide=SP?SP.curve("glide"):EF.decel;EF.gentle=SP?SP.curve("gentle"):EF.decel;
 
 /* ---------- physics: springs write --m-* variables, one CSS rule composes them ---------- */
@@ -598,19 +598,35 @@ M.exit=function(els,done){els=els.filter(Boolean);M.sheetOff();if(reduced()||!el
     else kf=[{opacity:1},{opacity:0}];
     var a=el.animate(kf,{duration:dur,easing:E.accel,fill:"forwards"});a.onfinish=a.oncancel=function(){if(--n===0)done()}})};
 
-/* ---------- theme: the icon turns on a spring, then a circular reveal from the toggle; colour cross-fade fallback ---------- */
+/* ---------- theme: a circular reveal from the toggle, and the icon turn read from the light edge; colour cross-fade fallback ---------- */
 /* Darkness is the absence of light, so light leads: going to light, light radiates out of the toggle; going to dark, the light is
    withdrawn into the toggle and the dark is what is left behind. Set LIGHT_LEADS to false for the old "dark spreads out" version. */
 var LIGHT_LEADS=true;
+/* The icon turn is read from the light edge, so it happens where the eye is: zero while the edge is at the toggle, full once the
+   edge is EYE px away, in both directions. The icon's spring follows that value, which keeps a small overshoot. */
+var EYE=100;
+function edgeAt(ms,dur,R,retreat){var u=Math.min(1,Math.max(0,ms/dur));return R*(retreat?1-EF.decel(u):EF.decelBack(u))}
+function lightTurn(svg,from,to,R,dur,retreat){
+  var prev=svg.__lt,x0=0,T0=null,x,v=0,last=performance.now(),raf=0;
+  if(prev){if(prev.live)x0=Math.max(0,Math.min(1,(prev.ang-from)/(to-from)));prev.stop()}
+  x=x0;var me={live:true,ang:from+(to-from)*x0};svg.__lt=me;
+  function set(p){me.ang=from+(to-from)*p;svg.style.setProperty("--m-r",me.ang.toFixed(2)+"deg")}
+  function end(){me.live=false;if(svg.__lt===me)svg.__lt=null;svg.style.removeProperty("--m-r");if(!svg.getAttribute("style"))svg.removeAttribute("style")}
+  function tick(now){raf=0;var dt=Math.min(.05,(now-last)/1000),ms=T0===null?0:now-T0,p=Math.min(1,edgeAt(ms,dur,R,retreat)/EYE),tg=retreat?1-p:p,h=dt/4,i;
+    last=now;for(i=0;i<4;i++){v+=(-380*(x-tg)-23*v)*h;x+=v*h}
+    if(ms>=dur&&Math.abs(x-tg)<.002&&Math.abs(v)<.05){set(tg);end();return}
+    set(x);raf=requestAnimationFrame(tick)}
+  me.ready=function(){if(T0===null)T0=performance.now()};
+  me.finish=function(){if(T0===null)T0=performance.now()-dur};
+  me.stop=function(){if(raf)cancelAnimationFrame(raf);raf=0;me.live=false;if(svg.__lt===me)svg.__lt=null};
+  set(x);raf=requestAnimationFrame(tick);return me}
 M.theme=function(apply,btn){if(reduced()){apply();return}
   var svg=btn&&btn.querySelector&&btn.querySelector("svg"),toLight=root.dataset.theme!=="light",keep=null,
-      retreat=LIGHT_LEADS?!toLight:toLight; /* the retreating layer is the old view, shrinking into the toggle */
-  /* the icon turns on its own spring; on the retreating direction it gets a springier curve so it turns, overshoots a touch and rests about when the layer has closed into it */
-  if(svg&&SP){var full=btn.classList.contains("theme-toggle")?180:360,from=toLight?0:full,to=toLight?full:0;
-    drive(svg,{r:to},{k:380,c:23},{init:{r:from},eps:.2})}
+      retreat=LIGHT_LEADS?!toLight:toLight, /* the retreating layer is the old view, shrinking into the toggle */
+      full=btn&&btn.classList&&btn.classList.contains("theme-toggle")?180:360,from=toLight?0:full,to=toLight?full:0;
   if(doc.startViewTransition&&btn&&btn.getBoundingClientRect){var r=btn.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,
       R=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y)),vt,c0="circle(0px at "+x+"px "+y+"px)",c1="circle("+R+"px at "+x+"px "+y+"px)",
-      dur=Math.round(D.l*1.3);
+      dur=Math.round(D.l*1.3),lt=svg?lightTurn(svg,from,to,R,dur,retreat):null;
     root.classList.add("m-vt-theme");if(retreat)root.classList.add("m-vt-back");
     /* the toggle gets its own layer above both themes, so its icon stays visible while the old view closes over it */
     btn.style.viewTransitionName="m-theme-toggle";
@@ -619,12 +635,15 @@ M.theme=function(apply,btn){if(reduced()){apply();return}
       btn.style.color=keep.c;btn.style.borderColor=keep.b;btn.style.backgroundColor=keep.g}
     var released=0;function release(){if(released||!keep)return;released=1;btn.style.transition="color 180ms,border-color 180ms,background-color 180ms";
       btn.style.color=btn.style.borderColor=btn.style.backgroundColor="";setTimeout(function(){btn.style.transition=""},300)}
-    try{vt=doc.startViewTransition(apply)}catch(e){root.classList.remove("m-vt-theme","m-vt-back");btn.style.viewTransitionName="";release();apply();return}
-    if(retreat)setTimeout(release,Math.round(dur*.64));
+    try{vt=doc.startViewTransition(apply)}catch(e){root.classList.remove("m-vt-theme","m-vt-back");btn.style.viewTransitionName="";release();if(lt)lt.finish();apply();return}
     vt.ready.then(function(){var an=root.animate({clipPath:retreat?[c1,c0]:[c0,c1]},{duration:dur,easing:retreat?E.decel:E.decelBack,fill:"forwards",pseudoElement:retreat?"::view-transition-old(root)":"::view-transition-new(root)"});
       /* a finished animation on a pseudo-element outlives its transition and would clip the next one, so it is cancelled at the end */
-      vt.finished.then(function(){an.cancel()},function(){an.cancel()})}).catch(function(){});
-    vt.finished.then(done,done);function done(){root.classList.remove("m-vt-theme","m-vt-back");btn.style.viewTransitionName="";release()}return}
+      vt.finished.then(function(){an.cancel()},function(){an.cancel()});
+      if(lt)lt.ready();
+      /* the toggle takes its own colours back when the closing light reaches it */
+      if(retreat){var ms=0,rt=r.width/2;while(ms<dur&&edgeAt(ms,dur,R,true)>rt)ms+=4;setTimeout(release,ms)}}).catch(function(){});
+    vt.finished.then(done,done);function done(){root.classList.remove("m-vt-theme","m-vt-back");btn.style.viewTransitionName="";release();if(lt)lt.finish()}return}
+  if(svg&&SP)drive(svg,{r:to},"snappy",{init:{r:from},eps:.2});
   root.classList.add("m-theming");apply();setTimeout(function(){root.classList.remove("m-theming")},D.m+60)};
 
 /* ---------- pause looping animations offscreen and in hidden tabs ---------- */
